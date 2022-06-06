@@ -10,6 +10,7 @@ using UnityEngine;
 using UnityEngine.XR;
 using UnityEngine.UI;
 using Microsoft.MixedReality.Toolkit.UI;
+using System.Collections;
 
 [RequireComponent(typeof(SpatialAnchorManager))]
 public class AzureSpatialAnchorsScript : MonoBehaviour
@@ -96,7 +97,7 @@ public class AzureSpatialAnchorsScript : MonoBehaviour
                         //{
                         //    ShortTap(handPosition);
                         //}
-                        
+
                         foreach (var source in CoreServices.InputSystem.DetectedInputSources)
                         {
                             // Ignore anything that is not a hand because we want articulated hands
@@ -171,7 +172,7 @@ public class AzureSpatialAnchorsScript : MonoBehaviour
             {
                 //Delete nearby Anchor
                 DeleteAnchor(anchorGameObject);
-            } 
+            }
         }
     }
     // </ShortTap>
@@ -418,14 +419,44 @@ public class AzureSpatialAnchorsScript : MonoBehaviour
                 CloudSpatialAnchor cloudSpatialAnchor = args.Anchor;
 
                 //Create GameObject
-                GameObject anchorGameObject = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                //GameObject anchorGameObject = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                GameObject anchorGameObject = Instantiate(hold);
                 anchorGameObject.transform.localScale = Vector3.one * 0.1f;
                 anchorGameObject.GetComponent<MeshRenderer>().material.shader = Shader.Find("Legacy Shaders/Diffuse");
                 anchorGameObject.GetComponent<MeshRenderer>().material.color = Color.blue;
 
+                // change color to green after a delay
+                StartCoroutine(changeColor(anchorGameObject, Color.green, 2f));
+
                 // Link to Cloud Anchor
                 anchorGameObject.AddComponent<CloudNativeAnchor>().CloudToNative(cloudSpatialAnchor);
                 _foundOrCreatedAnchorGameObjects.Add(anchorGameObject);
+
+                // Add and then disable maninpulation scripts since we are in 'Delete' mode
+                Debug.Log($"Adding manipulation");
+                Mesh mesh = anchorGameObject.GetComponent<MeshFilter>().mesh;
+
+                //Add MeshCollider
+                MeshCollider collider = anchorGameObject.EnsureComponent<MeshCollider>();
+
+                //A lot of components are curved and need convex set to false
+                collider.convex = true;
+
+                //Add NearInteractionGrabbable
+                anchorGameObject.EnsureComponent<NearInteractionGrabbable>();
+
+                //Add ManipulationHandler
+                var handler = anchorGameObject.EnsureComponent<ObjectManipulator>();
+                handler.OnHoverEntered.AddListener((eventData) => holdOnHoverStartedHandler(eventData, anchorGameObject));
+                handler.OnHoverExited.AddListener((eventData) => holdOnHoverExitedHandler(eventData, anchorGameObject));
+                //handler.OnManipulationEnded.AddListener(hello3);
+
+                //Set mesh to MeshCollider
+                collider.sharedMesh = mesh;
+
+                // Disable maninpulation scripts since we are in 'Delete' mode
+                anchorGameObject.GetComponent<NearInteractionGrabbable>().enabled = false;
+                anchorGameObject.GetComponent<ObjectManipulator>().enabled = false;
             });
         }
     }
@@ -459,7 +490,7 @@ public class AzureSpatialAnchorsScript : MonoBehaviour
     {
         Debug.Log(editingMode);
 
-        if (editingMode == EditingMode.Move) 
+        if (editingMode == EditingMode.Move)
         {
             editingMode = EditingMode.Delete;
 
@@ -490,5 +521,16 @@ public class AzureSpatialAnchorsScript : MonoBehaviour
                 anchorGameObject.GetComponent<ObjectManipulator>().enabled = true;
             }
         }
+    }
+
+    /// <summary>
+    /// Change color of game object.
+    /// Used in delayed fashion.
+    /// </summary>
+    /// <param name="gameObject"></param>
+    private IEnumerator changeColor(GameObject gameObject, Color color, float time)
+    { 
+        yield return new WaitForSeconds(time);
+        gameObject.GetComponent<MeshRenderer>().material.color = color;
     }
 }
