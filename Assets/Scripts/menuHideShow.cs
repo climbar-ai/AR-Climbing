@@ -26,25 +26,21 @@ public class menuHideShow : MonoBehaviour
             toggleEditorMode.SetActive(false);
             show = false;
 
+            hideShowMenuButton.GetComponent<ButtonConfigHelper>().SetQuadIconByName("IconShow");
+
             // move hideShowMenu button left 
             //NOTE: has drift and eventually moves the button (maybe because button position is a float?)
             //Vector3 pos = hideShowMenuButton.transform.position;
             //pos.x -= .1f;
             //hideShowMenuButton.transform.position = pos;
-
-            Debug.Log(hideShowMenuButton.GetComponent<ButtonConfigHelper>().IconSet);
-            ButtonIconSet bset = ScriptableObject.CreateInstance<ButtonIconSet>();
-            Debug.Log(bset.QuadIcons);
-            bset.TryGetQuadIcon("IconShow", out Texture2D iconShow);
-            //hideShowMenuButton.GetComponent<ButtonConfigHelper>().SetQuadIcon(bset.QuadIcons[2]);
-            hideShowMenuButton.GetComponent<ButtonConfigHelper>().SetQuadIconByName("IconShow");
-            hideShowMenuButton.GetComponent<ButtonConfigHelper>().SetQuadIcon(iconShow);
         }
         else
         {
             toggleMesh.SetActive(true);
             toggleEditorMode.SetActive(true);
             show = true;
+
+            hideShowMenuButton.GetComponent<ButtonConfigHelper>().SetQuadIconByName("IconHide");
 
             // move hideShowMenu button right
             //NOTE: has drift and eventually moves the button (maybe because button position is a float?)
