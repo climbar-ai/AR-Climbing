@@ -11,6 +11,7 @@ using UnityEngine.XR;
 using UnityEngine.UI;
 using Microsoft.MixedReality.Toolkit.UI;
 using System.Collections;
+using TMPro;
 
 [RequireComponent(typeof(SpatialAnchorManager))]
 public class AzureSpatialAnchorsScript : MonoBehaviour
@@ -73,6 +74,7 @@ public class AzureSpatialAnchorsScript : MonoBehaviour
         _spatialAnchorManager.Error += (sender, args) => Debug.LogError($"ASA - Error: {args.ErrorMessage}");
         _spatialAnchorManager.AnchorLocated += SpatialAnchorManager_AnchorLocated;
         editingMode = EditingMode.Move;
+        GameObject.Find("ToggleEditorMode").GetComponentInChildren<TextMeshPro>().text = "Mode: Move";
     }
     // </Start>
 
@@ -696,6 +698,8 @@ public class AzureSpatialAnchorsScript : MonoBehaviour
                     anchorGameObject.GetComponent<ObjectManipulator>().enabled = false;
                 }
             }
+          
+            GameObject.Find("ToggleEditorMode").GetComponentInChildren<TextMeshPro>().text = "Mode: Delete";
         } else if (editingMode == EditingMode.Delete)
         {
             editingMode = EditingMode.Move;
@@ -708,6 +712,8 @@ public class AzureSpatialAnchorsScript : MonoBehaviour
                 anchorGameObject.GetComponent<NearInteractionGrabbable>().enabled = true;
                 anchorGameObject.GetComponent<ObjectManipulator>().enabled = true;
             }
+
+            GameObject.Find("ToggleEditorMode").GetComponentInChildren<TextMeshPro>().text = "Mode: Move";
         }
     }
 

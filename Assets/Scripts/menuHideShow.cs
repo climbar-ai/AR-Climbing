@@ -1,3 +1,4 @@
+using Microsoft.MixedReality.Toolkit.UI;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -30,6 +31,14 @@ public class menuHideShow : MonoBehaviour
             //Vector3 pos = hideShowMenuButton.transform.position;
             //pos.x -= .1f;
             //hideShowMenuButton.transform.position = pos;
+
+            Debug.Log(hideShowMenuButton.GetComponent<ButtonConfigHelper>().IconSet);
+            ButtonIconSet bset = ScriptableObject.CreateInstance<ButtonIconSet>();
+            Debug.Log(bset.QuadIcons);
+            bset.TryGetQuadIcon("IconShow", out Texture2D iconShow);
+            //hideShowMenuButton.GetComponent<ButtonConfigHelper>().SetQuadIcon(bset.QuadIcons[2]);
+            hideShowMenuButton.GetComponent<ButtonConfigHelper>().SetQuadIconByName("IconShow");
+            hideShowMenuButton.GetComponent<ButtonConfigHelper>().SetQuadIcon(iconShow);
         }
         else
         {
