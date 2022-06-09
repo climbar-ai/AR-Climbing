@@ -8,13 +8,12 @@ using System.Linq;
 using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.XR;
-using UnityEngine.UI;
 using Microsoft.MixedReality.Toolkit.UI;
 using System.Collections;
 using TMPro;
 
 [RequireComponent(typeof(SpatialAnchorManager))]
-public class AzureSpatialAnchorsScript : MonoBehaviour
+public class AzureSpatialAnchors : MonoBehaviour
 {
     /// <summary>
     /// Used to distinguish short taps and long taps
@@ -65,6 +64,12 @@ public class AzureSpatialAnchorsScript : MonoBehaviour
     /// </summary>
     public GameObject holdHoverScript;
 
+    /// <summary>
+    /// Progress indicator object
+    /// </summary>
+    [SerializeField]
+    private GameObject indicatorObject;
+
     // <Start>
     // Start is called before the first frame update
     void Start()
@@ -75,6 +80,7 @@ public class AzureSpatialAnchorsScript : MonoBehaviour
         _spatialAnchorManager.AnchorLocated += SpatialAnchorManager_AnchorLocated;
         editingMode = EditingMode.Move;
         GameObject.Find("ToggleEditorMode").GetComponentInChildren<TextMeshPro>().text = "Mode: Move";
+        indicatorObject.SetActive(false);
     }
     // </Start>
 
@@ -113,8 +119,6 @@ public class AzureSpatialAnchorsScript : MonoBehaviour
                                         var startPoint = p.Position;
                                         var endPoint = p.Result.Details.Point;
                                         var hitObject = p.Result.Details.Object;
-
-                                        Debug.Log("short tap");
 
                                         ShortTap(endPoint);
                                     }
@@ -179,7 +183,6 @@ public class AzureSpatialAnchorsScript : MonoBehaviour
     }
     // </Update>
 
-
     // <ShortTap>
     /// <summary>
     /// Called when a user is air tapping for a short time 
@@ -187,13 +190,17 @@ public class AzureSpatialAnchorsScript : MonoBehaviour
     /// <param name="handPosition">Location where tap was registered</param>
     private async void ShortTap(Vector3 handPosition)
     {
+        Debug.Log("ShortTap");
+
         await _spatialAnchorManager.StartSessionAsync();
-        if (!IsAnchorNearby(handPosition, out GameObject anchorGameObject) && editingMode == EditingMode.Move)
+        bool anchorNearby = IsAnchorNearby(handPosition, out GameObject anchorGameObject);
+
+        if (!anchorNearby && editingMode == EditingMode.Move)
         {
             //No Anchor Nearby, start session and create an anchor
             await CreateAnchor(handPosition);
         }
-        else if (editingMode == EditingMode.Delete)
+        else if (anchorNearby && editingMode == EditingMode.Delete)
         {
             //Delete nearby Anchor
             DeleteAnchor(anchorGameObject);
@@ -209,10 +216,6 @@ public class AzureSpatialAnchorsScript : MonoBehaviour
     {
         if (editingMode == EditingMode.Delete)
         {
-            //Color originalColor = GUI.skin.settings.cursorColor;
-            //GUI.skin.settings.cursorColor = Color.blue;
-            //Cursor.SetCursor(Texture2D.blackTexture, Vector2.zero, CursorMode.Auto);
-
             if (_spatialAnchorManager.IsSessionStarted)
             {
                 // Stop Session and remove all GameObjects. This does not delete the Anchors in the cloud
@@ -226,7 +229,6 @@ public class AzureSpatialAnchorsScript : MonoBehaviour
                 await _spatialAnchorManager.StartSessionAsync();
                 LocateAnchor();
             }
-            //GUI.skin.settings.cursorColor = originalColor;
         }
     }
     // </LongTap>
@@ -284,6 +286,7 @@ public class AzureSpatialAnchorsScript : MonoBehaviour
     }
     // </IsAnchorNearby>
 
+    // <HoldOnHoverStartedHandler>
     /// <summary>
     /// OnHoverStarted handler for hold GameObject.
     /// Changes the color.
@@ -295,7 +298,9 @@ public class AzureSpatialAnchorsScript : MonoBehaviour
         MeshRenderer m_Renderer = hold.GetComponent<MeshRenderer>();
         m_Renderer.material.color = Color.red;
     }
+    // </HoldOnHoverStartedHandler>
 
+    // <HoldOnHoverExitedHandler>
     /// <summary>
     /// OnHoverExited handler for hold GameObjects.
     /// Changes the color.
@@ -307,22 +312,21 @@ public class AzureSpatialAnchorsScript : MonoBehaviour
         MeshRenderer m_Renderer = hold.GetComponent<MeshRenderer>();
         m_Renderer.material.color = Color.green;
     }
+    // </HoldOnHoverExitedHandler>
 
-    private IEnumerator DisableCoroutine()
-    {
-        yield return null;
-        Microsoft.MixedReality.Toolkit.CoreServices.InputSystem.Disable();
-    }
-
-    private IEnumerator EnableCoroutine()
-    {
-        yield return null;
-        Microsoft.MixedReality.Toolkit.CoreServices.InputSystem.Enable();
-    }
-
+    // <HoldOnManipulationEndedHandler>
+    /// <summary>
+    /// OnManipulationEndedHandler for GameObject.
+    /// Saves final position.
+    /// </summary>
+    /// <param name="eventData"></param>
+    /// <param name="currentAnchorGameObject"></param>
     private async void HoldOnManipulationEndedHandler(ManipulationEventData eventData, GameObject currentAnchorGameObject)
     {
-        Debug.Log("HoldOnManipulationEnded");
+        Debug.Log($"HoldOnManipulationEnded");
+
+        // open loader
+        indicatorObject.SetActive(true);
 
         // Temporarily disable MRTK input because this function is async and could be called in quick succession with race issues.  Last answer here: https://stackoverflow.com/questions/56757620/how-to-temporarly-disable-mixedrealitytoolkit-inputsystem
         StartCoroutine(DisableCoroutine());
@@ -404,76 +408,16 @@ public class AzureSpatialAnchorsScript : MonoBehaviour
             Debug.LogException(exception);
         }
 
+        // turn on MRTK inputs
         StartCoroutine(EnableCoroutine());
 
         // the gaze pointer comes back along with hand pointer so we disable the gaze pointer: https://docs.microsoft.com/en-us/windows/mixed-reality/mrtk-unity/mrtk2/features/input/pointers?view=mrtkunity-2021-05#disable-pointers
-        PointerUtils.SetGazePointerBehavior(PointerBehavior.AlwaysOff); 
+        PointerUtils.SetGazePointerBehavior(PointerBehavior.AlwaysOff); // gives a warning concerning WindowsMixedReality inputs but so far seems OK to ignore
 
-        // Apparenlty we can't update a SpatialAnchor yet: https://github.com/Azure/azure-spatial-anchors-samples/issues/58
-        //CloudNativeAnchor cloudNativeAnchor = newGameObject.GetComponent<CloudNativeAnchor>();
-        //Debug.Log(cloudNativeAnchor);
-        //Debug.Log(cloudNativeAnchor.transform.position);
-        //CloudSpatialAnchor cloudSpatialAnchor = cloudNativeAnchor.CloudAnchor;
-
-        ////Debug.Log($"ASA - Deleting cloud anchor: {cloudSpatialAnchor.Identifier}");
-
-        //////Request Deletion of Cloud Anchor
-        ////try
-        ////{
-        ////    await _spatialAnchorManager.DeleteAnchorAsync(cloudSpatialAnchor);
-        ////    DestroyImmediate(cloudNativeAnchor);
-        ////}
-        ////catch (Exception exception)
-        ////{
-        ////    Debug.Log("ASA - Failed to delete anchor: " + exception.ToString());
-        ////    Debug.LogException(exception);
-        ////}
-
-        ////Debug.Log(hold.GetComponent<CloudNativeAnchor>());
-
-        //////Remove local references
-        ////_createdAnchorIDs.Remove(cloudSpatialAnchor.Identifier);
-
-        ////Create new ASA component based on hold's updated position
-        ////Add and configure ASA components
-        //cloudNativeAnchor = hold.AddComponent<CloudNativeAnchor>();
-        //Debug.Log(cloudNativeAnchor);
-        //Debug.Log(cloudNativeAnchor.transform.position);
-        //await cloudNativeAnchor.NativeToCloud();
-        //cloudSpatialAnchor = cloudNativeAnchor.CloudAnchor;
-        //cloudSpatialAnchor.Expiration = DateTimeOffset.Now.AddDays(3);
-
-        ////Collect Environment Data
-        //while (!_spatialAnchorManager.IsReadyForCreate)
-        //{
-        //    float createProgress = _spatialAnchorManager.SessionStatus.RecommendedForCreateProgress;
-        //    Debug.Log($"ASA - Move your device to capture more environment data: {createProgress:0%}");
-        //}
-
-        //Debug.Log($"ASA - Saving cloud anchor... ");
-
-        //try
-        //{
-        //    // Now that the cloud spatial anchor has been prepared, we can try the actual save here.
-        //    await _spatialAnchorManager.CreateAnchorAsync(cloudSpatialAnchor);
-
-        //    bool saveSucceeded = cloudSpatialAnchor != null;
-        //    if (!saveSucceeded)
-        //    {
-        //        Debug.LogError("ASA - Failed to save, but no exception was thrown.");
-        //        return;
-        //    }
-
-        //    Debug.Log($"ASA - Saved cloud anchor with ID: {cloudSpatialAnchor.Identifier}");
-        //    _createdAnchorIDs.Add(cloudSpatialAnchor.Identifier);
-        //    hold.GetComponent<MeshRenderer>().material.color = Color.green;
-        //}
-        //catch (Exception exception)
-        //{
-        //    Debug.Log("ASA - Failed to save anchor: " + exception.ToString());
-        //    Debug.LogException(exception);
-        //}
+        // close loader
+        indicatorObject.SetActive(false);
     }
+    // </HoldOnManipulationEndedHandler>
 
     // <CreateAnchor>
     /// <summary>
@@ -483,6 +427,8 @@ public class AzureSpatialAnchorsScript : MonoBehaviour
     /// <returns>Async Task</returns>
     private async Task CreateAnchor(Vector3 position)
     {
+        Debug.Log($"CreateAnchor");
+
         //Create Anchor GameObject. We will use ASA to save the position and the rotation of this GameObject.
         if (!InputDevices.GetDeviceAtXRNode(XRNode.Head).TryGetFeatureValue(CommonUsages.devicePosition, out Vector3 headPosition))
         {
@@ -491,12 +437,7 @@ public class AzureSpatialAnchorsScript : MonoBehaviour
 
         Quaternion orientationTowardsHead = Quaternion.LookRotation(position - headPosition, Vector3.up);
 
-        //GameObject anchorGameObject = GameObject.CreatePrimitive(PrimitiveType.Cube);
-        //GameObject hoverScript = Instantiate(holdHoverScript);
         GameObject anchorGameObject = Instantiate(hold);
-        //hoverScript.GetComponent<onHoldHover>().m_GameObject = anchorGameObject;
-        //anchorGameObject.GetComponent<Interactable>().OnFocusEnter;
-        Debug.Log("here");
         anchorGameObject.GetComponent<MeshRenderer>().material.shader = Shader.Find("Legacy Shaders/Diffuse");
         anchorGameObject.transform.position = position;
         anchorGameObject.transform.rotation = orientationTowardsHead;
@@ -566,7 +507,7 @@ public class AzureSpatialAnchorsScript : MonoBehaviour
         }
         catch (Exception exception)
         {
-            Debug.Log("ASA - Failed to save anchor: " + exception.ToString());
+            Debug.Log($"ASA - Failed to save anchor: " + exception.ToString());
             Debug.LogException(exception);
         }
     }
@@ -609,7 +550,6 @@ public class AzureSpatialAnchorsScript : MonoBehaviour
                 CloudSpatialAnchor cloudSpatialAnchor = args.Anchor;
 
                 //Create GameObject
-                //GameObject anchorGameObject = GameObject.CreatePrimitive(PrimitiveType.Cube);
                 GameObject anchorGameObject = Instantiate(hold);
                 anchorGameObject.transform.localScale = Vector3.one * 0.1f;
                 anchorGameObject.GetComponent<MeshRenderer>().material.shader = Shader.Find("Legacy Shaders/Diffuse");
@@ -676,10 +616,12 @@ public class AzureSpatialAnchorsScript : MonoBehaviour
     }
     // </DeleteAnchor>
 
+    // <ToggleEditingMode>
+    /// <summary>
+    /// Toggles editing mode between Move and Delete
+    /// </summary>
     public void ToggleEditingMode()
     {
-        Debug.Log(editingMode);
-
         if (editingMode == EditingMode.Move)
         {
             editingMode = EditingMode.Delete;
@@ -687,7 +629,7 @@ public class AzureSpatialAnchorsScript : MonoBehaviour
             // make holds unmovable
             foreach (var anchorGameObject in _foundOrCreatedAnchorGameObjects)
             {
-                Debug.Log("Disabling Manipulation");
+                Debug.Log($"Disabling Manipulation");
                 // disable manipulation scripts if attached
                 if (anchorGameObject.GetComponent<NearInteractionGrabbable>() != null)
                 {
@@ -708,7 +650,7 @@ public class AzureSpatialAnchorsScript : MonoBehaviour
             foreach (var anchorGameObject in _foundOrCreatedAnchorGameObjects)
             {
                 // enable manipulation scripts
-                Debug.Log("Enabling Manipulation");
+                Debug.Log($"Enabling Manipulation");
                 anchorGameObject.GetComponent<NearInteractionGrabbable>().enabled = true;
                 anchorGameObject.GetComponent<ObjectManipulator>().enabled = true;
             }
@@ -716,7 +658,9 @@ public class AzureSpatialAnchorsScript : MonoBehaviour
             GameObject.Find("ToggleEditorMode").GetComponentInChildren<TextMeshPro>().text = "Mode: Move";
         }
     }
+    // </ToggleEditingMode>
 
+    // <changeColorDelayed>
     /// <summary>
     /// Change color of game object.
     /// Used in delayed fashion.
@@ -727,10 +671,44 @@ public class AzureSpatialAnchorsScript : MonoBehaviour
         yield return new WaitForSeconds(time);
         gameObject.GetComponent<MeshRenderer>().material.color = color;
     }
+    // </changeColorDelayed>
 
+    // <destroyObjectDelayed>
+    /// <summary>
+    /// Destroy object.
+    /// Used in delayed fashion e.g. when removing long tap's sphere object created for user feedback
+    /// </summary>
+    /// <param name="gameObject"></param>
+    /// <param name="time"></param>
+    /// <returns></returns>
     private IEnumerator destroyObjectDelayed(GameObject gameObject, float time)
     {
         yield return new WaitForSeconds(time);
         Destroy(gameObject);
     }
+    // </destroyObjectDelayed>
+
+    // <DisableCoroutine>
+    /// <summary>
+    /// Disable MRTK input 
+    /// </summary>
+    /// <returns></returns>
+    private IEnumerator DisableCoroutine()
+    {
+        yield return null;
+        Microsoft.MixedReality.Toolkit.CoreServices.InputSystem.Disable();
+    }
+    // </DisableCoroutine>
+
+    // <EnableCoroutine>
+    /// <summary>
+    /// Enable MRTK input
+    /// </summary>
+    /// <returns></returns>
+    private IEnumerator EnableCoroutine()
+    {
+        yield return null;
+        Microsoft.MixedReality.Toolkit.CoreServices.InputSystem.Enable();
+    }
+    // </EnableCoroutine>
 }

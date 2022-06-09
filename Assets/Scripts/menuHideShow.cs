@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class menuHideShow : MonoBehaviour
+public class MenuHideShow : MonoBehaviour
 {
     private GameObject toggleMesh, toggleEditorMode, hideShowMenuButton;
 

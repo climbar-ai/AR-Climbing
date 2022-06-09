@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using System;
 
-public class meshControls : MonoBehaviour
+public class MeshControls : MonoBehaviour
 {
     private bool showMesh;
 
