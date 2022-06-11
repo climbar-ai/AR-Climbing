@@ -11,6 +11,7 @@ using UnityEngine.XR;
 using Microsoft.MixedReality.Toolkit.UI;
 using System.Collections;
 using TMPro;
+using Photon.Pun;
 
 [RequireComponent(typeof(SpatialAnchorManager))]
 public class AzureSpatialAnchors : MonoBehaviour
@@ -62,7 +63,12 @@ public class AzureSpatialAnchors : MonoBehaviour
     /// <summary>
     /// hold hover script game object
     /// </summary>
-    public GameObject holdHoverScript;
+    //public GameObject holdHoverScript;
+
+    /// <summary>
+    /// sphere prefab for long tap user feedback
+    /// </summary>
+    public GameObject longTapSphere;
 
     /// <summary>
     /// Progress indicator object
@@ -159,12 +165,13 @@ public class AzureSpatialAnchors : MonoBehaviour
                                                 var hitObject = p.Result.Details.Object;
 
                                                 //Quaternion orientationTowardsHead = Quaternion.LookRotation(handPosition - headPosition, Vector3.up);
-                                                GameObject gameObject = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-                                                gameObject.GetComponent<MeshRenderer>().material.shader = Shader.Find("Legacy Shaders/Diffuse");
+                                                //GameObject gameObject = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+                                                GameObject gameObject = PhotonNetwork.Instantiate(longTapSphere.name, endPoint, Quaternion.identity);
+                                                //gameObject.GetComponent<MeshRenderer>().material.shader = Shader.Find("Legacy Shaders/Diffuse");
                                                 gameObject.transform.position = endPoint;
                                                 gameObject.transform.rotation = Quaternion.identity;
                                                 gameObject.transform.localScale = Vector3.one * 0.05f;
-                                                gameObject.GetComponent<MeshRenderer>().material.color = Color.blue;
+                                                //gameObject.GetComponent<MeshRenderer>().material.color = Color.blue;
 
                                                 StartCoroutine(destroyObjectDelayed(gameObject, .2f));
                                             }
@@ -241,7 +248,8 @@ public class AzureSpatialAnchors : MonoBehaviour
     {
         foreach (var anchorGameObject in _foundOrCreatedAnchorGameObjects)
         {
-            Destroy(anchorGameObject);
+            //Destroy(anchorGameObject);
+            PhotonNetwork.Destroy(anchorGameObject);
         }
         _foundOrCreatedAnchorGameObjects.Clear();
     }
@@ -331,7 +339,8 @@ public class AzureSpatialAnchors : MonoBehaviour
         // Temporarily disable MRTK input because this function is async and could be called in quick succession with race issues.  Last answer here: https://stackoverflow.com/questions/56757620/how-to-temporarly-disable-mixedrealitytoolkit-inputsystem
         StartCoroutine(DisableCoroutine());
 
-        GameObject newAnchorGameObject = Instantiate(hold);
+        //GameObject newAnchorGameObject = Instantiate(hold);
+        GameObject newAnchorGameObject = PhotonNetwork.Instantiate(hold.name, eventData.ManipulationSource.transform.position, eventData.ManipulationSource.transform.rotation);
         newAnchorGameObject.GetComponent<MeshRenderer>().material.shader = Shader.Find("Legacy Shaders/Diffuse");
         newAnchorGameObject.transform.position = eventData.ManipulationSource.transform.position;
         newAnchorGameObject.transform.rotation = eventData.ManipulationSource.transform.rotation;
@@ -437,7 +446,8 @@ public class AzureSpatialAnchors : MonoBehaviour
 
         Quaternion orientationTowardsHead = Quaternion.LookRotation(position - headPosition, Vector3.up);
 
-        GameObject anchorGameObject = Instantiate(hold);
+        //GameObject anchorGameObject = Instantiate(hold);
+        GameObject anchorGameObject = PhotonNetwork.Instantiate(hold.name, position, orientationTowardsHead);
         anchorGameObject.GetComponent<MeshRenderer>().material.shader = Shader.Find("Legacy Shaders/Diffuse");
         anchorGameObject.transform.position = position;
         anchorGameObject.transform.rotation = orientationTowardsHead;
@@ -550,7 +560,8 @@ public class AzureSpatialAnchors : MonoBehaviour
                 CloudSpatialAnchor cloudSpatialAnchor = args.Anchor;
 
                 //Create GameObject
-                GameObject anchorGameObject = Instantiate(hold);
+                //GameObject anchorGameObject = Instantiate(hold);
+                GameObject anchorGameObject = PhotonNetwork.Instantiate(hold.name, Vector3.zero, Quaternion.identity);
                 anchorGameObject.transform.localScale = Vector3.one * 0.1f;
                 anchorGameObject.GetComponent<MeshRenderer>().material.shader = Shader.Find("Legacy Shaders/Diffuse");
                 anchorGameObject.GetComponent<MeshRenderer>().material.color = Color.blue;
@@ -610,7 +621,8 @@ public class AzureSpatialAnchors : MonoBehaviour
         //Remove local references
         _createdAnchorIDs.Remove(cloudSpatialAnchor.Identifier);
         _foundOrCreatedAnchorGameObjects.Remove(anchorGameObject);
-        Destroy(anchorGameObject);
+        //Destroy(anchorGameObject);
+        PhotonNetwork.Destroy(anchorGameObject);
 
         Debug.Log($"ASA - Cloud anchor deleted!");
     }
@@ -684,7 +696,8 @@ public class AzureSpatialAnchors : MonoBehaviour
     private IEnumerator destroyObjectDelayed(GameObject gameObject, float time)
     {
         yield return new WaitForSeconds(time);
-        Destroy(gameObject);
+        //Destroy(gameObject);
+        PhotonNetwork.Destroy(gameObject);
     }
     // </destroyObjectDelayed>
 
