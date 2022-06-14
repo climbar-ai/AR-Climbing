@@ -126,9 +126,12 @@ public class AzureSpatialAnchors : MonoBehaviour
                                         var endPoint = p.Result.Details.Point;
                                         var hitObject = p.Result.Details.Object;
 
-                                        ShortTap(endPoint);
+                                        // we need the surface normal of the mesh we want to place the hold on
+                                        if (Physics.Raycast(startPoint, endPoint-startPoint, out var hit)) // check if successful before calling ShortTap
+                                        {
+                                            ShortTap(endPoint, hit.normal);
+                                        }
                                     }
-
                                 }
                             }
                         }
@@ -195,7 +198,7 @@ public class AzureSpatialAnchors : MonoBehaviour
     /// Called when a user is air tapping for a short time 
     /// </summary>
     /// <param name="handPosition">Location where tap was registered</param>
-    private async void ShortTap(Vector3 handPosition)
+    private async void ShortTap(Vector3 handPosition, Vector3 surfaceNormal)
     {
         Debug.Log("ShortTap");
 
@@ -205,7 +208,7 @@ public class AzureSpatialAnchors : MonoBehaviour
         if (!anchorNearby && editingMode == EditingMode.Move)
         {
             //No Anchor Nearby, start session and create an anchor
-            await CreateAnchor(handPosition);
+            await CreateAnchor(handPosition, surfaceNormal);
         }
         else if (anchorNearby && editingMode == EditingMode.Delete)
         {
@@ -434,7 +437,7 @@ public class AzureSpatialAnchors : MonoBehaviour
     /// </summary>
     /// <param name="position">Position where Azure Spatial Anchor will be created</param>
     /// <returns>Async Task</returns>
-    private async Task CreateAnchor(Vector3 position)
+    private async Task CreateAnchor(Vector3 position, Vector3 surfaceNormal)
     {
         Debug.Log($"CreateAnchor");
 
@@ -444,13 +447,13 @@ public class AzureSpatialAnchors : MonoBehaviour
             headPosition = Vector3.zero;
         }
 
-        Quaternion orientationTowardsHead = Quaternion.LookRotation(position - headPosition, Vector3.up);
+        Quaternion normalOrientation = Quaternion.LookRotation(-surfaceNormal, Vector3.up);
 
         //GameObject anchorGameObject = Instantiate(hold);
-        GameObject anchorGameObject = PhotonNetwork.Instantiate(hold.name, position, orientationTowardsHead);
+        GameObject anchorGameObject = PhotonNetwork.Instantiate(hold.name, position, normalOrientation);
         anchorGameObject.GetComponent<MeshRenderer>().material.shader = Shader.Find("Legacy Shaders/Diffuse");
         anchorGameObject.transform.position = position;
-        anchorGameObject.transform.rotation = orientationTowardsHead;
+        anchorGameObject.transform.rotation = normalOrientation;
         anchorGameObject.transform.localScale = Vector3.one * 0.1f;
 
         //Add and configure ASA components
@@ -724,4 +727,9 @@ public class AzureSpatialAnchors : MonoBehaviour
         Microsoft.MixedReality.Toolkit.CoreServices.InputSystem.Enable();
     }
     // </EnableCoroutine>
+
+    public void scrollHoldMenuClick(GameObject go)
+    {
+        Debug.Log(go);
+    }
 }
