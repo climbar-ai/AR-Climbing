@@ -58,7 +58,7 @@ public class AzureSpatialAnchors : MonoBehaviour
     /// <summary>
     /// hold prefab
     /// </summary>
-    public GameObject hold;
+    private string hold;
 
     /// <summary>
     /// hold hover script game object
@@ -343,12 +343,11 @@ public class AzureSpatialAnchors : MonoBehaviour
         StartCoroutine(DisableCoroutine());
 
         //GameObject newAnchorGameObject = Instantiate(hold);
-        GameObject newAnchorGameObject = PhotonNetwork.Instantiate(hold.name, eventData.ManipulationSource.transform.position, eventData.ManipulationSource.transform.rotation);
+        GameObject newAnchorGameObject = PhotonNetwork.Instantiate(hold, eventData.ManipulationSource.transform.position, eventData.ManipulationSource.transform.rotation);
         newAnchorGameObject.GetComponent<MeshRenderer>().material.shader = Shader.Find("Legacy Shaders/Diffuse");
         newAnchorGameObject.transform.position = eventData.ManipulationSource.transform.position;
         newAnchorGameObject.transform.rotation = eventData.ManipulationSource.transform.rotation;
         newAnchorGameObject.transform.localScale = eventData.ManipulationSource.transform.localScale;
-        Debug.Log(hold.transform.position);
 
         DeleteAnchor(currentAnchorGameObject);
 
@@ -450,7 +449,7 @@ public class AzureSpatialAnchors : MonoBehaviour
         Quaternion normalOrientation = Quaternion.LookRotation(-surfaceNormal, Vector3.up);
 
         //GameObject anchorGameObject = Instantiate(hold);
-        GameObject anchorGameObject = PhotonNetwork.Instantiate(hold.name, position, normalOrientation);
+        GameObject anchorGameObject = PhotonNetwork.Instantiate(hold, position, normalOrientation);
         anchorGameObject.GetComponent<MeshRenderer>().material.shader = Shader.Find("Legacy Shaders/Diffuse");
         anchorGameObject.transform.position = position;
         anchorGameObject.transform.rotation = normalOrientation;
@@ -564,7 +563,7 @@ public class AzureSpatialAnchors : MonoBehaviour
 
                 //Create GameObject
                 //GameObject anchorGameObject = Instantiate(hold);
-                GameObject anchorGameObject = PhotonNetwork.Instantiate(hold.name, Vector3.zero, Quaternion.identity);
+                GameObject anchorGameObject = PhotonNetwork.Instantiate(hold, Vector3.zero, Quaternion.identity);
                 anchorGameObject.transform.localScale = Vector3.one * 0.1f;
                 anchorGameObject.GetComponent<MeshRenderer>().material.shader = Shader.Find("Legacy Shaders/Diffuse");
                 anchorGameObject.GetComponent<MeshRenderer>().material.color = Color.blue;
@@ -731,5 +730,10 @@ public class AzureSpatialAnchors : MonoBehaviour
     public void scrollHoldMenuClick(GameObject go)
     {
         Debug.Log(go);
+        if (go != null)
+        {
+            // PhotonNetwork.PrefabPool lets us refer to prefabs by name under Resources folder without having to manually add them to the ResourceCache: https://forum.unity.com/threads/solved-photon-instantiating-prefabs-without-putting-them-in-a-resources-folder.293853/
+            hold = $"{go.name}";
+        }
     }
 }

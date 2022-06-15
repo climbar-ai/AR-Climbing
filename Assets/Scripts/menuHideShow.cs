@@ -6,16 +6,13 @@ using UnityEngine.UI;
 
 public class MenuHideShow : MonoBehaviour
 {
-    private GameObject toggleMesh, toggleEditorMode, hideShowMenuButton;
+    public GameObject toggleMesh, toggleEditorMode, hideShowMenuButton, hideShowScrollingHoldMenu;
 
     private bool show;
 
     void Start()
     {
         show = true;
-        toggleMesh = GameObject.Find("ToggleMesh");
-        toggleEditorMode = GameObject.Find("ToggleEditorMode");
-        hideShowMenuButton = GameObject.Find("HideShowMenu");
     }
 
     public void hideShowMenu()
@@ -24,6 +21,7 @@ public class MenuHideShow : MonoBehaviour
         {
             toggleMesh.SetActive(false);
             toggleEditorMode.SetActive(false);
+            hideShowScrollingHoldMenu.SetActive(false);
             show = false;
 
             hideShowMenuButton.GetComponent<ButtonConfigHelper>().SetQuadIconByName("IconShow");
@@ -38,6 +36,7 @@ public class MenuHideShow : MonoBehaviour
         {
             toggleMesh.SetActive(true);
             toggleEditorMode.SetActive(true);
+            hideShowScrollingHoldMenu.SetActive(true);
             show = true;
 
             hideShowMenuButton.GetComponent<ButtonConfigHelper>().SetQuadIconByName("IconHide");

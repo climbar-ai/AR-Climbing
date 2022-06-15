@@ -9,9 +9,7 @@ namespace Scripts
         public static PhotonRoom Room;
 
         [SerializeField] private GameObject photonUserPrefab = default;
-        [SerializeField] private GameObject roverExplorerPrefab = default;
         [SerializeField] private GameObject longTapSpherePrefab = default;
-        //[SerializeField] private Transform roverExplorerLocation = default;
 
         // private PhotonView pv;
         private Player[] photonPlayers;
@@ -64,8 +62,6 @@ namespace Scripts
             if (PhotonNetwork.PrefabPool is DefaultPool pool)
             {
                 if (photonUserPrefab != null) pool.ResourceCache.Add(photonUserPrefab.name, photonUserPrefab);
-
-                if (roverExplorerPrefab != null) pool.ResourceCache.Add(roverExplorerPrefab.name, roverExplorerPrefab);
 
                 if (longTapSpherePrefab != null) pool.ResourceCache.Add(longTapSpherePrefab.name, longTapSpherePrefab);
             }
