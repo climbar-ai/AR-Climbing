@@ -13,6 +13,7 @@ using System.Collections;
 using TMPro;
 using Photon.Pun;
 using Microsoft.MixedReality.Toolkit.Utilities.Solvers;
+using UnityEngine.Events;
 
 [RequireComponent(typeof(SpatialAnchorManager))]
 public class AzureSpatialAnchors : MonoBehaviour
@@ -77,6 +78,8 @@ public class AzureSpatialAnchors : MonoBehaviour
     [SerializeField]
     private GameObject indicatorObject;
 
+    private UnityEvent stoppedPlacement;
+
     // <Start>
     // Start is called before the first frame update
     void Start()
@@ -88,6 +91,7 @@ public class AzureSpatialAnchors : MonoBehaviour
         editingMode = EditingMode.Move;
         GameObject.Find("ToggleEditorMode").GetComponentInChildren<TextMeshPro>().text = "Mode: Move";
         indicatorObject.SetActive(false);
+        //stoppedPlacement.AddListener(HoldOnPlacingStopped);
     }
     // </Start>
 
@@ -217,20 +221,22 @@ public class AzureSpatialAnchors : MonoBehaviour
             //anchorGameObject.GetComponent<TapToPlace>().enabled = !anchorGameObject.GetComponent<TapToPlace>().enabled;
             bool isTappingToPlace = anchorGameObject.GetComponent<HoldData>().isTappingToPlace;
             anchorGameObject.GetComponent<HoldData>().isTappingToPlace = !anchorGameObject.GetComponent<HoldData>().isTappingToPlace;
-            TapToPlace ttp = anchorGameObject.GetComponent<TapToPlace>();
-            //SurfaceMagnetism sm = anchorGameObject.GetComponent<SurfaceMagnetism>();
+            //TapToPlace ttp = anchorGameObject.GetComponent<TapToPlace>();
+            SurfaceMagnetism sm = anchorGameObject.EnsureComponent<SurfaceMagnetism>();
             Debug.Log("isTappingToPlace:");
             Debug.Log(isTappingToPlace);
             Debug.Log(anchorGameObject.transform.rotation);
             if (isTappingToPlace)
             {
-                ttp.StopPlacement();
-                //sm.enabled = false;
+                //ttp.StopPlacement();
+                sm.enabled = false;
+                //stoppedPlacement.Invoke();
+                await HoldOnPlacingStopped(anchorGameObject);
             }
             else
             {
-                ttp.StartPlacement();
-                //sm.enabled = true;
+                //ttp.StartPlacement();
+                sm.enabled = true;
             }
         }
         else if (anchorNearby && editingMode == EditingMode.Delete)
@@ -327,7 +333,7 @@ public class AzureSpatialAnchors : MonoBehaviour
         Debug.Log("HoldOnPlacingStarted");
         Debug.Log(go);
     }
-    private async void HoldOnPlacingStopped(GameObject go)
+    private async Task HoldOnPlacingStopped(GameObject go)
     {
         Debug.Log("HoldOnPlacingStopped");
         Debug.Log(go);
@@ -916,10 +922,10 @@ public class AzureSpatialAnchors : MonoBehaviour
                 omHandler.OnManipulationStarted.AddListener((eventData) => HoldOnManipulationStartedHandler(eventData, anchorGameObject));
                 omHandler.OnManipulationEnded.AddListener((eventData) => HoldOnManipulationEndedHandler(eventData, anchorGameObject));
 
-                //Add TapToPlace event listeners
-                TapToPlace ttp = anchorGameObject.EnsureComponent<TapToPlace>();
-                ttp.OnPlacingStarted.AddListener(() => HoldOnPlacingStarted(anchorGameObject));
-                ttp.OnPlacingStopped.AddListener(() => HoldOnPlacingStopped(anchorGameObject));
+                ////Add TapToPlace event listeners
+                //TapToPlace ttp = anchorGameObject.EnsureComponent<TapToPlace>();
+                //ttp.OnPlacingStarted.AddListener(() => HoldOnPlacingStarted(anchorGameObject));
+                //ttp.OnPlacingStopped.AddListener(() => HoldOnPlacingStopped(anchorGameObject));
 
                 //Set mesh to MeshCollider
                 collider.sharedMesh = mesh;
