@@ -14,6 +14,7 @@ using TMPro;
 using Photon.Pun;
 using Microsoft.MixedReality.Toolkit.Utilities.Solvers;
 using UnityEngine.Events;
+using GK;
 
 [RequireComponent(typeof(SpatialAnchorManager))]
 public class AzureSpatialAnchors : MonoBehaviour
@@ -79,6 +80,23 @@ public class AzureSpatialAnchors : MonoBehaviour
     private GameObject indicatorObject;
 
     /// <summary>
+    /// Hold data and convex hull calculator for in progress mesh
+    /// </summary>
+    private GameObject newGO;
+    //private Mesh newMesh;
+    //Vector3[] newVertices;
+    //Vector2[] newUV;
+    //int[] newTriangles;
+    private List<Vector3> newVerticesList;
+    //private List<float> newUVList;
+    private List<int> newTrianglesList;
+    private List<Vector3> newNormalsList;
+    private List<Vector3> newPointsList;
+    //public GameObject convexHullCalculator;
+    private ConvexHullCalculator convexHullCalculator;
+    Vector3 newGOPos;
+
+    /// <summary>
     /// Signals when user has finished placing object and surface magnetism should turn off for that object
     /// NOTE: doesn't work
     /// </summary>
@@ -97,6 +115,18 @@ public class AzureSpatialAnchors : MonoBehaviour
         indicatorObject.SetActive(false);
         hold = "Hold_1_Simple";
         //stoppedPlacement.AddListener(HoldOnPlacingStopped);
+
+        newGO = new GameObject();
+        //newMesh = new Mesh();
+        newGO.name = "NewGO";
+        //newGO.AddComponent<MeshFilter>().mesh = newMesh;
+        newGO.AddComponent<MeshRenderer>().material.shader = Shader.Find("Legacy Shaders/Diffuse");
+        newGO.GetComponent<MeshRenderer>().material.color = Color.blue;
+        newVerticesList = new List<Vector3>();
+        newPointsList = new List<Vector3>();
+        newTrianglesList = new List<int>();
+        newNormalsList = new List<Vector3>();
+        convexHullCalculator = new ConvexHullCalculator();
     }
     // </Start>
 
@@ -136,11 +166,76 @@ public class AzureSpatialAnchors : MonoBehaviour
                                         var endPoint = p.Result.Details.Point;
                                         var hitObject = p.Result.Details.Object;
 
-                                        // we need the surface normal of the mesh we want to place the hold on
-                                        if (Physics.Raycast(startPoint, endPoint-startPoint, out var hit)) // check if successful before calling ShortTap
+
+                                        
+                                        newPointsList.Add(startPoint);
+                                        if (newPointsList.Count >= 4) // calculator doesn't work for less than 4 points
                                         {
-                                            ShortTap(endPoint, hit.normal);
+                                            // Find centroid of first 4 points and make this the position of the new game object
+                                            if (newPointsList.Count == 4)
+                                            {
+                                                Debug.Log("Finding centroid of starter points");
+                                                var totalX = 0f;
+                                                var totalY = 0f;
+                                                var totalZ = 0f;
+
+                                                foreach (Vector3 pt in newPointsList)
+                                                {
+                                                    totalX += pt.x;
+                                                    totalY += pt.y;
+                                                    totalZ += pt.z;
+                                                }
+                                                var cX = totalX / newPointsList.Count();
+                                                var cY = totalY / newPointsList.Count();
+                                                var cZ = totalZ / newPointsList.Count();
+
+                                                newGOPos = new Vector3(cX, cY, cZ);
+
+                                                Debug.Log("positioning");
+
+                                                newGO.transform.position = newGOPos;
+                                                newGO.transform.rotation = Quaternion.identity;
+                                                newGO.transform.localScale = Vector3.one;
+                                            }
+
+                                            Debug.Log("Calculating Hull");
+                                            convexHullCalculator.GenerateHull(newPointsList, false, ref newVerticesList, ref newTrianglesList, ref newNormalsList);
+
+                                            Debug.Log(String.Format("# verts: {0}", newVerticesList.Count()));
+                                            Debug.Log(String.Format("# tris: {0}", newTrianglesList.Count()));
+                                            Debug.Log(String.Format("# norms: {0}", newNormalsList.Count()));
+
+                                            Mesh newMesh = new Mesh();
+                                            newMesh.SetVertices(newVerticesList);
+                                            newMesh.SetTriangles(newTrianglesList, 0);
+                                            newMesh.SetNormals(newNormalsList);
+
+                                            Debug.Log("setting mesh filter/collider");
+
+                                            newGO.EnsureComponent<MeshFilter>().sharedMesh = newMesh;
+                                            newGO.EnsureComponent<MeshCollider>().sharedMesh = newMesh;
+
+                                            //Mesh oldMesh = newGO.GetComponent<MeshFilter>().mesh;
+                                            //oldMesh.Clear();
+                                            //oldMesh.vertices = newVerticesList.ToArray();
+                                            //newGO.GetComponent<MeshFilter>().mesh = oldMesh;
+                                            //MeshCollider newMC = newGO.AddComponent<MeshCollider>();
+                                            //newMC.convex = true;
+                                            //newMC.sharedMesh = oldMesh;
                                         }
+
+                                        Debug.Log(newPointsList.Count());
+                                        foreach (Vector3 pt in newPointsList)
+                                        {
+                                            Debug.Log(pt);
+                                        }
+                                        Debug.Log("--");
+
+                                        //// we need the surface normal of the mesh we want to place the hold on
+                                        //if (Physics.Raycast(startPoint, endPoint - startPoint, out var hit)) // check if successful before calling ShortTap
+                                        //{
+                                        //    ShortTap(endPoint, hit.normal);
+                                        //}
                                     }
                                 }
                             }
