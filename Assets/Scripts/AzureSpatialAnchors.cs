@@ -146,6 +146,10 @@ public class AzureSpatialAnchors : MonoBehaviour
                     //Stopped Tapping or wasn't tapping
                     if (0f < _tappingTimer[i] && _tappingTimer[i] < 1f)
                     {
+                        if (device.TryGetFeatureValue(CommonUsages.devicePosition, out Vector3 handPosition))
+                        {
+                            Debug.Log(String.Format("Hand Position: (X: {0}, Y: {1}, Z: {2})", handPosition.x.ToString("F4"), handPosition.y.ToString("F4"), handPosition.z.ToString("F4")));
+                        }
                         //User has been tapping for less than 1 sec. Get hand-ray's end position and call ShortTap
                         foreach (var source in CoreServices.InputSystem.DetectedInputSources)
                         {
@@ -158,6 +162,15 @@ public class AzureSpatialAnchors : MonoBehaviour
                                     {
                                         // Ignore near pointers, we only want the rays
                                         Debug.Log("Near Pointer");
+                                        IMixedRealityNearPointer nearPointer = (IMixedRealityNearPointer)p;
+                                        nearPointer.TryGetNearGraspPoint(out Vector3 nearGraspPt);
+                                        Debug.Log(String.Format("Near Grasp Point: (X: {0}, Y: {1}, Z: {2})", nearGraspPt.x.ToString("F4"), nearGraspPt.y.ToString("F4"), nearGraspPt.z.ToString("F4")));
+                                        // Place object at grasp point
+                                        GameObject gameObject = PhotonNetwork.Instantiate(longTapSphere.name, nearGraspPt, Quaternion.identity);
+                                        //gameObject.GetComponent<MeshRenderer>().material.shader = Shader.Find("Legacy Shaders/Diffuse");
+                                        gameObject.transform.position = nearGraspPt;
+                                        gameObject.transform.rotation = Quaternion.identity;
+                                        gameObject.transform.localScale = Vector3.one * 0.05f;
                                         continue;
                                     }
                                     if (p.Result != null)
@@ -167,7 +180,16 @@ public class AzureSpatialAnchors : MonoBehaviour
                                         var hitObject = p.Result.Details.Object;
 
 
-                                        
+                                        Debug.Log(String.Format("(X: {0}, Y: {1}, Z: {2})", startPoint.x.ToString("F4"), startPoint.y.ToString("F4"), startPoint.z.ToString("F4")));
+                                        //Debug.Log(String.Format("(X: {0}, Y: {1}, Z: {2})", endPoint.x.ToString("F4"), endPoint.y.ToString("F4"), endPoint.z.ToString("F4")));
+
+                                        // Place object at position of middle of hand
+                                        //GameObject gameObject = PhotonNetwork.Instantiate(longTapSphere.name, endPoint, Quaternion.identity);
+                                        ////gameObject.GetComponent<MeshRenderer>().material.shader = Shader.Find("Legacy Shaders/Diffuse");
+                                        //gameObject.transform.position = startPoint;
+                                        //gameObject.transform.rotation = Quaternion.identity;
+                                        //gameObject.transform.localScale = Vector3.one * 0.05f;
+
                                         newPointsList.Add(startPoint);
                                         if (newPointsList.Count >= 4) // calculator doesn't work for less than 4 points
                                         {
@@ -184,6 +206,7 @@ public class AzureSpatialAnchors : MonoBehaviour
                                                     totalX += pt.x;
                                                     totalY += pt.y;
                                                     totalZ += pt.z;
+                                                    Debug.Log(String.Format("(pt: {0}, Y: {1}, Z: {2})", pt.x.ToString("F4"), pt.y.ToString("F4"), pt.z.ToString("F4")));
                                                 }
                                                 var cX = totalX / newPointsList.Count();
                                                 var cY = totalY / newPointsList.Count();
@@ -191,10 +214,11 @@ public class AzureSpatialAnchors : MonoBehaviour
 
                                                 newGOPos = new Vector3(cX, cY, cZ);
 
-                                                Debug.Log("positioning");
+                                                Debug.Log(String.Format("(centroid: {0}, Y: {1}, Z: {2})", newGOPos.x.ToString("F4"), newGOPos.y.ToString("F4"), newGOPos.z.ToString("F4")));
 
-                                                newGO.transform.position = newGOPos;
-                                                newGO.transform.rotation = Quaternion.identity;
+                                                newGO.transform.SetParent(transform, false);
+                                                newGO.transform.localPosition = newGOPos;
+                                                newGO.transform.localRotation = Quaternion.identity;
                                                 newGO.transform.localScale = Vector3.one;
                                             }
 
@@ -204,6 +228,11 @@ public class AzureSpatialAnchors : MonoBehaviour
                                             Debug.Log(String.Format("# verts: {0}", newVerticesList.Count()));
                                             Debug.Log(String.Format("# tris: {0}", newTrianglesList.Count()));
                                             Debug.Log(String.Format("# norms: {0}", newNormalsList.Count()));
+
+                                            foreach (Vector3 v in newVerticesList)
+                                            {
+                                                Debug.Log(String.Format("vertex: ({0}, {1}, {2})", v.x.ToString("F4"), v.y.ToString("F4"), v.z.ToString("F4")));
+                                            }
 
                                             Mesh newMesh = new Mesh();
                                             newMesh.SetVertices(newVerticesList);
@@ -225,11 +254,11 @@ public class AzureSpatialAnchors : MonoBehaviour
                                         }
 
                                         Debug.Log(newPointsList.Count());
-                                        foreach (Vector3 pt in newPointsList)
-                                        {
-                                            Debug.Log(pt);
-                                        }
-                                        Debug.Log("--");
+                                        //foreach (Vector3 pt in newPointsList)
+                                        //{
+                                        //    Debug.Log(String.Format("(X: {0}, Y: {1}, Z: {2})", pt.x.ToString("F4"), pt.y.ToString("F4"), pt.z.ToString("F4")));
+                                        //}
+                                        //Debug.Log("--");
 
                                         //// we need the surface normal of the mesh we want to place the hold on
                                         //if (Physics.Raycast(startPoint, endPoint - startPoint, out var hit)) // check if successful before calling ShortTap
