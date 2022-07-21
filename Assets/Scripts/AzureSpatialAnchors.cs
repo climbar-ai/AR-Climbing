@@ -490,7 +490,7 @@ public class AzureSpatialAnchors : MonoBehaviour
         StartCoroutine(DisableCoroutine());
 
         //GameObject newAnchorGameObject = Instantiate(hold);
-        GameObject newAnchorGameObject = PhotonNetwork.Instantiate(go, position, rotation);
+        GameObject newAnchorGameObject = PhotonNetwork.InstantiateRoomObject(go, position, rotation);
         newAnchorGameObject.GetComponent<MeshRenderer>().material.shader = Shader.Find("Legacy Shaders/Diffuse");
         newAnchorGameObject.transform.position = position;
         newAnchorGameObject.transform.rotation = rotation;
@@ -622,7 +622,7 @@ public class AzureSpatialAnchors : MonoBehaviour
 
                 //Create GameObject
                 //GameObject anchorGameObject = Instantiate(hold);
-                GameObject anchorGameObject = PhotonNetwork.Instantiate(hold, Vector3.zero, Quaternion.identity);
+                GameObject anchorGameObject = PhotonNetwork.InstantiateRoomObject(hold, Vector3.zero, Quaternion.identity);
                 anchorGameObject.transform.localScale = Vector3.one * 0.1f;
                 anchorGameObject.GetComponent<MeshRenderer>().material.shader = Shader.Find("Legacy Shaders/Diffuse");
                 anchorGameObject.GetComponent<MeshRenderer>().material.color = Color.blue;
