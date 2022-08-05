@@ -1,5 +1,6 @@
 using Photon.Pun;
 using Photon.Realtime;
+using TMPro;
 using UnityEngine;
 
 namespace Scripts
@@ -10,6 +11,7 @@ namespace Scripts
 
         [SerializeField] private GameObject photonUserPrefab = default;
         [SerializeField] private GameObject longTapSpherePrefab = default;
+        [SerializeField] private GameObject roomStatsDisplay = default;
 
         // private PhotonView pv;
         private Player[] photonPlayers;
@@ -24,6 +26,17 @@ namespace Scripts
             base.OnPlayerEnteredRoom(newPlayer);
             photonPlayers = PhotonNetwork.PlayerList;
             playersInRoom++;
+            roomStatsDisplay.GetComponent<TextMeshPro>().text = $"# Players in room: {playersInRoom}";
+            Debug.Log($"Player, {newPlayer.NickName}, entered room");
+        }
+
+        public override void OnPlayerLeftRoom(Player otherPlayer)
+        {
+            base.OnPlayerLeftRoom(otherPlayer);
+            photonPlayers = PhotonNetwork.PlayerList;
+            playersInRoom--;
+            roomStatsDisplay.GetComponent<TextMeshPro>().text = $"# Players in room: {playersInRoom}";
+            Debug.Log($"Player, {otherPlayer.NickName}, left room");
         }
 
         private void Awake()
@@ -77,6 +90,8 @@ namespace Scripts
             PhotonNetwork.NickName = myNumberInRoom.ToString();
 
             StartGame();
+
+            roomStatsDisplay.GetComponent<TextMeshPro>().text = $"# Players in room: {playersInRoom}";
         }
 
         private void StartGame()
