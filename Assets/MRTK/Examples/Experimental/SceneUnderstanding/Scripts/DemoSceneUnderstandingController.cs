@@ -179,10 +179,11 @@ namespace Microsoft.MixedReality.Toolkit.Experimental.SceneUnderstanding
         /// <returns>A dictionary with the scene objects of the requested type being the values and their ids being the keys.</returns>
         public IReadOnlyDictionary<int, SpatialAwarenessSceneObject> GetSceneObjectsOfType(SpatialAwarenessSurfaceTypes type)
         {
-            if (!observer.SurfaceTypes.IsMaskSet(type))
-            {
-                Debug.LogErrorFormat("The Scene Objects of type {0} are not being observed. You should add {0} to the SurfaceTypes property of the observer in advance.", type);
-            }
+            // wasn't compiling with this
+            //if (!observer.SurfaceTypes.IsMaskSet(type))
+            //{
+            //    Debug.LogErrorFormat("The Scene Objects of type {0} are not being observed. You should add {0} to the SurfaceTypes property of the observer in advance.", type);
+            //}
 
             if (observedSceneObjects.TryGetValue(type, out Dictionary<int, SpatialAwarenessSceneObject> sceneObjects))
             {
@@ -341,12 +342,13 @@ namespace Microsoft.MixedReality.Toolkit.Experimental.SceneUnderstanding
         {
             ToggleObservedSurfaceType(SpatialAwarenessSurfaceTypes.World);
 
-            if (observer.SurfaceTypes.IsMaskSet(SpatialAwarenessSurfaceTypes.World))
-            {
-                // Ensure we requesting meshes
-                observer.RequestMeshData = true;
-                meshesToggle.GetComponent<Interactable>().IsToggled = true;
-            }
+            // wasn't compiling with this
+            //if (observer.SurfaceTypes.IsMaskSet(SpatialAwarenessSurfaceTypes.World))
+            //{
+            //    // Ensure we requesting meshes
+            //    observer.RequestMeshData = true;
+            //    meshesToggle.GetComponent<Interactable>().IsToggled = true;
+            //}
             ClearAndUpdateObserver();
         }
 
@@ -386,13 +388,14 @@ namespace Microsoft.MixedReality.Toolkit.Experimental.SceneUnderstanding
             inferRegionsToggle.IsToggled = observer.InferRegions;
 
             // Filter display
-            platformToggle.IsToggled = observer.SurfaceTypes.IsMaskSet(SpatialAwarenessSurfaceTypes.Platform);
-            wallToggle.IsToggled = observer.SurfaceTypes.IsMaskSet(SpatialAwarenessSurfaceTypes.Wall);
-            floorToggle.IsToggled = observer.SurfaceTypes.IsMaskSet(SpatialAwarenessSurfaceTypes.Floor);
-            ceilingToggle.IsToggled = observer.SurfaceTypes.IsMaskSet(SpatialAwarenessSurfaceTypes.Ceiling);
-            worldToggle.IsToggled = observer.SurfaceTypes.IsMaskSet(SpatialAwarenessSurfaceTypes.World);
-            completelyInferred.IsToggled = observer.SurfaceTypes.IsMaskSet(SpatialAwarenessSurfaceTypes.Inferred);
-            backgroundToggle.IsToggled = observer.SurfaceTypes.IsMaskSet(SpatialAwarenessSurfaceTypes.Background);
+            // wasn't compiling with this
+            //platformToggle.IsToggled = observer.SurfaceTypes.IsMaskSet(SpatialAwarenessSurfaceTypes.Platform);
+            //wallToggle.IsToggled = observer.SurfaceTypes.IsMaskSet(SpatialAwarenessSurfaceTypes.Wall);
+            //floorToggle.IsToggled = observer.SurfaceTypes.IsMaskSet(SpatialAwarenessSurfaceTypes.Floor);
+            //ceilingToggle.IsToggled = observer.SurfaceTypes.IsMaskSet(SpatialAwarenessSurfaceTypes.Ceiling);
+            //worldToggle.IsToggled = observer.SurfaceTypes.IsMaskSet(SpatialAwarenessSurfaceTypes.World);
+            //completelyInferred.IsToggled = observer.SurfaceTypes.IsMaskSet(SpatialAwarenessSurfaceTypes.Inferred);
+            //backgroundToggle.IsToggled = observer.SurfaceTypes.IsMaskSet(SpatialAwarenessSurfaceTypes.Background);
         }
 
         /// <summary>
@@ -435,14 +438,15 @@ namespace Microsoft.MixedReality.Toolkit.Experimental.SceneUnderstanding
 
         private void ToggleObservedSurfaceType(SpatialAwarenessSurfaceTypes surfaceType)
         {
-            if (observer.SurfaceTypes.IsMaskSet(surfaceType))
-            {
-                observer.SurfaceTypes &= ~surfaceType;
-            }
-            else
-            {
-                observer.SurfaceTypes |= surfaceType;
-            }
+            // wasn't compiling with this
+            //if (observer.SurfaceTypes.IsMaskSet(surfaceType))
+            //{
+            //    observer.SurfaceTypes &= ~surfaceType;
+            //}
+            //else
+            //{
+            //    observer.SurfaceTypes |= surfaceType;
+            //}
         }
 
         #endregion Helper Functions

@@ -13,11 +13,13 @@ using System.Collections;
 using TMPro;
 using Photon.Pun;
 using Microsoft.MixedReality.Toolkit.Utilities.Solvers;
-using UnityEngine.Events;
 
 [RequireComponent(typeof(SpatialAnchorManager))]
-public class AzureSpatialAnchors : MonoBehaviour
+public class AzureSpatialAnchors : MonoBehaviourPunCallbacks
 {
+    //[SerializeField]
+    //private GameObject player;
+
     /// <summary>
     /// Used to distinguish short taps and long taps
     /// </summary>
@@ -489,12 +491,20 @@ public class AzureSpatialAnchors : MonoBehaviour
         // Temporarily disable MRTK input because this function is async and could be called in quick succession with race issues.  Last answer here: https://stackoverflow.com/questions/56757620/how-to-temporarly-disable-mixedrealitytoolkit-inputsystem
         StartCoroutine(DisableCoroutine());
 
+        Debug.Log("There");
+
         //GameObject newAnchorGameObject = Instantiate(hold);
-        GameObject newAnchorGameObject = PhotonNetwork.InstantiateRoomObject(go, position, rotation);
+        //GameObject newAnchorGameObject = PhotonNetwork.InstantiateRoomObject(go, position, rotation);
+        GameObject newAnchorGameObject = PhotonNetwork.Instantiate(go, position, rotation);
+
+        Debug.Log(newAnchorGameObject);
+        
         newAnchorGameObject.GetComponent<MeshRenderer>().material.shader = Shader.Find("Legacy Shaders/Diffuse");
         newAnchorGameObject.transform.position = position;
         newAnchorGameObject.transform.rotation = rotation;
         newAnchorGameObject.transform.localScale = localScale;
+
+        Debug.Log("Here");
 
         //Add and configure ASA components
         CloudNativeAnchor cloudNativeAnchor = newAnchorGameObject.AddComponent<CloudNativeAnchor>();
@@ -567,6 +577,9 @@ public class AzureSpatialAnchors : MonoBehaviour
                 newAnchorGameObject.GetComponent<NearInteractionGrabbable>().enabled = false;
                 newAnchorGameObject.GetComponent<ObjectManipulator>().enabled = false;
             }
+
+            // share the created anchorId
+            ShareAzureAnchorIds();
         }
         catch (Exception exception)
         {
@@ -596,7 +609,7 @@ public class AzureSpatialAnchors : MonoBehaviour
             Debug.Log($"ASA - Creating watcher to look for {_createdAnchorIDs.Count} spatial anchors");
             AnchorLocateCriteria anchorLocateCriteria = new AnchorLocateCriteria();
             anchorLocateCriteria.Identifiers = _createdAnchorIDs.ToArray();
-            _spatialAnchorManager.Session.CreateWatcher(anchorLocateCriteria);
+            var watcher = _spatialAnchorManager.Session.CreateWatcher(anchorLocateCriteria);
             Debug.Log($"ASA - Watcher created!");
         }
     }
@@ -622,7 +635,8 @@ public class AzureSpatialAnchors : MonoBehaviour
 
                 //Create GameObject
                 //GameObject anchorGameObject = Instantiate(hold);
-                GameObject anchorGameObject = PhotonNetwork.InstantiateRoomObject(hold, Vector3.zero, Quaternion.identity);
+                //GameObject anchorGameObject = PhotonNetwork.InstantiateRoomObject(hold, Vector3.zero, Quaternion.identity);
+                GameObject anchorGameObject = PhotonNetwork.Instantiate(hold, Vector3.zero, Quaternion.identity);
                 anchorGameObject.transform.localScale = Vector3.one * 0.1f;
                 anchorGameObject.GetComponent<MeshRenderer>().material.shader = Shader.Find("Legacy Shaders/Diffuse");
                 anchorGameObject.GetComponent<MeshRenderer>().material.color = Color.blue;
@@ -662,9 +676,15 @@ public class AzureSpatialAnchors : MonoBehaviour
                 //Set mesh to MeshCollider
                 collider.sharedMesh = mesh;
 
-                // Disable maninpulation scripts since we are in 'Delete' mode
-                anchorGameObject.GetComponent<NearInteractionGrabbable>().enabled = false;
-                anchorGameObject.GetComponent<ObjectManipulator>().enabled = false;
+                // Disable maninpulation scripts if we are in 'Delete' mode
+                if (editingMode == EditingMode.Delete)
+                {
+                    anchorGameObject.GetComponent<NearInteractionGrabbable>().enabled = false;
+                    anchorGameObject.GetComponent<ObjectManipulator>().enabled = false;
+                }
+                //// Disable maninpulation scripts since we are in 'Delete' mode
+                //anchorGameObject.GetComponent<NearInteractionGrabbable>().enabled = false;
+                //anchorGameObject.GetComponent<ObjectManipulator>().enabled = false;
             });
         }
     }
@@ -805,5 +825,62 @@ public class AzureSpatialAnchors : MonoBehaviour
             // PhotonNetwork.PrefabPool lets us refer to prefabs by name under Resources folder without having to manually add them to the ResourceCache: https://forum.unity.com/threads/solved-photon-instantiating-prefabs-without-putting-them-in-a-resources-folder.293853/
             hold = $"{go.name}";
         }
+    }
+
+    private async void restartAnchorWatcher(List<string> anchorIds)
+    {
+        Debug.Log("restartAnchorWatcher");
+        _createdAnchorIDs = anchorIds;
+
+        // there doesn't appear to be a method to simply remove the watcher so we need to stop/restart the session and reattach a new watcher for the updated list of anchorIds
+        if (_spatialAnchorManager.IsSessionStarted)
+        {
+            // Stop Session and remove all GameObjects. This does not delete the Anchors in the cloud
+            _spatialAnchorManager.DestroySession();
+            RemoveAllAnchorGameObjects();
+            Debug.Log("ASA - Stopped Session and removed all Anchor Objects");
+        }
+        
+        //Start session and search for all Anchors previously created
+        await _spatialAnchorManager.StartSessionAsync();
+        LocateAnchor();
+    }
+
+    public void ShareAzureAnchorIds()
+    {
+        Debug.Log("ShareAzureAnchorIds");
+#if UNITY_2020
+        ExitGames.Client.Photon.Hashtable setValue = new ExitGames.Client.Photon.Hashtable();
+        setValue.Add("anchorIDs", _createdAnchorIDs.ToArray());
+        PhotonNetwork.CurrentRoom.SetCustomProperties(setValue);
+        //if (player != null)
+        //    player.GetComponent<PhotonView>().RPC("PunRPC_ShareAzureAnchorIds", RpcTarget.OthersBuffered, _createdAnchorIDs);
+        //else
+        //    Debug.LogError("PV is null");
+#endif
+    }
+
+    public override void OnRoomPropertiesUpdate(ExitGames.Client.Photon.Hashtable propertiesThatChanged)
+    {
+        base.OnRoomPropertiesUpdate(propertiesThatChanged);
+
+        Debug.Log("OnRoomPropertiesUpdate");
+        if (propertiesThatChanged.ContainsKey("anchorIDs"))
+        {
+            String[] anchorIDs = (String[])propertiesThatChanged["anchorIDs"];
+            restartAnchorWatcher(anchorIDs.ToList());
+        }
+    }
+
+    public override void OnEnable()
+    {
+        base.OnEnable();
+        PhotonNetwork.AddCallbackTarget(this);
+    }
+
+    public override void OnDisable()
+    {
+        base.OnDisable();
+        PhotonNetwork.RemoveCallbackTarget(this);
     }
 }

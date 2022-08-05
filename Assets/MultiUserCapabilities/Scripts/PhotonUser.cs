@@ -1,16 +1,19 @@
 using Photon.Pun;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace MultiUserCapabilities
 {
     public class PhotonUser : MonoBehaviour
     {
+        //private GameObject asaScript;
         private PhotonView pv;
         private string username;
 
         private void Start()
         {
             pv = GetComponent<PhotonView>();
+            //asaScript = GameObject.Find("AzureSpatialAnchors");
 
             if (!pv.IsMine) return;
 
@@ -42,5 +45,11 @@ namespace MultiUserCapabilities
             else
                 Debug.LogError("PV is null");
         }
+
+        //[PunRPC]
+        //private async void PunRPC_ShareAzureAnchorIds(List<string> anchorIds)
+        //{
+        //    asaScript.GetComponent<AzureSpatialAnchors>().restartAnchorWatcher(anchorIds);
+        //}
     }
 }

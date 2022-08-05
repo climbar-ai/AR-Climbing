@@ -45,6 +45,8 @@ MonoBehaviour:
   - PunRPC_ToggleExplodedView
   - PunRPC_TogglePlacementHints
   - RespawnSpaceship
+  - Rpc_SetModuleParent
+  - PunRPC_ShareAzureAnchorIds
   DisableAutoOpenWizard: 1
   ShowSettings: 1
   DevRegionSetOnce: 0

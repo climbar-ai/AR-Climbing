@@ -23,6 +23,7 @@ GameObject:
   - component: {fileID: -7087298151885554634}
   - component: {fileID: 7403300017795259568}
   - component: {fileID: 8283919076131219231}
+  - component: {fileID: 6598863843132561944}
   m_Layer: 0
   m_Name: Hold_1_Simple
   m_TagString: Untagged
@@ -174,10 +175,34 @@ MonoBehaviour:
       m_Calls: []
   onHoverEntered:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 6598863843132561944}
+        m_TargetAssemblyTypeName: onHoldHover, Assembly-CSharp
+        m_MethodName: OnHoverOver
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
   onHoverExited:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 6598863843132561944}
+        m_TargetAssemblyTypeName: onHoldHover, Assembly-CSharp
+        m_MethodName: OnHoverExit
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &-647035369062387486
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -357,3 +382,16 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   isTappingToPlace: 0
+--- !u!114 &6598863843132561944
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6804333430780893325}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fc6cf8c1a7569e24f943e2df20dd3147, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_GameObject: {fileID: 6804333430780893325}

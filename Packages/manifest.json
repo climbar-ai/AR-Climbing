@@ -1,16 +1,16 @@
 {
   "dependencies": {
-    "com.microsoft.azure.spatial-anchors-sdk.core": "file:MixedReality/com.microsoft.azure.spatial-anchors-sdk.core-2.12.0.tgz",
+    "com.microsoft.azure.spatial-anchors-sdk.core": "file:MixedReality/com.microsoft.azure.spatial-anchors-sdk.core-2.11.0.tgz",
     "com.microsoft.azure.spatial-anchors-sdk.windows": "file:MixedReality/com.microsoft.azure.spatial-anchors-sdk.windows-2.12.0.tgz",
     "com.microsoft.mixedreality.openxr": "file:MixedReality/com.microsoft.mixedreality.openxr-1.4.0.tgz",
     "com.microsoft.mixedreality.toolkit.examples": "file:MixedReality/com.microsoft.mixedreality.toolkit.examples-2.8.0.tgz",
     "com.microsoft.mixedreality.toolkit.extensions": "file:MixedReality/com.microsoft.mixedreality.toolkit.extensions-2.8.0.tgz",
     "com.microsoft.mixedreality.toolkit.figmabridge": "file:MixedReality/com.microsoft.mixedreality.toolkit.figmabridge-0.1.1.tgz",
-    "com.microsoft.mixedreality.toolkit.foundation": "file:MixedReality/com.microsoft.mixedreality.toolkit.foundation-2.8.0.tgz",
+    "com.microsoft.mixedreality.toolkit.foundation": "file:MixedReality/com.microsoft.mixedreality.toolkit.foundation-2.7.0.tgz",
     "com.microsoft.mixedreality.toolkit.gpustats": "file:MixedReality/com.microsoft.mixedreality.toolkit.gpustats-1.0.3.tgz",
     "com.microsoft.mixedreality.toolkit.micstream": "file:MixedReality/com.microsoft.mixedreality.toolkit.micstream-1.0.0.tgz",
     "com.microsoft.mixedreality.toolkit.planefinding": "file:MixedReality/com.microsoft.mixedreality.toolkit.planefinding-1.0.0.tgz",
-    "com.microsoft.mixedreality.toolkit.standardassets": "file:MixedReality/com.microsoft.mixedreality.toolkit.standardassets-2.8.0.tgz",
+    "com.microsoft.mixedreality.toolkit.standardassets": "file:MixedReality/com.microsoft.mixedreality.toolkit.standardassets-2.7.0.tgz",
     "com.microsoft.mixedreality.toolkit.testutilities": "file:MixedReality/com.microsoft.mixedreality.toolkit.testutilities-2.8.0.tgz",
     "com.microsoft.mixedreality.toolkit.tools": "file:MixedReality/com.microsoft.mixedreality.toolkit.tools-2.8.0.tgz",
     "com.unity.collab-proxy": "1.15.18",
@@ -52,6 +52,10 @@
     "com.unity.modules.video": "1.0.0",
     "com.unity.modules.vr": "1.0.0",
     "com.unity.modules.wind": "1.0.0",
-    "com.unity.modules.xr": "1.0.0"
+    "com.unity.modules.xr": "1.0.0",
+    "com.microsoft.mixedreality.wlt.asa": "file:MixedReality/com.microsoft.mixedreality.wlt.asa-1.5.9.tgz",
+    "com.microsoft.mixedreality.wlt.asa.samples": "file:MixedReality/com.microsoft.mixedreality.wlt.asa.samples-1.5.9.tgz",
+    "com.microsoft.mixedreality.worldlockingsamples": "file:MixedReality/com.microsoft.mixedreality.worldlockingsamples-1.5.9.tgz",
+    "com.microsoft.mixedreality.worldlockingtools": "file:MixedReality/com.microsoft.mixedreality.worldlockingtools-1.5.9.tgz"
   }
 }
