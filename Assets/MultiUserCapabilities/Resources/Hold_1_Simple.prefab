@@ -255,7 +255,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   trackedTargetType: 5
-  trackedHandedness: 3
+  trackedHandness: 3
   trackedHandJoint: 5
   transformOverride: {fileID: 0}
   additionalOffset: {x: 0, y: 0, z: 0}
@@ -349,7 +349,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   handType: 3
   proximityType: 3
-  executionOrder: 0
   constraintOnRotation: 3
   useLocalSpaceForConstraint: 1
 --- !u!114 &7403300017795259568
@@ -366,7 +365,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   handType: 3
   proximityType: 3
-  executionOrder: 0
   constraintOnMovement: -1
   useLocalSpaceForConstraint: 1
 --- !u!114 &8283919076131219231
