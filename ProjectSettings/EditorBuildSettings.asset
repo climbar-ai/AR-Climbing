@@ -11,9 +11,12 @@ EditorBuildSettings:
   - enabled: 0
     path: Assets/Samples/WLT-ASA Samples/1.5.9/WLT-ASA Examples/Scenes/PinTestSofa.unity
     guid: cbb1de1abeaa6f149a3b118ab18fc463
-  - enabled: 1
+  - enabled: 0
     path: Assets/Scenes/main.unity
     guid: d8eba13f6084ce34fb5f3a480234f6b7
+  - enabled: 1
+    path: Assets/SimpleSharedHologramsTutorial/Scenes/simpleSharedHologramsTutorial.unity
+    guid: 23a72c0b6eff5944faafecff4b399bed
   m_configObjects:
     com.unity.xr.management.loader_settings: {fileID: 11400000, guid: d88741d4f89b13145bbbb1d253b1a8cc, type: 2}
     com.unity.xr.openxr.settings4: {fileID: 11400000, guid: 42b123315ab92d443a6912c131045048, type: 2}

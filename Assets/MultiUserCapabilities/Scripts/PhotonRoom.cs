@@ -1,7 +1,10 @@
+using ExitGames.Client.Photon;
 using Photon.Pun;
 using Photon.Realtime;
 using TMPro;
 using UnityEngine;
+using AzureSpatialAnchors;
+using System.Threading.Tasks;
 
 namespace Scripts
 {
@@ -20,6 +23,24 @@ namespace Scripts
 
         // private GameObject module;
         // private Vector3 moduleLocation = Vector3.zero;
+
+        enum RoomStatus
+        {
+            None,
+            CreatedRoom,
+            JoinedRoom,
+            JoinedRoomDownloadedAnchor
+        }
+
+        public int emptyRoomTimeToLiveSeconds = 120;
+
+        RoomStatus roomStatus = RoomStatus.None;
+
+        static readonly string ANCHOR_ID_CUSTOM_PROPERTY = "anchorId";
+        static readonly string ROOM_NAME = "HardCodedRoomName";
+
+        [SerializeField] public GameObject ASAObject;
+        private AzureSpatialAnchors.AzureSpatialAnchors ASAScript;
 
         public override void OnPlayerEnteredRoom(Player newPlayer)
         {
@@ -69,6 +90,7 @@ namespace Scripts
 
         private void Start()
         {
+            ASAScript = ASAObject.GetComponent<AzureSpatialAnchors.AzureSpatialAnchors>();
             // pv = GetComponent<PhotonView>();
 
             // Allow prefabs not in a Resources folder
@@ -80,7 +102,7 @@ namespace Scripts
             }
         }
 
-        public override void OnJoinedRoom()
+        public async override void OnJoinedRoom()
         {
             base.OnJoinedRoom();
 
@@ -92,6 +114,13 @@ namespace Scripts
             StartGame();
 
             roomStatsDisplay.GetComponent<TextMeshPro>().text = $"# Players in room: {playersInRoom}";
+
+            // Note that the creator of the room also joins the room...
+            if (this.roomStatus == RoomStatus.None)
+            {
+                this.roomStatus = RoomStatus.JoinedRoom;
+            }
+            await this.PopulateAnchorAsync();
         }
 
         private void StartGame()
@@ -130,6 +159,76 @@ namespace Scripts
         //     Debug.Log("Rpc_SetModuleParent- RPC Called");
         //     module.transform.parent = TableAnchor.Instance.transform;
         //     module.transform.localPosition = moduleLocation;
-        // }
+        //
+        // 
+        //void Start()
+        //{
+        //    PhotonNetwork.ConnectUsingSettings();
+        //}
+
+        public override void OnConnectedToMaster()
+        {
+            base.OnConnectedToMaster();
+
+            var roomOptions = new RoomOptions();
+            roomOptions.EmptyRoomTtl = this.emptyRoomTimeToLiveSeconds * 1000;
+            PhotonNetwork.JoinOrCreateRoom(ROOM_NAME, roomOptions, null);
+        }
+    
+        public async override void OnCreatedRoom()
+        {
+            base.OnCreatedRoom();
+            this.roomStatus = RoomStatus.CreatedRoom;
+            await this.CreateAnchorAsync();
+        }
+
+        async Task CreateAnchorAsync()
+        {
+            // If we created the room then we will attempt to create an anchor for the parent
+            // of the cubes that we are creating.
+            var anchorService = ASAScript;
+
+            var anchorId = await anchorService.CreateAnchorOnObjectAsync(this.gameObject);
+
+            // Put this ID into a custom property so that other devices joining the
+            // room can get hold of it.
+#if UNITY_2020 
+             PhotonNetwork.CurrentRoom.SetCustomProperties(
+                new Hashtable()
+                {
+                    { ANCHOR_ID_CUSTOM_PROPERTY, anchorId }
+                }
+             );
+#endif
+        }
+        async Task PopulateAnchorAsync()
+        {
+            if (this.roomStatus == RoomStatus.JoinedRoom)
+            {
+                object keyValue = null;
+
+#if UNITY_2020
+                // First time around, this property may not be here so we see if is there.
+                if (PhotonNetwork.CurrentRoom.CustomProperties.TryGetValue(
+                    ANCHOR_ID_CUSTOM_PROPERTY, out keyValue))
+                {
+                    // If the anchorId property is present then we will try and get the
+                    // anchor but only once so change the status.
+                    this.roomStatus = RoomStatus.JoinedRoomDownloadedAnchor;
+
+                    // If we didn't create the room then we want to try and get the anchor
+                    // from the cloud and apply it.
+                    await ASAScript.PopulateAnchorOnObjectAsync(
+                        (string)keyValue, this.gameObject);
+                }
+#endif
+            }
+        }
+        public async override void OnRoomPropertiesUpdate(Hashtable propertiesThatChanged)
+        {
+            base.OnRoomPropertiesUpdate(propertiesThatChanged);
+
+            await this.PopulateAnchorAsync();
+        }
     }
 }

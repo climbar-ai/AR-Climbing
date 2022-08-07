@@ -14,664 +14,563 @@ using TMPro;
 using Photon.Pun;
 using Microsoft.MixedReality.Toolkit.Utilities.Solvers;
 
-[RequireComponent(typeof(SpatialAnchorManager))]
-public class AzureSpatialAnchors : MonoBehaviourPunCallbacks
+namespace AzureSpatialAnchors
 {
-    //[SerializeField]
-    //private GameObject player;
-
-    /// <summary>
-    /// Used to distinguish short taps and long taps
-    /// </summary>
-    private float[] _tappingTimer = { 0, 0 };
-
-    /// <summary>
-    /// Main interface to anything Spatial Anchors related
-    /// </summary>
-    private SpatialAnchorManager _spatialAnchorManager = null;
-
-    /// <summary>
-    /// Used to keep track of all GameObjects that represent a found or created anchor
-    /// </summary>
-    private List<GameObject> _foundOrCreatedAnchorGameObjects = new List<GameObject>();
-
-    /// <summary>
-    /// Used to keep track of all the created Anchor IDs
-    /// </summary>
-    private List<String> _createdAnchorIDs = new List<String>();
-
-    /// <summary>
-    /// Editing modes
-    /// </summary>
-    private enum EditingMode
+    [RequireComponent(typeof(SpatialAnchorManager))]
+    public class AzureSpatialAnchors : MonoBehaviourPunCallbacks
     {
-        Move,
-        Delete
-    }
+        //[SerializeField]
+        //private GameObject player;
 
-    /// <summary>
-    /// Used to track hold editing mode, either delete or move
-    /// </summary>
-    private EditingMode editingMode;
+        /// <summary>
+        /// Used to distinguish short taps and long taps
+        /// </summary>
+        private float[] _tappingTimer = { 0, 0 };
 
-    /// <summary>
-    /// editor mode button
-    /// </summary>
-    //public Button editorModeButton;
+        /// <summary>
+        /// Main interface to anything Spatial Anchors related
+        /// </summary>
+        private SpatialAnchorManager _spatialAnchorManager = null;
 
-    /// <summary>
-    /// hold prefab
-    /// </summary>
-    private string hold;
+        /// <summary>
+        /// Used to keep track of all GameObjects that represent a found or created anchor
+        /// </summary>
+        private List<GameObject> _foundOrCreatedAnchorGameObjects = new List<GameObject>();
 
-    /// <summary>
-    /// hold hover script game object
-    /// </summary>
-    //public GameObject holdHoverScript;
+        /// <summary>
+        /// Used to keep track of all the created Anchor IDs
+        /// </summary>
+        private List<String> _createdAnchorIDs = new List<String>();
 
-    /// <summary>
-    /// sphere prefab for long tap user feedback
-    /// </summary>
-    public GameObject longTapSphere;
-
-    /// <summary>
-    /// Progress indicator object
-    /// </summary>
-    [SerializeField]
-    private GameObject indicatorObject;
-
-    /// <summary>
-    /// Signals when user has finished placing object and surface magnetism should turn off for that object
-    /// NOTE: doesn't work
-    /// </summary>
-    //private UnityEvent stoppedPlacement;
-
-    // <Start>
-    // Start is called before the first frame update
-    void Start()
-    {
-        _spatialAnchorManager = GetComponent<SpatialAnchorManager>();
-        _spatialAnchorManager.LogDebug += (sender, args) => Debug.Log($"ASA - Debug: {args.Message}");
-        _spatialAnchorManager.Error += (sender, args) => Debug.LogError($"ASA - Error: {args.ErrorMessage}");
-        _spatialAnchorManager.AnchorLocated += SpatialAnchorManager_AnchorLocated;
-        editingMode = EditingMode.Move;
-        GameObject.Find("ToggleEditorMode").GetComponentInChildren<TextMeshPro>().text = "Mode: Move";
-        indicatorObject.SetActive(false);
-        hold = "Hold_1_Simple";
-        //stoppedPlacement.AddListener(HoldOnPlacingStopped);
-    }
-    // </Start>
-
-    // <Update>
-    // Update is called once per frame
-    void Update()
-    {
-
-        //Check for any air taps from either hand
-        for (int i = 0; i < 2; i++)
+        /// <summary>
+        /// Editing modes
+        /// </summary>
+        private enum EditingMode
         {
-            InputDevice device = InputDevices.GetDeviceAtXRNode((i == 0) ? XRNode.RightHand : XRNode.LeftHand);
-            if (device.TryGetFeatureValue(CommonUsages.primaryButton, out bool isTapping))
-            {
-                if (!isTapping)
-                {
-                    //Stopped Tapping or wasn't tapping
-                    if (0f < _tappingTimer[i] && _tappingTimer[i] < 1f)
-                    {
-                        //User has been tapping for less than 1 sec. Get hand-ray's end position and call ShortTap
-                        foreach (var source in CoreServices.InputSystem.DetectedInputSources)
-                        {
-                            // Ignore anything that is not a hand because we want articulated hands
-                            if (source.SourceType == Microsoft.MixedReality.Toolkit.Input.InputSourceType.Hand)
-                            {
-                                foreach (var p in source.Pointers)
-                                {
-                                    if (p is IMixedRealityNearPointer && editingMode != EditingMode.Delete) // we want to be able to use direct touch to delete game objects
-                                    {
-                                        // Ignore near pointers, we only want the rays
-                                        Debug.Log("Near Pointer");
-                                        continue;
-                                    }
-                                    if (p.Result != null)
-                                    {
-                                        var startPoint = p.Position;
-                                        var endPoint = p.Result.Details.Point;
-                                        var hitObject = p.Result.Details.Object;
+            Move,
+            Delete
+        }
 
-                                        // we need the surface normal of the mesh we want to place the hold on
-                                        if (Physics.Raycast(startPoint, endPoint-startPoint, out var hit)) // check if successful before calling ShortTap
+        /// <summary>
+        /// Used to track hold editing mode, either delete or move
+        /// </summary>
+        private EditingMode editingMode;
+
+        /// <summary>
+        /// editor mode button
+        /// </summary>
+        //public Button editorModeButton;
+
+        /// <summary>
+        /// hold prefab
+        /// </summary>
+        private string hold;
+
+        /// <summary>
+        /// hold hover script game object
+        /// </summary>
+        //public GameObject holdHoverScript;
+
+        /// <summary>
+        /// sphere prefab for long tap user feedback
+        /// </summary>
+        public GameObject longTapSphere;
+
+        /// <summary>
+        /// Progress indicator object
+        /// </summary>
+        [SerializeField]
+        private GameObject indicatorObject;
+
+        /// <summary>
+        /// Signals when user has finished placing object and surface magnetism should turn off for that object
+        /// NOTE: doesn't work
+        /// </summary>
+        //private UnityEvent stoppedPlacement;
+
+        TaskCompletionSource<CloudSpatialAnchor> taskWaitForAnchorLocation;
+
+        // <Start>
+        // Start is called before the first frame update
+        void Start()
+        {
+            _spatialAnchorManager = GetComponent<SpatialAnchorManager>();
+            _spatialAnchorManager.LogDebug += (sender, args) => Debug.Log($"ASA - Debug: {args.Message}");
+            _spatialAnchorManager.Error += (sender, args) => Debug.LogError($"ASA - Error: {args.ErrorMessage}");
+            _spatialAnchorManager.AnchorLocated += SpatialAnchorManager_AnchorLocated;
+            editingMode = EditingMode.Move;
+            GameObject.Find("ToggleEditorMode").GetComponentInChildren<TextMeshPro>().text = "Mode: Move";
+            indicatorObject.SetActive(false);
+            hold = "Hold_1_Simple";
+            //stoppedPlacement.AddListener(HoldOnPlacingStopped);
+        }
+        // </Start>
+
+        // <Update>
+        // Update is called once per frame
+        void Update()
+        {
+
+            //Check for any air taps from either hand
+            for (int i = 0; i < 2; i++)
+            {
+                InputDevice device = InputDevices.GetDeviceAtXRNode((i == 0) ? XRNode.RightHand : XRNode.LeftHand);
+                if (device.TryGetFeatureValue(CommonUsages.primaryButton, out bool isTapping))
+                {
+                    if (!isTapping)
+                    {
+                        //Stopped Tapping or wasn't tapping
+                        if (0f < _tappingTimer[i] && _tappingTimer[i] < 1f)
+                        {
+                            //User has been tapping for less than 1 sec. Get hand-ray's end position and call ShortTap
+                            foreach (var source in CoreServices.InputSystem.DetectedInputSources)
+                            {
+                                // Ignore anything that is not a hand because we want articulated hands
+                                if (source.SourceType == Microsoft.MixedReality.Toolkit.Input.InputSourceType.Hand)
+                                {
+                                    foreach (var p in source.Pointers)
+                                    {
+                                        if (p is IMixedRealityNearPointer && editingMode != EditingMode.Delete) // we want to be able to use direct touch to delete game objects
                                         {
-                                            ShortTap(endPoint, hit.normal);
+                                            // Ignore near pointers, we only want the rays
+                                            Debug.Log("Near Pointer");
+                                            continue;
+                                        }
+                                        if (p.Result != null)
+                                        {
+                                            var startPoint = p.Position;
+                                            var endPoint = p.Result.Details.Point;
+                                            var hitObject = p.Result.Details.Object;
+
+                                            // we need the surface normal of the mesh we want to place the hold on
+                                            if (Physics.Raycast(startPoint, endPoint - startPoint, out var hit)) // check if successful before calling ShortTap
+                                            {
+                                                ShortTap(endPoint, hit.normal);
+                                            }
                                         }
                                     }
                                 }
                             }
                         }
+                        _tappingTimer[i] = 0;
                     }
-                    _tappingTimer[i] = 0;
+                    else
+                    {
+                        _tappingTimer[i] += Time.deltaTime;
+                        if (_tappingTimer[i] >= 2f)
+                        {
+                            if (editingMode == EditingMode.Delete)
+                            {
+                                //User has been air tapping for at least 2sec. Get hand position and call LongTap
+                                if (device.TryGetFeatureValue(CommonUsages.devicePosition, out Vector3 handPosition))
+                                {
+                                    // feedback for user on long airtap by briefly displaying a dot at the cursor
+                                    foreach (var source in CoreServices.InputSystem.DetectedInputSources)
+                                    {
+                                        // Ignore anything that is not a hand because we want articulated hands
+                                        if (source.SourceType == Microsoft.MixedReality.Toolkit.Input.InputSourceType.Hand)
+                                        {
+                                            foreach (var p in source.Pointers)
+                                            {
+                                                if (p is IMixedRealityNearPointer)
+                                                {
+                                                    // Ignore near pointers, we only want the rays
+                                                    continue;
+                                                }
+                                                if (p.Result != null)
+                                                {
+                                                    var startPoint = p.Position;
+                                                    var endPoint = p.Result.Details.Point;
+                                                    var hitObject = p.Result.Details.Object;
+
+                                                    //Quaternion orientationTowardsHead = Quaternion.LookRotation(handPosition - headPosition, Vector3.up);
+                                                    //GameObject gameObject = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+                                                    GameObject gameObject = PhotonNetwork.Instantiate(longTapSphere.name, endPoint, Quaternion.identity);
+                                                    //gameObject.GetComponent<MeshRenderer>().material.shader = Shader.Find("Legacy Shaders/Diffuse");
+                                                    gameObject.transform.position = endPoint;
+                                                    gameObject.transform.rotation = Quaternion.identity;
+                                                    gameObject.transform.localScale = Vector3.one * 0.05f;
+                                                    //gameObject.GetComponent<MeshRenderer>().material.color = Color.blue;
+
+                                                    StartCoroutine(DestroyObjectDelayed(gameObject, .2f));
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+
+                                LongTap();
+                            }
+                            _tappingTimer[i] = -float.MaxValue; // reset the timer, to avoid retriggering if user is still holding tap
+                        }
+                    }
+                }
+            }
+        }
+        // </Update>
+
+        // <ShortTap>
+        /// <summary>
+        /// Called when a user is air tapping for a short time 
+        /// </summary>
+        /// <param name="handPosition">Location where tap was registered</param>
+        private async void ShortTap(Vector3 handPosition, Vector3 surfaceNormal)
+        {
+            Debug.Log("ShortTap");
+
+            await _spatialAnchorManager.StartSessionAsync();
+            bool anchorNearby = IsAnchorNearby(handPosition, out GameObject anchorGameObject);
+
+            if (!anchorNearby && editingMode == EditingMode.Move)
+            {
+                //No Anchor Nearby, start session and create an anchor
+                await CreateAnchor(handPosition, surfaceNormal);
+            }
+            else if (anchorNearby && editingMode == EditingMode.Move)
+            {
+                //Toggle TapToPlace on so we can start or end moving the object
+                //anchorGameObject.GetComponent<TapToPlace>().enabled = !anchorGameObject.GetComponent<TapToPlace>().enabled;
+                bool isTappingToPlace = anchorGameObject.GetComponent<HoldData>().isTappingToPlace;
+                anchorGameObject.GetComponent<HoldData>().isTappingToPlace = !anchorGameObject.GetComponent<HoldData>().isTappingToPlace;
+                //TapToPlace ttp = anchorGameObject.GetComponent<TapToPlace>();
+                SurfaceMagnetism sm = anchorGameObject.EnsureComponent<SurfaceMagnetism>();
+                Debug.Log("isTappingToPlace:");
+                Debug.Log(isTappingToPlace);
+                Debug.Log(anchorGameObject.transform.rotation);
+                if (isTappingToPlace)
+                {
+                    //ttp.StopPlacement();
+                    sm.enabled = false;
+                    //stoppedPlacement.Invoke();
+                    await HoldOnPlacingStopped(anchorGameObject);
                 }
                 else
                 {
-                    _tappingTimer[i] += Time.deltaTime;
-                    if (_tappingTimer[i] >= 2f)
-                    {
-                        if (editingMode == EditingMode.Delete)
-                        {
-                            //User has been air tapping for at least 2sec. Get hand position and call LongTap
-                            if (device.TryGetFeatureValue(CommonUsages.devicePosition, out Vector3 handPosition))
-                            {
-                                // feedback for user on long airtap by briefly displaying a dot at the cursor
-                                foreach (var source in CoreServices.InputSystem.DetectedInputSources)
-                                {
-                                    // Ignore anything that is not a hand because we want articulated hands
-                                    if (source.SourceType == Microsoft.MixedReality.Toolkit.Input.InputSourceType.Hand)
-                                    {
-                                        foreach (var p in source.Pointers)
-                                        {
-                                            if (p is IMixedRealityNearPointer)
-                                            {
-                                                // Ignore near pointers, we only want the rays
-                                                continue;
-                                            }
-                                            if (p.Result != null)
-                                            {
-                                                var startPoint = p.Position;
-                                                var endPoint = p.Result.Details.Point;
-                                                var hitObject = p.Result.Details.Object;
+                    //ttp.StartPlacement();
+                    sm.enabled = true;
+                }
+            }
+            else if (anchorNearby && editingMode == EditingMode.Delete)
+            {
+                //Delete nearby Anchor
+                DeleteAnchor(anchorGameObject);
+            }
+        }
+        // </ShortTap>
 
-                                                //Quaternion orientationTowardsHead = Quaternion.LookRotation(handPosition - headPosition, Vector3.up);
-                                                //GameObject gameObject = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-                                                GameObject gameObject = PhotonNetwork.Instantiate(longTapSphere.name, endPoint, Quaternion.identity);
-                                                //gameObject.GetComponent<MeshRenderer>().material.shader = Shader.Find("Legacy Shaders/Diffuse");
-                                                gameObject.transform.position = endPoint;
-                                                gameObject.transform.rotation = Quaternion.identity;
-                                                gameObject.transform.localScale = Vector3.one * 0.05f;
-                                                //gameObject.GetComponent<MeshRenderer>().material.color = Color.blue;
+        // <LongTap>
+        /// <summary>
+        /// Called when a user is air tapping for a long time (>=2 sec)
+        /// </summary>
+        private async void LongTap()
+        {
+            Debug.Log("LongTap");
 
-                                                StartCoroutine(DestroyObjectDelayed(gameObject, .2f));
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-
-                            LongTap();
-                        }
-                        _tappingTimer[i] = -float.MaxValue; // reset the timer, to avoid retriggering if user is still holding tap
-                    }
+            if (editingMode == EditingMode.Delete)
+            {
+                if (_spatialAnchorManager.IsSessionStarted)
+                {
+                    // Stop Session and remove all GameObjects. This does not delete the Anchors in the cloud
+                    _spatialAnchorManager.DestroySession();
+                    RemoveAllAnchorGameObjects();
+                    Debug.Log("ASA - Stopped Session and removed all Anchor Objects");
+                }
+                else
+                {
+                    //Start session and search for all Anchors previously created
+                    await _spatialAnchorManager.StartSessionAsync();
+                    LocateAnchor();
                 }
             }
         }
-    }
-    // </Update>
+        // </LongTap>
 
-    // <ShortTap>
-    /// <summary>
-    /// Called when a user is air tapping for a short time 
-    /// </summary>
-    /// <param name="handPosition">Location where tap was registered</param>
-    private async void ShortTap(Vector3 handPosition, Vector3 surfaceNormal)
-    {
-        Debug.Log("ShortTap");
-
-        await _spatialAnchorManager.StartSessionAsync();
-        bool anchorNearby = IsAnchorNearby(handPosition, out GameObject anchorGameObject);
-
-        if (!anchorNearby && editingMode == EditingMode.Move)
+        // <RemoveAllAnchorGameObjects>
+        /// <summary>
+        /// Destroys all Anchor GameObjects
+        /// </summary>
+        private void RemoveAllAnchorGameObjects()
         {
-            //No Anchor Nearby, start session and create an anchor
-            await CreateAnchor(handPosition, surfaceNormal);
-        }
-        else if (anchorNearby && editingMode == EditingMode.Move)
-        {
-            //Toggle TapToPlace on so we can start or end moving the object
-            //anchorGameObject.GetComponent<TapToPlace>().enabled = !anchorGameObject.GetComponent<TapToPlace>().enabled;
-            bool isTappingToPlace = anchorGameObject.GetComponent<HoldData>().isTappingToPlace;
-            anchorGameObject.GetComponent<HoldData>().isTappingToPlace = !anchorGameObject.GetComponent<HoldData>().isTappingToPlace;
-            //TapToPlace ttp = anchorGameObject.GetComponent<TapToPlace>();
-            SurfaceMagnetism sm = anchorGameObject.EnsureComponent<SurfaceMagnetism>();
-            Debug.Log("isTappingToPlace:");
-            Debug.Log(isTappingToPlace);
-            Debug.Log(anchorGameObject.transform.rotation);
-            if (isTappingToPlace)
+            foreach (var anchorGameObject in _foundOrCreatedAnchorGameObjects)
             {
-                //ttp.StopPlacement();
-                sm.enabled = false;
-                //stoppedPlacement.Invoke();
-                await HoldOnPlacingStopped(anchorGameObject);
+                //Destroy(anchorGameObject);
+                PhotonNetwork.Destroy(anchorGameObject);
+            }
+            _foundOrCreatedAnchorGameObjects.Clear();
+        }
+        // </RemoveAllAnchorGameObjects>
+
+        // <IsAnchorNearby>
+        /// <summary>
+        /// Returns true if an Anchor GameObject is within 15cm of the received reference position
+        /// </summary>
+        /// <param name="position">Reference position</param>
+        /// <param name="anchorGameObject">Anchor GameObject within 15cm of received position. Not necessarily the nearest to this position. If no AnchorObject is within 15cm, this value will be null</param>
+        /// <returns>True if a Anchor GameObject is within 15cm</returns>
+        private bool IsAnchorNearby(Vector3 position, out GameObject anchorGameObject)
+        {
+            anchorGameObject = null;
+
+            if (_foundOrCreatedAnchorGameObjects.Count <= 0)
+            {
+                return false;
+            }
+
+            //Iterate over existing anchor gameobjects to find the nearest
+            var (distance, closestObject) = _foundOrCreatedAnchorGameObjects.Aggregate(
+                new Tuple<float, GameObject>(Mathf.Infinity, null),
+                (minPair, gameobject) =>
+                {
+                    Vector3 gameObjectPosition = gameobject.transform.position;
+                    float distance = (position - gameObjectPosition).magnitude;
+                    return distance < minPair.Item1 ? new Tuple<float, GameObject>(distance, gameobject) : minPair;
+                });
+
+            if (distance <= 0.15f)
+            {
+                //Found an anchor within 15cm
+                anchorGameObject = closestObject;
+                return true;
             }
             else
             {
-                //ttp.StartPlacement();
-                sm.enabled = true;
+                return false;
             }
         }
-        else if (anchorNearby && editingMode == EditingMode.Delete)
+        // </IsAnchorNearby>
+
+        // <HoldOnPlacingStarted>
+        /// <summary>
+        /// Called on start of movement of object
+        /// </summary>
+        /// <param name="go"></param>
+        private void HoldOnPlacingStarted(GameObject go)
         {
-            //Delete nearby Anchor
-            DeleteAnchor(anchorGameObject);
+            Debug.Log("HoldOnPlacingStarted");
+            Debug.Log(go);
         }
-    }
-    // </ShortTap>
+        // </HoldOnPlacingStarted>
 
-    // <LongTap>
-    /// <summary>
-    /// Called when a user is air tapping for a long time (>=2 sec)
-    /// </summary>
-    private async void LongTap()
-    {
-        Debug.Log("LongTap");
-
-        if (editingMode == EditingMode.Delete)
+        // <HoldOnPlacingStopped>
+        /// <summary>
+        /// Handles object saving once user has finished moving an object.
+        /// Called for surface magnetism movement
+        /// </summary>
+        /// <param name="go"></param>
+        /// <returns></returns>
+        private async Task HoldOnPlacingStopped(GameObject go)
         {
-            if (_spatialAnchorManager.IsSessionStarted)
-            {
-                // Stop Session and remove all GameObjects. This does not delete the Anchors in the cloud
-                _spatialAnchorManager.DestroySession();
-                RemoveAllAnchorGameObjects();
-                Debug.Log("ASA - Stopped Session and removed all Anchor Objects");
-            }
-            else
-            {
-                //Start session and search for all Anchors previously created
-                await _spatialAnchorManager.StartSessionAsync();
-                LocateAnchor();
-            }
-        }
-    }
-    // </LongTap>
+            Debug.Log("HoldOnPlacingStopped");
+            Debug.Log(go);
 
-    // <RemoveAllAnchorGameObjects>
-    /// <summary>
-    /// Destroys all Anchor GameObjects
-    /// </summary>
-    private void RemoveAllAnchorGameObjects()
-    {
-        foreach (var anchorGameObject in _foundOrCreatedAnchorGameObjects)
-        {
-            //Destroy(anchorGameObject);
-            PhotonNetwork.Destroy(anchorGameObject);
-        }
-        _foundOrCreatedAnchorGameObjects.Clear();
-    }
-    // </RemoveAllAnchorGameObjects>
+            Vector3 position = go.transform.position;
+            Quaternion rotation = go.transform.rotation;
+            Vector3 localScale = go.transform.localScale;
 
-    // <IsAnchorNearby>
-    /// <summary>
-    /// Returns true if an Anchor GameObject is within 15cm of the received reference position
-    /// </summary>
-    /// <param name="position">Reference position</param>
-    /// <param name="anchorGameObject">Anchor GameObject within 15cm of received position. Not necessarily the nearest to this position. If no AnchorObject is within 15cm, this value will be null</param>
-    /// <returns>True if a Anchor GameObject is within 15cm</returns>
-    private bool IsAnchorNearby(Vector3 position, out GameObject anchorGameObject)
-    {
-        anchorGameObject = null;
-
-        if (_foundOrCreatedAnchorGameObjects.Count <= 0)
-        {
-            return false;
-        }
-
-        //Iterate over existing anchor gameobjects to find the nearest
-        var (distance, closestObject) = _foundOrCreatedAnchorGameObjects.Aggregate(
-            new Tuple<float, GameObject>(Mathf.Infinity, null),
-            (minPair, gameobject) =>
-            {
-                Vector3 gameObjectPosition = gameobject.transform.position;
-                float distance = (position - gameObjectPosition).magnitude;
-                return distance < minPair.Item1 ? new Tuple<float, GameObject>(distance, gameobject) : minPair;
-            });
-
-        if (distance <= 0.15f)
-        {
-            //Found an anchor within 15cm
-            anchorGameObject = closestObject;
-            return true;
-        }
-        else
-        {
-            return false;
-        }
-    }
-    // </IsAnchorNearby>
-
-    // <HoldOnPlacingStarted>
-    /// <summary>
-    /// Called on start of movement of object
-    /// </summary>
-    /// <param name="go"></param>
-    private void HoldOnPlacingStarted(GameObject go)
-    {
-        Debug.Log("HoldOnPlacingStarted");
-        Debug.Log(go);
-    }
-    // </HoldOnPlacingStarted>
-
-    // <HoldOnPlacingStopped>
-    /// <summary>
-    /// Handles object saving once user has finished moving an object.
-    /// Called for surface magnetism movement
-    /// </summary>
-    /// <param name="go"></param>
-    /// <returns></returns>
-    private async Task HoldOnPlacingStopped(GameObject go)
-    {
-        Debug.Log("HoldOnPlacingStopped");
-        Debug.Log(go);
-
-        Vector3 position = go.transform.position;
-        Quaternion rotation = go.transform.rotation;
-        Vector3 localScale = go.transform.localScale;
-
-        DeleteAnchor(go);
-
-        await BuildAnchor(hold, position, rotation, localScale);
-    }
-    // </HoldOnPlacingStopped>
-
-    // <HoldOnHoverStartedHandler>
-    /// <summary>
-    /// OnHoverStarted handler for hold GameObject.
-    /// Changes the color.
-    /// </summary>
-    /// <param name="eventdata"></param>
-    /// <param name="hold"></param>
-    private void HoldOnHoverStartedHandler(ManipulationEventData eventdata, GameObject hold)
-    {
-        MeshRenderer m_Renderer = hold.GetComponent<MeshRenderer>();
-        m_Renderer.material.color = Color.red;
-    }
-    // </HoldOnHoverStartedHandler>
-
-    // <HoldOnHoverExitedHandler>
-    /// <summary>
-    /// OnHoverExited handler for hold GameObjects.
-    /// Changes the color.
-    /// </summary>
-    /// <param name="eventdata"></param>
-    /// <param name="hold"></param>
-    private void HoldOnHoverExitedHandler(ManipulationEventData eventdata, GameObject hold)
-    {
-        MeshRenderer m_Renderer = hold.GetComponent<MeshRenderer>();
-        m_Renderer.material.color = Color.green;
-    }
-    // </HoldOnHoverExitedHandler>
-
-    // <HoldOnManipulationStartedHandler>
-    /// <summary>
-    /// Handles saving object once user has finished rotating an object
-    /// Called by manipulation script event for rotation
-    /// </summary>
-    /// <param name="eventData"></param>
-    /// <param name="hold"></param>
-    private void HoldOnManipulationStartedHandler(ManipulationEventData eventData, GameObject hold)
-    {
-        Debug.Log($"HoldOnManipulationStarted");
-
-        // detect if object is receiving a short tap
-        eventData.ManipulationSource.GetComponent<HoldData>().manipulationStartTime = DateTime.Now;
-
-        // the cursor doesn't always stay aligned with object's mesh when moving it with TapToPlace
-        MeshRenderer m_Renderer = hold.GetComponent<MeshRenderer>();
-        m_Renderer.material.color = Color.red;
-
-        //// detect if object is receiving a short tap
-        //bool receivingTap = false;
-        //for (int i = 0; i < 2; i++)
-        //{
-        //    InputDevice device = InputDevices.GetDeviceAtXRNode((i == 0) ? XRNode.RightHand : XRNode.LeftHand);
-        //    device.TryGetFeatureValue(CommonUsages.primaryButton, out bool handIsTapping);
-        //    receivingTap = receivingTap || handIsTapping;
-        //    Debug.Log(handIsTapping);
-        //}
-        //eventData.ManipulationSource.GetComponent<HoldData>().receivingShortTap = receivingTap;
-    }
-    // </HoldOnManipulationStartedHandler>
-
-    // <HoldOnManipulationEndedHandler>
-    /// <summary>
-    /// OnManipulationEndedHandler for GameObject.
-    /// Saves final position.
-    /// We don't want this called for short taps as those are reserved for movement corresponding to surface magnetism.
-    /// </summary>
-    /// <param name="eventData"></param>
-    /// <param name="currentAnchorGameObject"></param>
-    private async void HoldOnManipulationEndedHandler(ManipulationEventData eventData, GameObject currentAnchorGameObject)
-    {
-        Debug.Log($"HoldOnManipulationEnded");
-
-        DateTime currentTime = DateTime.Now;
-        TimeSpan interval = currentTime - eventData.ManipulationSource.GetComponent<HoldData>().manipulationStartTime;
-        Debug.Log(interval.TotalMilliseconds);
-
-        // ignore short taps (shorter than 1 second) from either hand
-        if (interval.TotalMilliseconds >= 1000)
-        //if (!eventData.ManipulationSource.GetComponent<HoldData>().receivingShortTap)
-        {
-            Debug.Log("Detected long tap as manipulation event");
-
-            Vector3 position = eventData.ManipulationSource.transform.position;
-            Quaternion rotation = eventData.ManipulationSource.transform.rotation;
-            Vector3 localScale = eventData.ManipulationSource.transform.localScale;
-
-            DeleteAnchor(eventData.ManipulationSource);
+            DeleteAnchor(go);
 
             await BuildAnchor(hold, position, rotation, localScale);
         }
-    }
-    // </HoldOnManipulationEndedHandler>
+        // </HoldOnPlacingStopped>
 
-    // <CreateAnchor>
-    /// <summary>
-    /// Creates an Azure Spatial Anchor at the given position rotated towards the user
-    /// </summary>
-    /// <param name="position">Position where Azure Spatial Anchor will be created</param>
-    /// <returns>Async Task</returns>
-    private async Task CreateAnchor(Vector3 position, Vector3 surfaceNormal)
-    {
-        Debug.Log($"CreateAnchor");
-
-        //Create Anchor GameObject. We will use ASA to save the position and the rotation of this GameObject.
-        if (!InputDevices.GetDeviceAtXRNode(XRNode.Head).TryGetFeatureValue(CommonUsages.devicePosition, out Vector3 headPosition))
+        // <HoldOnHoverStartedHandler>
+        /// <summary>
+        /// OnHoverStarted handler for hold GameObject.
+        /// Changes the color.
+        /// </summary>
+        /// <param name="eventdata"></param>
+        /// <param name="hold"></param>
+        private void HoldOnHoverStartedHandler(ManipulationEventData eventdata, GameObject hold)
         {
-            headPosition = Vector3.zero;
+            MeshRenderer m_Renderer = hold.GetComponent<MeshRenderer>();
+            m_Renderer.material.color = Color.red;
         }
+        // </HoldOnHoverStartedHandler>
 
-        Quaternion normalOrientation = Quaternion.LookRotation(-surfaceNormal, Vector3.up);
-
-        await BuildAnchor(hold, position, normalOrientation, Vector3.one * 0.1f);
-    }
-    // </CreateAnchor>
-
-    private async Task BuildAnchor(string go, Vector3 position, Quaternion rotation, Vector3 localScale)
-    {
-        // open loader
-        indicatorObject.SetActive(true);
-
-        // Temporarily disable MRTK input because this function is async and could be called in quick succession with race issues.  Last answer here: https://stackoverflow.com/questions/56757620/how-to-temporarly-disable-mixedrealitytoolkit-inputsystem
-        StartCoroutine(DisableCoroutine());
-
-        Debug.Log("There");
-
-        //GameObject newAnchorGameObject = Instantiate(hold);
-        //GameObject newAnchorGameObject = PhotonNetwork.InstantiateRoomObject(go, position, rotation);
-        GameObject newAnchorGameObject = PhotonNetwork.Instantiate(go, position, rotation);
-
-        Debug.Log(newAnchorGameObject);
-        
-        newAnchorGameObject.GetComponent<MeshRenderer>().material.shader = Shader.Find("Legacy Shaders/Diffuse");
-        newAnchorGameObject.transform.position = position;
-        newAnchorGameObject.transform.rotation = rotation;
-        newAnchorGameObject.transform.localScale = localScale;
-
-        Debug.Log("Here");
-
-        //Add and configure ASA components
-        CloudNativeAnchor cloudNativeAnchor = newAnchorGameObject.AddComponent<CloudNativeAnchor>();
-        await cloudNativeAnchor.NativeToCloud();
-        CloudSpatialAnchor cloudSpatialAnchor = cloudNativeAnchor.CloudAnchor;
-        cloudSpatialAnchor.Expiration = DateTimeOffset.Now.AddDays(3);
-
-        //Collect Environment Data
-        while (!_spatialAnchorManager.IsReadyForCreate)
+        // <HoldOnHoverExitedHandler>
+        /// <summary>
+        /// OnHoverExited handler for hold GameObjects.
+        /// Changes the color.
+        /// </summary>
+        /// <param name="eventdata"></param>
+        /// <param name="hold"></param>
+        private void HoldOnHoverExitedHandler(ManipulationEventData eventdata, GameObject hold)
         {
-            float createProgress = _spatialAnchorManager.SessionStatus.RecommendedForCreateProgress;
-            Debug.Log($"ASA - Move your device to capture more environment data: {createProgress:0%}");
+            MeshRenderer m_Renderer = hold.GetComponent<MeshRenderer>();
+            m_Renderer.material.color = Color.green;
         }
+        // </HoldOnHoverExitedHandler>
 
-        Debug.Log($"ASA - Saving cloud anchor... ");
-
-        try
+        // <HoldOnManipulationStartedHandler>
+        /// <summary>
+        /// Handles saving object once user has finished rotating an object
+        /// Called by manipulation script event for rotation
+        /// </summary>
+        /// <param name="eventData"></param>
+        /// <param name="hold"></param>
+        private void HoldOnManipulationStartedHandler(ManipulationEventData eventData, GameObject hold)
         {
-            // Now that the cloud spatial anchor has been prepared, we can try the actual save here.
-            await _spatialAnchorManager.CreateAnchorAsync(cloudSpatialAnchor);
+            Debug.Log($"HoldOnManipulationStarted");
 
-            bool saveSucceeded = cloudSpatialAnchor != null;
-            if (!saveSucceeded)
+            // detect if object is receiving a short tap
+            eventData.ManipulationSource.GetComponent<HoldData>().manipulationStartTime = DateTime.Now;
+
+            // the cursor doesn't always stay aligned with object's mesh when moving it with TapToPlace
+            MeshRenderer m_Renderer = hold.GetComponent<MeshRenderer>();
+            m_Renderer.material.color = Color.red;
+
+            //// detect if object is receiving a short tap
+            //bool receivingTap = false;
+            //for (int i = 0; i < 2; i++)
+            //{
+            //    InputDevice device = InputDevices.GetDeviceAtXRNode((i == 0) ? XRNode.RightHand : XRNode.LeftHand);
+            //    device.TryGetFeatureValue(CommonUsages.primaryButton, out bool handIsTapping);
+            //    receivingTap = receivingTap || handIsTapping;
+            //    Debug.Log(handIsTapping);
+            //}
+            //eventData.ManipulationSource.GetComponent<HoldData>().receivingShortTap = receivingTap;
+        }
+        // </HoldOnManipulationStartedHandler>
+
+        // <HoldOnManipulationEndedHandler>
+        /// <summary>
+        /// OnManipulationEndedHandler for GameObject.
+        /// Saves final position.
+        /// We don't want this called for short taps as those are reserved for movement corresponding to surface magnetism.
+        /// </summary>
+        /// <param name="eventData"></param>
+        /// <param name="currentAnchorGameObject"></param>
+        private async void HoldOnManipulationEndedHandler(ManipulationEventData eventData, GameObject currentAnchorGameObject)
+        {
+            Debug.Log($"HoldOnManipulationEnded");
+
+            DateTime currentTime = DateTime.Now;
+            TimeSpan interval = currentTime - eventData.ManipulationSource.GetComponent<HoldData>().manipulationStartTime;
+            Debug.Log(interval.TotalMilliseconds);
+
+            // ignore short taps (shorter than 1 second) from either hand
+            if (interval.TotalMilliseconds >= 1000)
+            //if (!eventData.ManipulationSource.GetComponent<HoldData>().receivingShortTap)
             {
-                Debug.LogError("ASA - Failed to save, but no exception was thrown.");
-                return;
+                Debug.Log("Detected long tap as manipulation event");
+
+                Vector3 position = eventData.ManipulationSource.transform.position;
+                Quaternion rotation = eventData.ManipulationSource.transform.rotation;
+                Vector3 localScale = eventData.ManipulationSource.transform.localScale;
+
+                DeleteAnchor(eventData.ManipulationSource);
+
+                await BuildAnchor(hold, position, rotation, localScale);
+            }
+        }
+        // </HoldOnManipulationEndedHandler>
+
+        // <CreateAnchor>
+        /// <summary>
+        /// Creates an Azure Spatial Anchor at the given position rotated towards the user
+        /// </summary>
+        /// <param name="position">Position where Azure Spatial Anchor will be created</param>
+        /// <returns>Async Task</returns>
+        private async Task CreateAnchor(Vector3 position, Vector3 surfaceNormal)
+        {
+            Debug.Log($"CreateAnchor");
+
+            //Create Anchor GameObject. We will use ASA to save the position and the rotation of this GameObject.
+            if (!InputDevices.GetDeviceAtXRNode(XRNode.Head).TryGetFeatureValue(CommonUsages.devicePosition, out Vector3 headPosition))
+            {
+                headPosition = Vector3.zero;
             }
 
-            Debug.Log($"ASA - Saved cloud anchor with ID: {cloudSpatialAnchor.Identifier}");
-            _foundOrCreatedAnchorGameObjects.Add(newAnchorGameObject);
-            _createdAnchorIDs.Add(cloudSpatialAnchor.Identifier);
-            newAnchorGameObject.GetComponent<MeshRenderer>().material.color = Color.green;
+            Quaternion normalOrientation = Quaternion.LookRotation(-surfaceNormal, Vector3.up);
 
-            // add manipulation scripts: https://stackoverflow.com/questions/61663652/adding-manipulation-components-via-c-sharp-script-only-works-in-unity
-            Debug.Log($"Adding manipulation");
-            Mesh mesh = newAnchorGameObject.GetComponent<MeshFilter>().mesh;
+            await BuildAnchor(hold, position, normalOrientation, Vector3.one * 0.1f);
+        }
+        // </CreateAnchor>
 
-            //Add MeshCollider
-            MeshCollider collider = newAnchorGameObject.EnsureComponent<MeshCollider>();
+        private async Task BuildAnchor(string go, Vector3 position, Quaternion rotation, Vector3 localScale)
+        {
+            // open loader
+            indicatorObject.SetActive(true);
 
-            //A lot of components are curved and need convex set to false
-            collider.convex = true;
+            // Temporarily disable MRTK input because this function is async and could be called in quick succession with race issues.  Last answer here: https://stackoverflow.com/questions/56757620/how-to-temporarly-disable-mixedrealitytoolkit-inputsystem
+            StartCoroutine(DisableCoroutine());
 
-            //Add NearInteractionGrabbable
-            newAnchorGameObject.EnsureComponent<NearInteractionGrabbable>();
+            Debug.Log("There");
 
-            //Add ManipulationHandler with event listeners
-            Debug.Log(newAnchorGameObject.transform.position);
-            Debug.Log(newAnchorGameObject.transform.rotation);
-            var handler = newAnchorGameObject.EnsureComponent<ObjectManipulator>();
-            handler.OnHoverEntered.AddListener((eventData) => HoldOnHoverStartedHandler(eventData, newAnchorGameObject));
-            handler.OnHoverExited.AddListener((eventData) => HoldOnHoverExitedHandler(eventData, newAnchorGameObject));
-            handler.OnManipulationStarted.AddListener((eventData) => HoldOnManipulationStartedHandler(eventData, newAnchorGameObject));
-            handler.OnManipulationEnded.AddListener((eventData) => HoldOnManipulationEndedHandler(eventData, newAnchorGameObject));
+            //GameObject newAnchorGameObject = Instantiate(hold);
+            //GameObject newAnchorGameObject = PhotonNetwork.InstantiateRoomObject(go, position, rotation);
+            GameObject newAnchorGameObject = PhotonNetwork.Instantiate(go, position, rotation);
 
-            //Add TapToPlace event listeners
-            TapToPlace ttp = newAnchorGameObject.EnsureComponent<TapToPlace>();
-            ttp.OnPlacingStarted.AddListener(() => HoldOnPlacingStarted(newAnchorGameObject));
-            ttp.OnPlacingStopped.AddListener(() => HoldOnPlacingStopped(newAnchorGameObject));
+            Debug.Log(newAnchorGameObject);
 
-            ////SurfaceMagnetism sm = newAnchorGameObject.EnsureComponent<SurfaceMagnetism>();
-            ////sm.enabled = false;
+            newAnchorGameObject.GetComponent<MeshRenderer>().material.shader = Shader.Find("Legacy Shaders/Diffuse");
+            newAnchorGameObject.transform.position = position;
+            newAnchorGameObject.transform.rotation = rotation;
+            newAnchorGameObject.transform.localScale = localScale;
 
-            //Set mesh to MeshCollider
-            collider.sharedMesh = mesh;
+            Debug.Log("Here");
 
-            // Disable maninpulation scripts if we are in 'Delete' mode
-            if (editingMode == EditingMode.Delete)
+            //Add and configure ASA components
+            CloudNativeAnchor cloudNativeAnchor = newAnchorGameObject.AddComponent<CloudNativeAnchor>();
+            await cloudNativeAnchor.NativeToCloud();
+            CloudSpatialAnchor cloudSpatialAnchor = cloudNativeAnchor.CloudAnchor;
+            cloudSpatialAnchor.Expiration = DateTimeOffset.Now.AddDays(3);
+
+            //Collect Environment Data
+            while (!_spatialAnchorManager.IsReadyForCreate)
             {
-                newAnchorGameObject.GetComponent<NearInteractionGrabbable>().enabled = false;
-                newAnchorGameObject.GetComponent<ObjectManipulator>().enabled = false;
+                float createProgress = _spatialAnchorManager.SessionStatus.RecommendedForCreateProgress;
+                Debug.Log($"ASA - Move your device to capture more environment data: {createProgress:0%}");
             }
 
-            // share the created anchorId
-            ShareAzureAnchorIds();
-        }
-        catch (Exception exception)
-        {
-            Debug.Log("ASA - Failed to save anchor: " + exception.ToString());
-            Debug.LogException(exception);
-        }
+            Debug.Log($"ASA - Saving cloud anchor... ");
 
-        // turn on MRTK inputs
-        StartCoroutine(EnableCoroutine());
-
-        // the gaze pointer comes back along with hand pointer so we disable the gaze pointer: https://docs.microsoft.com/en-us/windows/mixed-reality/mrtk-unity/mrtk2/features/input/pointers?view=mrtkunity-2021-05#disable-pointers
-        PointerUtils.SetGazePointerBehavior(PointerBehavior.AlwaysOff); // gives a warning concerning WindowsMixedReality inputs but so far seems OK to ignore
-
-        // close loader
-        indicatorObject.SetActive(false);
-    }
-
-    // <LocateAnchor>
-    /// <summary>
-    /// Looking for anchors with ID in _createdAnchorIDs
-    /// </summary>
-    private void LocateAnchor()
-    {
-        if (_createdAnchorIDs.Count > 0)
-        {
-            //Create watcher to look for all stored anchor IDs
-            Debug.Log($"ASA - Creating watcher to look for {_createdAnchorIDs.Count} spatial anchors");
-            AnchorLocateCriteria anchorLocateCriteria = new AnchorLocateCriteria();
-            anchorLocateCriteria.Identifiers = _createdAnchorIDs.ToArray();
-            var watcher = _spatialAnchorManager.Session.CreateWatcher(anchorLocateCriteria);
-            Debug.Log($"ASA - Watcher created!");
-        }
-    }
-    // </LocateAnchor>
-
-    // <SpatialAnchorManagerAnchorLocated>
-    /// <summary>
-    /// Callback when an anchor is located
-    /// </summary>
-    /// <param name="sender">Callback sender</param>
-    /// <param name="args">Callback AnchorLocatedEventArgs</param>
-    private void SpatialAnchorManager_AnchorLocated(object sender, AnchorLocatedEventArgs args)
-    {
-        Debug.Log($"ASA - Anchor recognized as a possible anchor {args.Identifier} {args.Status}");
-
-        if (args.Status == LocateAnchorStatus.Located)
-        {
-            //Creating and adjusting GameObjects have to run on the main thread. We are using the UnityDispatcher to make sure this happens.
-            UnityDispatcher.InvokeOnAppThread(() =>
+            try
             {
-                // Read out Cloud Anchor values
-                CloudSpatialAnchor cloudSpatialAnchor = args.Anchor;
+                // Now that the cloud spatial anchor has been prepared, we can try the actual save here.
+                await _spatialAnchorManager.CreateAnchorAsync(cloudSpatialAnchor);
 
-                //Create GameObject
-                //GameObject anchorGameObject = Instantiate(hold);
-                //GameObject anchorGameObject = PhotonNetwork.InstantiateRoomObject(hold, Vector3.zero, Quaternion.identity);
-                GameObject anchorGameObject = PhotonNetwork.Instantiate(hold, Vector3.zero, Quaternion.identity);
-                anchorGameObject.transform.localScale = Vector3.one * 0.1f;
-                anchorGameObject.GetComponent<MeshRenderer>().material.shader = Shader.Find("Legacy Shaders/Diffuse");
-                anchorGameObject.GetComponent<MeshRenderer>().material.color = Color.blue;
+                bool saveSucceeded = cloudSpatialAnchor != null;
+                if (!saveSucceeded)
+                {
+                    Debug.LogError("ASA - Failed to save, but no exception was thrown.");
+                    return;
+                }
 
-                // change color to green after a delay
-                StartCoroutine(ChangeColorDelayed(anchorGameObject, Color.green, 2f));
+                Debug.Log($"ASA - Saved cloud anchor with ID: {cloudSpatialAnchor.Identifier}");
+                _foundOrCreatedAnchorGameObjects.Add(newAnchorGameObject);
+                _createdAnchorIDs.Add(cloudSpatialAnchor.Identifier);
+                newAnchorGameObject.GetComponent<MeshRenderer>().material.color = Color.green;
 
-                // Link to Cloud Anchor
-                anchorGameObject.AddComponent<CloudNativeAnchor>().CloudToNative(cloudSpatialAnchor);
-                _foundOrCreatedAnchorGameObjects.Add(anchorGameObject);
-
-                // Add and then disable maninpulation scripts since we are in 'Delete' mode
+                // add manipulation scripts: https://stackoverflow.com/questions/61663652/adding-manipulation-components-via-c-sharp-script-only-works-in-unity
                 Debug.Log($"Adding manipulation");
-                Mesh mesh = anchorGameObject.GetComponent<MeshFilter>().mesh;
+                Mesh mesh = newAnchorGameObject.GetComponent<MeshFilter>().mesh;
 
                 //Add MeshCollider
-                MeshCollider collider = anchorGameObject.EnsureComponent<MeshCollider>();
+                MeshCollider collider = newAnchorGameObject.EnsureComponent<MeshCollider>();
 
                 //A lot of components are curved and need convex set to false
                 collider.convex = true;
 
                 //Add NearInteractionGrabbable
-                anchorGameObject.EnsureComponent<NearInteractionGrabbable>();
+                newAnchorGameObject.EnsureComponent<NearInteractionGrabbable>();
 
-                //Add manipulation event listeners
-                var omHandler = anchorGameObject.EnsureComponent<ObjectManipulator>();
-                omHandler.OnHoverEntered.AddListener((eventData) => HoldOnHoverStartedHandler(eventData, anchorGameObject));
-                omHandler.OnHoverExited.AddListener((eventData) => HoldOnHoverExitedHandler(eventData, anchorGameObject));
-                omHandler.OnManipulationStarted.AddListener((eventData) => HoldOnManipulationStartedHandler(eventData, anchorGameObject));
-                omHandler.OnManipulationEnded.AddListener((eventData) => HoldOnManipulationEndedHandler(eventData, anchorGameObject));
+                //Add ManipulationHandler with event listeners
+                Debug.Log(newAnchorGameObject.transform.position);
+                Debug.Log(newAnchorGameObject.transform.rotation);
+                var handler = newAnchorGameObject.EnsureComponent<ObjectManipulator>();
+                handler.OnHoverEntered.AddListener((eventData) => HoldOnHoverStartedHandler(eventData, newAnchorGameObject));
+                handler.OnHoverExited.AddListener((eventData) => HoldOnHoverExitedHandler(eventData, newAnchorGameObject));
+                handler.OnManipulationStarted.AddListener((eventData) => HoldOnManipulationStartedHandler(eventData, newAnchorGameObject));
+                handler.OnManipulationEnded.AddListener((eventData) => HoldOnManipulationEndedHandler(eventData, newAnchorGameObject));
 
-                ////Add TapToPlace event listeners
-                //TapToPlace ttp = anchorGameObject.EnsureComponent<TapToPlace>();
-                //ttp.OnPlacingStarted.AddListener(() => HoldOnPlacingStarted(anchorGameObject));
-                //ttp.OnPlacingStopped.AddListener(() => HoldOnPlacingStopped(anchorGameObject));
+                //Add TapToPlace event listeners
+                TapToPlace ttp = newAnchorGameObject.EnsureComponent<TapToPlace>();
+                ttp.OnPlacingStarted.AddListener(() => HoldOnPlacingStarted(newAnchorGameObject));
+                ttp.OnPlacingStopped.AddListener(() => HoldOnPlacingStopped(newAnchorGameObject));
+
+                ////SurfaceMagnetism sm = newAnchorGameObject.EnsureComponent<SurfaceMagnetism>();
+                ////sm.enabled = false;
 
                 //Set mesh to MeshCollider
                 collider.sharedMesh = mesh;
@@ -679,208 +578,401 @@ public class AzureSpatialAnchors : MonoBehaviourPunCallbacks
                 // Disable maninpulation scripts if we are in 'Delete' mode
                 if (editingMode == EditingMode.Delete)
                 {
-                    anchorGameObject.GetComponent<NearInteractionGrabbable>().enabled = false;
-                    anchorGameObject.GetComponent<ObjectManipulator>().enabled = false;
+                    newAnchorGameObject.GetComponent<NearInteractionGrabbable>().enabled = false;
+                    newAnchorGameObject.GetComponent<ObjectManipulator>().enabled = false;
                 }
-                //// Disable maninpulation scripts since we are in 'Delete' mode
-                //anchorGameObject.GetComponent<NearInteractionGrabbable>().enabled = false;
-                //anchorGameObject.GetComponent<ObjectManipulator>().enabled = false;
-            });
-        }
-    }
-    // </SpatialAnchorManagerAnchorLocated>
 
-    // <DeleteAnchor>
-    /// <summary>
-    /// Deleting Cloud Anchor attached to the given GameObject and deleting the GameObject
-    /// </summary>
-    /// <param name="anchorGameObject">Anchor GameObject that is to be deleted</param>
-    private async void DeleteAnchor(GameObject anchorGameObject)
-    {
-        CloudNativeAnchor cloudNativeAnchor = anchorGameObject.GetComponent<CloudNativeAnchor>();
-        CloudSpatialAnchor cloudSpatialAnchor = cloudNativeAnchor.CloudAnchor;
-
-        Debug.Log($"ASA - Deleting cloud anchor: {cloudSpatialAnchor.Identifier}");
-
-        //Request Deletion of Cloud Anchor
-        await _spatialAnchorManager.DeleteAnchorAsync(cloudSpatialAnchor);
-
-        //Remove local references
-        _createdAnchorIDs.Remove(cloudSpatialAnchor.Identifier);
-        _foundOrCreatedAnchorGameObjects.Remove(anchorGameObject);
-        //Destroy(anchorGameObject);
-        PhotonNetwork.Destroy(anchorGameObject);
-
-        Debug.Log($"ASA - Cloud anchor deleted!");
-    }
-    // </DeleteAnchor>
-
-    // <ToggleEditingMode>
-    /// <summary>
-    /// Toggles editing mode between Move and Delete
-    /// </summary>
-    public void ToggleEditingMode()
-    {
-        if (editingMode == EditingMode.Move)
-        {
-            editingMode = EditingMode.Delete;
-
-            // make holds unmovable
-            foreach (var anchorGameObject in _foundOrCreatedAnchorGameObjects)
-            {
-                Debug.Log($"Disabling Manipulation");
-                // disable manipulation scripts if attached
-                if (anchorGameObject.GetComponent<NearInteractionGrabbable>() != null)
-                {
-                    anchorGameObject.GetComponent<NearInteractionGrabbable>().enabled = false;
-                }
-                if (anchorGameObject.GetComponent<ObjectManipulator>() != null)
-                {
-                    anchorGameObject.GetComponent<ObjectManipulator>().enabled = false;
-                }
+                // share the created anchorId
+                ShareAzureAnchorIds();
             }
-          
-            GameObject.Find("ToggleEditorMode").GetComponentInChildren<TextMeshPro>().text = "Mode: Delete";
-        } else if (editingMode == EditingMode.Delete)
-        {
-            editingMode = EditingMode.Move;
-
-            // make holds movable
-            foreach (var anchorGameObject in _foundOrCreatedAnchorGameObjects)
+            catch (Exception exception)
             {
-                // enable manipulation scripts
-                Debug.Log($"Enabling Manipulation");
-                anchorGameObject.GetComponent<NearInteractionGrabbable>().enabled = true;
-                anchorGameObject.GetComponent<ObjectManipulator>().enabled = true;
+                Debug.Log("ASA - Failed to save anchor: " + exception.ToString());
+                Debug.LogException(exception);
             }
 
-            GameObject.Find("ToggleEditorMode").GetComponentInChildren<TextMeshPro>().text = "Mode: Move";
+            // turn on MRTK inputs
+            StartCoroutine(EnableCoroutine());
+
+            // the gaze pointer comes back along with hand pointer so we disable the gaze pointer: https://docs.microsoft.com/en-us/windows/mixed-reality/mrtk-unity/mrtk2/features/input/pointers?view=mrtkunity-2021-05#disable-pointers
+            PointerUtils.SetGazePointerBehavior(PointerBehavior.AlwaysOff); // gives a warning concerning WindowsMixedReality inputs but so far seems OK to ignore
+
+            // close loader
+            indicatorObject.SetActive(false);
         }
-    }
-    // </ToggleEditingMode>
 
-    // <changeColorDelayed>
-    /// <summary>
-    /// Change color of game object.
-    /// Used in delayed fashion.
-    /// </summary>
-    /// <param name="gameObject"></param>
-    private IEnumerator ChangeColorDelayed(GameObject gameObject, Color color, float time)
-    { 
-        yield return new WaitForSeconds(time);
-        gameObject.GetComponent<MeshRenderer>().material.color = color;
-    }
-    // </changeColorDelayed>
-
-    // <destroyObjectDelayed>
-    /// <summary>
-    /// Destroy object.
-    /// Used in delayed fashion e.g. when removing long tap's sphere object created for user feedback
-    /// </summary>
-    /// <param name="gameObject"></param>
-    /// <param name="time"></param>
-    /// <returns></returns>
-    private IEnumerator DestroyObjectDelayed(GameObject gameObject, float time)
-    {
-        yield return new WaitForSeconds(time);
-        //Destroy(gameObject);
-        PhotonNetwork.Destroy(gameObject);
-    }
-    // </destroyObjectDelayed>
-
-    // <DisableCoroutine>
-    /// <summary>
-    /// Disable MRTK input 
-    /// </summary>
-    /// <returns></returns>
-    private IEnumerator DisableCoroutine()
-    {
-        yield return null;
-        Microsoft.MixedReality.Toolkit.CoreServices.InputSystem.Disable();
-    }
-    // </DisableCoroutine>
-
-    // <EnableCoroutine>
-    /// <summary>
-    /// Enable MRTK input
-    /// </summary>
-    /// <returns></returns>
-    private IEnumerator EnableCoroutine()
-    {
-        yield return null;
-        Microsoft.MixedReality.Toolkit.CoreServices.InputSystem.Enable();
-    }
-    // </EnableCoroutine>
-
-    // <ScrollHoldMenuClick>
-    /// <summary>
-    /// Handle scoll hold menu selection
-    /// </summary>
-    /// <param name="go"></param>
-    public void ScrollHoldMenuClick(GameObject go)
-    {
-        Debug.Log(go);
-        if (go != null)
+        // <LocateAnchor>
+        /// <summary>
+        /// Looking for anchors with ID in _createdAnchorIDs
+        /// </summary>
+        private void LocateAnchor()
         {
-            // PhotonNetwork.PrefabPool lets us refer to prefabs by name under Resources folder without having to manually add them to the ResourceCache: https://forum.unity.com/threads/solved-photon-instantiating-prefabs-without-putting-them-in-a-resources-folder.293853/
-            hold = $"{go.name}";
+            if (_createdAnchorIDs.Count > 0)
+            {
+                //Create watcher to look for all stored anchor IDs
+                Debug.Log($"ASA - Creating watcher to look for {_createdAnchorIDs.Count} spatial anchors");
+                AnchorLocateCriteria anchorLocateCriteria = new AnchorLocateCriteria();
+                anchorLocateCriteria.Identifiers = _createdAnchorIDs.ToArray();
+                var watcher = _spatialAnchorManager.Session.CreateWatcher(anchorLocateCriteria);
+                Debug.Log($"ASA - Watcher created!");
+            }
         }
-    }
+        // </LocateAnchor>
 
-    private async void restartAnchorWatcher(List<string> anchorIds)
-    {
-        Debug.Log("restartAnchorWatcher");
-        _createdAnchorIDs = anchorIds;
-
-        // there doesn't appear to be a method to simply remove the watcher so we need to stop/restart the session and reattach a new watcher for the updated list of anchorIds
-        if (_spatialAnchorManager.IsSessionStarted)
+        // <SpatialAnchorManagerAnchorLocated>
+        /// <summary>
+        /// Callback when an anchor is located
+        /// </summary>
+        /// <param name="sender">Callback sender</param>
+        /// <param name="args">Callback AnchorLocatedEventArgs</param>
+        private void SpatialAnchorManager_AnchorLocated(object sender, AnchorLocatedEventArgs args)
         {
-            // Stop Session and remove all GameObjects. This does not delete the Anchors in the cloud
-            _spatialAnchorManager.DestroySession();
-            RemoveAllAnchorGameObjects();
-            Debug.Log("ASA - Stopped Session and removed all Anchor Objects");
-        }
-        
-        //Start session and search for all Anchors previously created
-        await _spatialAnchorManager.StartSessionAsync();
-        LocateAnchor();
-    }
+            Debug.Log($"ASA - Anchor recognized as a possible anchor {args.Identifier} {args.Status}");
 
-    public void ShareAzureAnchorIds()
-    {
-        Debug.Log("ShareAzureAnchorIds");
+            if (args.Status == LocateAnchorStatus.Located)
+            {
+                //Creating and adjusting GameObjects have to run on the main thread. We are using the UnityDispatcher to make sure this happens.
+                UnityDispatcher.InvokeOnAppThread(() =>
+                {
+                    // Read out Cloud Anchor values
+                    CloudSpatialAnchor cloudSpatialAnchor = args.Anchor;
+
+                    //Create GameObject
+                    //GameObject anchorGameObject = Instantiate(hold);
+                    //GameObject anchorGameObject = PhotonNetwork.InstantiateRoomObject(hold, Vector3.zero, Quaternion.identity);
+                    GameObject anchorGameObject = PhotonNetwork.Instantiate(hold, Vector3.zero, Quaternion.identity);
+                    anchorGameObject.transform.localScale = Vector3.one * 0.1f;
+                    anchorGameObject.GetComponent<MeshRenderer>().material.shader = Shader.Find("Legacy Shaders/Diffuse");
+                    anchorGameObject.GetComponent<MeshRenderer>().material.color = Color.blue;
+
+                    // change color to green after a delay
+                    StartCoroutine(ChangeColorDelayed(anchorGameObject, Color.green, 2f));
+
+                    // Link to Cloud Anchor
+                    anchorGameObject.AddComponent<CloudNativeAnchor>().CloudToNative(cloudSpatialAnchor);
+                    _foundOrCreatedAnchorGameObjects.Add(anchorGameObject);
+
+                    // Add and then disable maninpulation scripts since we are in 'Delete' mode
+                    Debug.Log($"Adding manipulation");
+                    Mesh mesh = anchorGameObject.GetComponent<MeshFilter>().mesh;
+
+                    //Add MeshCollider
+                    MeshCollider collider = anchorGameObject.EnsureComponent<MeshCollider>();
+
+                    //A lot of components are curved and need convex set to false
+                    collider.convex = true;
+
+                    //Add NearInteractionGrabbable
+                    anchorGameObject.EnsureComponent<NearInteractionGrabbable>();
+
+                    //Add manipulation event listeners
+                    var omHandler = anchorGameObject.EnsureComponent<ObjectManipulator>();
+                    omHandler.OnHoverEntered.AddListener((eventData) => HoldOnHoverStartedHandler(eventData, anchorGameObject));
+                    omHandler.OnHoverExited.AddListener((eventData) => HoldOnHoverExitedHandler(eventData, anchorGameObject));
+                    omHandler.OnManipulationStarted.AddListener((eventData) => HoldOnManipulationStartedHandler(eventData, anchorGameObject));
+                    omHandler.OnManipulationEnded.AddListener((eventData) => HoldOnManipulationEndedHandler(eventData, anchorGameObject));
+
+                    ////Add TapToPlace event listeners
+                    //TapToPlace ttp = anchorGameObject.EnsureComponent<TapToPlace>();
+                    //ttp.OnPlacingStarted.AddListener(() => HoldOnPlacingStarted(anchorGameObject));
+                    //ttp.OnPlacingStopped.AddListener(() => HoldOnPlacingStopped(anchorGameObject));
+
+                    //Set mesh to MeshCollider
+                    collider.sharedMesh = mesh;
+
+                    // Disable maninpulation scripts if we are in 'Delete' mode
+                    if (editingMode == EditingMode.Delete)
+                    {
+                        anchorGameObject.GetComponent<NearInteractionGrabbable>().enabled = false;
+                        anchorGameObject.GetComponent<ObjectManipulator>().enabled = false;
+                    }
+                    //// Disable maninpulation scripts since we are in 'Delete' mode
+                    //anchorGameObject.GetComponent<NearInteractionGrabbable>().enabled = false;
+                    //anchorGameObject.GetComponent<ObjectManipulator>().enabled = false;
+                });
+            }
+        }
+        // </SpatialAnchorManagerAnchorLocated>
+
+        // <DeleteAnchor>
+        /// <summary>
+        /// Deleting Cloud Anchor attached to the given GameObject and deleting the GameObject
+        /// </summary>
+        /// <param name="anchorGameObject">Anchor GameObject that is to be deleted</param>
+        private async void DeleteAnchor(GameObject anchorGameObject)
+        {
+            CloudNativeAnchor cloudNativeAnchor = anchorGameObject.GetComponent<CloudNativeAnchor>();
+            CloudSpatialAnchor cloudSpatialAnchor = cloudNativeAnchor.CloudAnchor;
+
+            Debug.Log($"ASA - Deleting cloud anchor: {cloudSpatialAnchor.Identifier}");
+
+            //Request Deletion of Cloud Anchor
+            await _spatialAnchorManager.DeleteAnchorAsync(cloudSpatialAnchor);
+
+            //Remove local references
+            _createdAnchorIDs.Remove(cloudSpatialAnchor.Identifier);
+            _foundOrCreatedAnchorGameObjects.Remove(anchorGameObject);
+            //Destroy(anchorGameObject);
+            PhotonNetwork.Destroy(anchorGameObject);
+
+            Debug.Log($"ASA - Cloud anchor deleted!");
+        }
+        // </DeleteAnchor>
+
+        // <ToggleEditingMode>
+        /// <summary>
+        /// Toggles editing mode between Move and Delete
+        /// </summary>
+        public void ToggleEditingMode()
+        {
+            if (editingMode == EditingMode.Move)
+            {
+                editingMode = EditingMode.Delete;
+
+                // make holds unmovable
+                foreach (var anchorGameObject in _foundOrCreatedAnchorGameObjects)
+                {
+                    Debug.Log($"Disabling Manipulation");
+                    // disable manipulation scripts if attached
+                    if (anchorGameObject.GetComponent<NearInteractionGrabbable>() != null)
+                    {
+                        anchorGameObject.GetComponent<NearInteractionGrabbable>().enabled = false;
+                    }
+                    if (anchorGameObject.GetComponent<ObjectManipulator>() != null)
+                    {
+                        anchorGameObject.GetComponent<ObjectManipulator>().enabled = false;
+                    }
+                }
+
+                GameObject.Find("ToggleEditorMode").GetComponentInChildren<TextMeshPro>().text = "Mode: Delete";
+            }
+            else if (editingMode == EditingMode.Delete)
+            {
+                editingMode = EditingMode.Move;
+
+                // make holds movable
+                foreach (var anchorGameObject in _foundOrCreatedAnchorGameObjects)
+                {
+                    // enable manipulation scripts
+                    Debug.Log($"Enabling Manipulation");
+                    anchorGameObject.GetComponent<NearInteractionGrabbable>().enabled = true;
+                    anchorGameObject.GetComponent<ObjectManipulator>().enabled = true;
+                }
+
+                GameObject.Find("ToggleEditorMode").GetComponentInChildren<TextMeshPro>().text = "Mode: Move";
+            }
+        }
+        // </ToggleEditingMode>
+
+        // <changeColorDelayed>
+        /// <summary>
+        /// Change color of game object.
+        /// Used in delayed fashion.
+        /// </summary>
+        /// <param name="gameObject"></param>
+        private IEnumerator ChangeColorDelayed(GameObject gameObject, Color color, float time)
+        {
+            yield return new WaitForSeconds(time);
+            gameObject.GetComponent<MeshRenderer>().material.color = color;
+        }
+        // </changeColorDelayed>
+
+        // <destroyObjectDelayed>
+        /// <summary>
+        /// Destroy object.
+        /// Used in delayed fashion e.g. when removing long tap's sphere object created for user feedback
+        /// </summary>
+        /// <param name="gameObject"></param>
+        /// <param name="time"></param>
+        /// <returns></returns>
+        private IEnumerator DestroyObjectDelayed(GameObject gameObject, float time)
+        {
+            yield return new WaitForSeconds(time);
+            //Destroy(gameObject);
+            PhotonNetwork.Destroy(gameObject);
+        }
+        // </destroyObjectDelayed>
+
+        // <DisableCoroutine>
+        /// <summary>
+        /// Disable MRTK input 
+        /// </summary>
+        /// <returns></returns>
+        private IEnumerator DisableCoroutine()
+        {
+            yield return null;
+            Microsoft.MixedReality.Toolkit.CoreServices.InputSystem.Disable();
+        }
+        // </DisableCoroutine>
+
+        // <EnableCoroutine>
+        /// <summary>
+        /// Enable MRTK input
+        /// </summary>
+        /// <returns></returns>
+        private IEnumerator EnableCoroutine()
+        {
+            yield return null;
+            Microsoft.MixedReality.Toolkit.CoreServices.InputSystem.Enable();
+        }
+        // </EnableCoroutine>
+
+        // <ScrollHoldMenuClick>
+        /// <summary>
+        /// Handle scoll hold menu selection
+        /// </summary>
+        /// <param name="go"></param>
+        public void ScrollHoldMenuClick(GameObject go)
+        {
+            Debug.Log(go);
+            if (go != null)
+            {
+                // PhotonNetwork.PrefabPool lets us refer to prefabs by name under Resources folder without having to manually add them to the ResourceCache: https://forum.unity.com/threads/solved-photon-instantiating-prefabs-without-putting-them-in-a-resources-folder.293853/
+                hold = $"{go.name}";
+            }
+        }
+
+        private async void restartAnchorWatcher(List<string> anchorIds)
+        {
+            Debug.Log("restartAnchorWatcher");
+            _createdAnchorIDs = anchorIds;
+
+            // there doesn't appear to be a method to simply remove the watcher so we need to stop/restart the session and reattach a new watcher for the updated list of anchorIds
+            if (_spatialAnchorManager.IsSessionStarted)
+            {
+                // Stop Session and remove all GameObjects. This does not delete the Anchors in the cloud
+                _spatialAnchorManager.DestroySession();
+                RemoveAllAnchorGameObjects();
+                Debug.Log("ASA - Stopped Session and removed all Anchor Objects");
+            }
+
+            //Start session and search for all Anchors previously created
+            await _spatialAnchorManager.StartSessionAsync();
+            LocateAnchor();
+        }
+
+        public void ShareAzureAnchorIds()
+        {
+            Debug.Log("ShareAzureAnchorIds");
 #if UNITY_2020
-        ExitGames.Client.Photon.Hashtable setValue = new ExitGames.Client.Photon.Hashtable();
-        setValue.Add("anchorIDs", _createdAnchorIDs.ToArray());
-        PhotonNetwork.CurrentRoom.SetCustomProperties(setValue);
-        //if (player != null)
-        //    player.GetComponent<PhotonView>().RPC("PunRPC_ShareAzureAnchorIds", RpcTarget.OthersBuffered, _createdAnchorIDs);
-        //else
-        //    Debug.LogError("PV is null");
+            ExitGames.Client.Photon.Hashtable setValue = new ExitGames.Client.Photon.Hashtable();
+            setValue.Add("anchorIDs", _createdAnchorIDs.ToArray());
+            PhotonNetwork.CurrentRoom.SetCustomProperties(setValue);
+            //if (player != null)
+            //    player.GetComponent<PhotonView>().RPC("PunRPC_ShareAzureAnchorIds", RpcTarget.OthersBuffered, _createdAnchorIDs);
+            //else
+            //    Debug.LogError("PV is null");
 #endif
-    }
-
-    public override void OnRoomPropertiesUpdate(ExitGames.Client.Photon.Hashtable propertiesThatChanged)
-    {
-        base.OnRoomPropertiesUpdate(propertiesThatChanged);
-
-        Debug.Log("OnRoomPropertiesUpdate");
-        if (propertiesThatChanged.ContainsKey("anchorIDs"))
-        {
-            String[] anchorIDs = (String[])propertiesThatChanged["anchorIDs"];
-            restartAnchorWatcher(anchorIDs.ToList());
         }
-    }
 
-    public override void OnEnable()
-    {
-        base.OnEnable();
-        PhotonNetwork.AddCallbackTarget(this);
-    }
+        public override void OnRoomPropertiesUpdate(ExitGames.Client.Photon.Hashtable propertiesThatChanged)
+        {
+            base.OnRoomPropertiesUpdate(propertiesThatChanged);
 
-    public override void OnDisable()
-    {
-        base.OnDisable();
-        PhotonNetwork.RemoveCallbackTarget(this);
+            Debug.Log("OnRoomPropertiesUpdate");
+            if (propertiesThatChanged.ContainsKey("anchorIDs"))
+            {
+                String[] anchorIDs = (String[])propertiesThatChanged["anchorIDs"];
+                restartAnchorWatcher(anchorIDs.ToList());
+            }
+        }
+
+        public override void OnEnable()
+        {
+            base.OnEnable();
+            PhotonNetwork.AddCallbackTarget(this);
+        }
+
+        public override void OnDisable()
+        {
+            base.OnDisable();
+            PhotonNetwork.RemoveCallbackTarget(this);
+        }
+
+        public async Task<string> CreateAnchorOnObjectAsync(GameObject gameObjectForAnchor)
+        {
+            Debug.Log("CreateAnchorOnObjectAsync");
+
+            string anchorId = string.Empty;
+
+            await _spatialAnchorManager.StartSessionAsync();
+
+            //Add and configure ASA components
+            CloudNativeAnchor cloudNativeAnchor = gameObjectForAnchor.AddComponent<CloudNativeAnchor>();
+            await cloudNativeAnchor.NativeToCloud();
+            CloudSpatialAnchor cloudSpatialAnchor = cloudNativeAnchor.CloudAnchor;
+            cloudSpatialAnchor.Expiration = DateTimeOffset.Now.AddDays(3);
+
+            //Collect Environment Data
+            while (!_spatialAnchorManager.IsReadyForCreate)
+            {
+                float createProgress = _spatialAnchorManager.SessionStatus.RecommendedForCreateProgress;
+                Debug.Log($"ASA - Move your device to capture more environment data: {createProgress:0%}");
+            }
+
+            Debug.Log($"ASA - Saving room cloud anchor... ");
+
+            try
+            {
+                // Now that the cloud spatial anchor has been prepared, we can try the actual save here.
+                await _spatialAnchorManager.CreateAnchorAsync(cloudSpatialAnchor);
+
+                bool saveSucceeded = cloudSpatialAnchor != null;
+                if (!saveSucceeded)
+                {
+                    Debug.LogError("ASA - Failed to save, but no exception was thrown.");
+                    return anchorId;
+                }
+
+                anchorId = cloudSpatialAnchor.Identifier;
+                Debug.Log($"ASA - Saved room cloud anchor with ID: {anchorId}");
+            }
+            catch (Exception exception)
+            {
+                Debug.Log("ASA - Failed to save room anchor: " + exception.ToString());
+                Debug.LogException(exception);
+            }
+
+            return anchorId;
+        }
+
+        public async Task<bool> PopulateAnchorOnObjectAsync(string anchorId, GameObject gameObjectForAnchor)
+        {
+            Debug.Log("PopulateAnchorOnObjectAsync");
+
+            bool anchorLocated = false;
+
+            try
+            {
+                await _spatialAnchorManager.StartSessionAsync();
+
+                this.taskWaitForAnchorLocation = new TaskCompletionSource<CloudSpatialAnchor>();
+
+                var watcher = _spatialAnchorManager.Session.CreateWatcher(
+                    new AnchorLocateCriteria()
+                    {
+                        Identifiers = new string[] { anchorId },
+                        BypassCache = true,
+                        Strategy = LocateStrategy.AnyStrategy,
+                        RequestedCategories = AnchorDataCategory.Spatial
+                    }
+                );
+
+                var cloudAnchor = await this.taskWaitForAnchorLocation.Task;
+
+                anchorLocated = cloudAnchor != null;
+
+                if (anchorLocated)
+                {
+                    gameObjectForAnchor.AddComponent<CloudNativeAnchor>().CloudToNative(cloudAnchor);
+                }
+                watcher.Stop();
+            }
+            catch (Exception ex) // TODO: reasonable exceptions here.
+            {
+                Debug.Log($"Caught {ex.Message}");
+            }
+            return (anchorLocated);
+        }
     }
 }
