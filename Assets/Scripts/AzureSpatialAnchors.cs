@@ -94,10 +94,10 @@ namespace AzureSpatialAnchors
         // Start is called before the first frame update
         void Start()
         {
-            _spatialAnchorManager = GetComponent<SpatialAnchorManager>();
-            _spatialAnchorManager.LogDebug += (sender, args) => Debug.Log($"ASA - Debug: {args.Message}");
-            _spatialAnchorManager.Error += (sender, args) => Debug.LogError($"ASA - Error: {args.ErrorMessage}");
-            _spatialAnchorManager.AnchorLocated += SpatialAnchorManager_AnchorLocated;
+            //_spatialAnchorManager = GetComponent<SpatialAnchorManager>();
+            //_spatialAnchorManager.LogDebug += (sender, args) => Debug.Log($"ASA - Debug: {args.Message}");
+            //_spatialAnchorManager.Error += (sender, args) => Debug.LogError($"ASA - Error: {args.ErrorMessage}");
+            //_spatialAnchorManager.AnchorLocated += SpatialAnchorManager_AnchorLocated;
             editingMode = EditingMode.Move;
             GameObject.Find("ToggleEditorMode").GetComponentInChildren<TextMeshPro>().text = "Mode: Move";
             indicatorObject.SetActive(false);
@@ -218,7 +218,7 @@ namespace AzureSpatialAnchors
         {
             Debug.Log("ShortTap");
 
-            await _spatialAnchorManager.StartSessionAsync();
+            //await _spatialAnchorManager.StartSessionAsync();
             bool anchorNearby = IsAnchorNearby(handPosition, out GameObject anchorGameObject);
 
             if (!anchorNearby && editingMode == EditingMode.Move)
@@ -268,19 +268,20 @@ namespace AzureSpatialAnchors
 
             if (editingMode == EditingMode.Delete)
             {
-                if (_spatialAnchorManager.IsSessionStarted)
-                {
-                    // Stop Session and remove all GameObjects. This does not delete the Anchors in the cloud
-                    _spatialAnchorManager.DestroySession();
-                    RemoveAllAnchorGameObjects();
-                    Debug.Log("ASA - Stopped Session and removed all Anchor Objects");
-                }
-                else
-                {
-                    //Start session and search for all Anchors previously created
-                    await _spatialAnchorManager.StartSessionAsync();
-                    LocateAnchor();
-                }
+                RemoveAllAnchorGameObjects();
+                //if (_spatialAnchorManager.IsSessionStarted)
+                //{
+                //    // Stop Session and remove all GameObjects. This does not delete the Anchors in the cloud
+                //    _spatialAnchorManager.DestroySession();
+                //    RemoveAllAnchorGameObjects();
+                //    Debug.Log("ASA - Stopped Session and removed all Anchor Objects");
+                //}
+                //else
+                //{
+                //    //Start session and search for all Anchors previously created
+                //    await _spatialAnchorManager.StartSessionAsync();
+                //    LocateAnchor();
+                //}
             }
         }
         // </LongTap>
@@ -510,36 +511,36 @@ namespace AzureSpatialAnchors
 
             Debug.Log("Here");
 
-            //Add and configure ASA components
-            CloudNativeAnchor cloudNativeAnchor = newAnchorGameObject.AddComponent<CloudNativeAnchor>();
-            await cloudNativeAnchor.NativeToCloud();
-            CloudSpatialAnchor cloudSpatialAnchor = cloudNativeAnchor.CloudAnchor;
-            cloudSpatialAnchor.Expiration = DateTimeOffset.Now.AddDays(3);
+            ////Add and configure ASA components
+            //CloudNativeAnchor cloudNativeAnchor = newAnchorGameObject.AddComponent<CloudNativeAnchor>();
+            //await cloudNativeAnchor.NativeToCloud();
+            //CloudSpatialAnchor cloudSpatialAnchor = cloudNativeAnchor.CloudAnchor;
+            //cloudSpatialAnchor.Expiration = DateTimeOffset.Now.AddDays(3);
 
-            //Collect Environment Data
-            while (!_spatialAnchorManager.IsReadyForCreate)
-            {
-                float createProgress = _spatialAnchorManager.SessionStatus.RecommendedForCreateProgress;
-                Debug.Log($"ASA - Move your device to capture more environment data: {createProgress:0%}");
-            }
+            ////Collect Environment Data
+            //while (!_spatialAnchorManager.IsReadyForCreate)
+            //{
+            //    float createProgress = _spatialAnchorManager.SessionStatus.RecommendedForCreateProgress;
+            //    Debug.Log($"ASA - Move your device to capture more environment data: {createProgress:0%}");
+            //}
 
-            Debug.Log($"ASA - Saving cloud anchor... ");
+            //Debug.Log($"ASA - Saving cloud anchor... ");
 
             try
             {
                 // Now that the cloud spatial anchor has been prepared, we can try the actual save here.
-                await _spatialAnchorManager.CreateAnchorAsync(cloudSpatialAnchor);
+                //await _spatialAnchorManager.CreateAnchorAsync(cloudSpatialAnchor);
 
-                bool saveSucceeded = cloudSpatialAnchor != null;
-                if (!saveSucceeded)
-                {
-                    Debug.LogError("ASA - Failed to save, but no exception was thrown.");
-                    return;
-                }
+                //bool saveSucceeded = cloudSpatialAnchor != null;
+                //if (!saveSucceeded)
+                //{
+                //    Debug.LogError("ASA - Failed to save, but no exception was thrown.");
+                //    return;
+                //}
 
-                Debug.Log($"ASA - Saved cloud anchor with ID: {cloudSpatialAnchor.Identifier}");
+                //Debug.Log($"ASA - Saved cloud anchor with ID: {cloudSpatialAnchor.Identifier}");
                 _foundOrCreatedAnchorGameObjects.Add(newAnchorGameObject);
-                _createdAnchorIDs.Add(cloudSpatialAnchor.Identifier);
+                //_createdAnchorIDs.Add(cloudSpatialAnchor.Identifier);
                 newAnchorGameObject.GetComponent<MeshRenderer>().material.color = Color.green;
 
                 // add manipulation scripts: https://stackoverflow.com/questions/61663652/adding-manipulation-components-via-c-sharp-script-only-works-in-unity
@@ -582,8 +583,8 @@ namespace AzureSpatialAnchors
                     newAnchorGameObject.GetComponent<ObjectManipulator>().enabled = false;
                 }
 
-                // share the created anchorId
-                ShareAzureAnchorIds();
+                //// share the created anchorId
+                //ShareAzureAnchorIds();
             }
             catch (Exception exception)
             {
@@ -701,16 +702,16 @@ namespace AzureSpatialAnchors
         /// <param name="anchorGameObject">Anchor GameObject that is to be deleted</param>
         private async void DeleteAnchor(GameObject anchorGameObject)
         {
-            CloudNativeAnchor cloudNativeAnchor = anchorGameObject.GetComponent<CloudNativeAnchor>();
-            CloudSpatialAnchor cloudSpatialAnchor = cloudNativeAnchor.CloudAnchor;
+            //CloudNativeAnchor cloudNativeAnchor = anchorGameObject.GetComponent<CloudNativeAnchor>();
+            //CloudSpatialAnchor cloudSpatialAnchor = cloudNativeAnchor.CloudAnchor;
 
-            Debug.Log($"ASA - Deleting cloud anchor: {cloudSpatialAnchor.Identifier}");
+            //Debug.Log($"ASA - Deleting cloud anchor: {cloudSpatialAnchor.Identifier}");
 
-            //Request Deletion of Cloud Anchor
-            await _spatialAnchorManager.DeleteAnchorAsync(cloudSpatialAnchor);
+            ////Request Deletion of Cloud Anchor
+            //await _spatialAnchorManager.DeleteAnchorAsync(cloudSpatialAnchor);
 
-            //Remove local references
-            _createdAnchorIDs.Remove(cloudSpatialAnchor.Identifier);
+            ////Remove local references
+            //_createdAnchorIDs.Remove(cloudSpatialAnchor.Identifier);
             _foundOrCreatedAnchorGameObjects.Remove(anchorGameObject);
             //Destroy(anchorGameObject);
             PhotonNetwork.Destroy(anchorGameObject);
@@ -889,90 +890,90 @@ namespace AzureSpatialAnchors
             PhotonNetwork.RemoveCallbackTarget(this);
         }
 
-        public async Task<string> CreateAnchorOnObjectAsync(GameObject gameObjectForAnchor)
-        {
-            Debug.Log("CreateAnchorOnObjectAsync");
+        //public async Task<string> CreateAnchorOnObjectAsync(GameObject gameObjectForAnchor)
+        //{
+        //    Debug.Log("CreateAnchorOnObjectAsync");
 
-            string anchorId = string.Empty;
+        //    string anchorId = string.Empty;
 
-            await _spatialAnchorManager.StartSessionAsync();
+        //    await _spatialAnchorManager.StartSessionAsync();
 
-            //Add and configure ASA components
-            CloudNativeAnchor cloudNativeAnchor = gameObjectForAnchor.AddComponent<CloudNativeAnchor>();
-            await cloudNativeAnchor.NativeToCloud();
-            CloudSpatialAnchor cloudSpatialAnchor = cloudNativeAnchor.CloudAnchor;
-            cloudSpatialAnchor.Expiration = DateTimeOffset.Now.AddDays(3);
+        //    //Add and configure ASA components
+        //    CloudNativeAnchor cloudNativeAnchor = gameObjectForAnchor.AddComponent<CloudNativeAnchor>();
+        //    await cloudNativeAnchor.NativeToCloud();
+        //    CloudSpatialAnchor cloudSpatialAnchor = cloudNativeAnchor.CloudAnchor;
+        //    cloudSpatialAnchor.Expiration = DateTimeOffset.Now.AddDays(3);
 
-            //Collect Environment Data
-            while (!_spatialAnchorManager.IsReadyForCreate)
-            {
-                float createProgress = _spatialAnchorManager.SessionStatus.RecommendedForCreateProgress;
-                Debug.Log($"ASA - Move your device to capture more environment data: {createProgress:0%}");
-            }
+        //    //Collect Environment Data
+        //    while (!_spatialAnchorManager.IsReadyForCreate)
+        //    {
+        //        float createProgress = _spatialAnchorManager.SessionStatus.RecommendedForCreateProgress;
+        //        Debug.Log($"ASA - Move your device to capture more environment data: {createProgress:0%}");
+        //    }
 
-            Debug.Log($"ASA - Saving room cloud anchor... ");
+        //    Debug.Log($"ASA - Saving room cloud anchor... ");
 
-            try
-            {
-                // Now that the cloud spatial anchor has been prepared, we can try the actual save here.
-                await _spatialAnchorManager.CreateAnchorAsync(cloudSpatialAnchor);
+        //    try
+        //    {
+        //        // Now that the cloud spatial anchor has been prepared, we can try the actual save here.
+        //        await _spatialAnchorManager.CreateAnchorAsync(cloudSpatialAnchor);
 
-                bool saveSucceeded = cloudSpatialAnchor != null;
-                if (!saveSucceeded)
-                {
-                    Debug.LogError("ASA - Failed to save, but no exception was thrown.");
-                    return anchorId;
-                }
+        //        bool saveSucceeded = cloudSpatialAnchor != null;
+        //        if (!saveSucceeded)
+        //        {
+        //            Debug.LogError("ASA - Failed to save, but no exception was thrown.");
+        //            return anchorId;
+        //        }
 
-                anchorId = cloudSpatialAnchor.Identifier;
-                Debug.Log($"ASA - Saved room cloud anchor with ID: {anchorId}");
-            }
-            catch (Exception exception)
-            {
-                Debug.Log("ASA - Failed to save room anchor: " + exception.ToString());
-                Debug.LogException(exception);
-            }
+        //        anchorId = cloudSpatialAnchor.Identifier;
+        //        Debug.Log($"ASA - Saved room cloud anchor with ID: {anchorId}");
+        //    }
+        //    catch (Exception exception)
+        //    {
+        //        Debug.Log("ASA - Failed to save room anchor: " + exception.ToString());
+        //        Debug.LogException(exception);
+        //    }
 
-            return anchorId;
-        }
+        //    return anchorId;
+        //}
 
-        public async Task<bool> PopulateAnchorOnObjectAsync(string anchorId, GameObject gameObjectForAnchor)
-        {
-            Debug.Log("PopulateAnchorOnObjectAsync");
+        //public async Task<bool> PopulateAnchorOnObjectAsync(string anchorId, GameObject gameObjectForAnchor)
+        //{
+        //    Debug.Log("PopulateAnchorOnObjectAsync");
 
-            bool anchorLocated = false;
+        //    bool anchorLocated = false;
 
-            try
-            {
-                await _spatialAnchorManager.StartSessionAsync();
+        //    try
+        //    {
+        //        await _spatialAnchorManager.StartSessionAsync();
 
-                this.taskWaitForAnchorLocation = new TaskCompletionSource<CloudSpatialAnchor>();
+        //        this.taskWaitForAnchorLocation = new TaskCompletionSource<CloudSpatialAnchor>();
 
-                var watcher = _spatialAnchorManager.Session.CreateWatcher(
-                    new AnchorLocateCriteria()
-                    {
-                        Identifiers = new string[] { anchorId },
-                        BypassCache = true,
-                        Strategy = LocateStrategy.AnyStrategy,
-                        RequestedCategories = AnchorDataCategory.Spatial
-                    }
-                );
+        //        var watcher = _spatialAnchorManager.Session.CreateWatcher(
+        //            new AnchorLocateCriteria()
+        //            {
+        //                Identifiers = new string[] { anchorId },
+        //                BypassCache = true,
+        //                Strategy = LocateStrategy.AnyStrategy,
+        //                RequestedCategories = AnchorDataCategory.Spatial
+        //            }
+        //        );
 
-                var cloudAnchor = await this.taskWaitForAnchorLocation.Task;
+        //        var cloudAnchor = await this.taskWaitForAnchorLocation.Task;
 
-                anchorLocated = cloudAnchor != null;
+        //        anchorLocated = cloudAnchor != null;
 
-                if (anchorLocated)
-                {
-                    gameObjectForAnchor.AddComponent<CloudNativeAnchor>().CloudToNative(cloudAnchor);
-                }
-                watcher.Stop();
-            }
-            catch (Exception ex) // TODO: reasonable exceptions here.
-            {
-                Debug.Log($"Caught {ex.Message}");
-            }
-            return (anchorLocated);
-        }
+        //        if (anchorLocated)
+        //        {
+        //            gameObjectForAnchor.AddComponent<CloudNativeAnchor>().CloudToNative(cloudAnchor);
+        //        }
+        //        watcher.Stop();
+        //    }
+        //    catch (Exception ex) // TODO: reasonable exceptions here.
+        //    {
+        //        Debug.Log($"Caught {ex.Message}");
+        //    }
+        //    return (anchorLocated);
+        //}
     }
 }
