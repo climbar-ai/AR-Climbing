@@ -12,6 +12,8 @@ using TMPro;
 
 namespace Scripts.WorldLocking
 {
+    using CloudAnchorId = System.String;
+
     /// <summary>
     /// Script for implementing button actions. Simple passthrough to perform publisher actions on interaction events.
     /// </summary>
@@ -174,6 +176,28 @@ namespace Scripts.WorldLocking
             SimpleConsole.AddLine(8, $"Finished.");
 
             await ChangeColorForSeconds(finishSeconds, Color.green);
+            working = false;
+        }
+
+        public async void DoDownloadOne(CloudAnchorId cloudAnchorId)
+        {
+            working = true;
+            //SetColors(Color.black);
+
+            SimpleConsole.AddLine(8, $"DownloadOne, binder is {(binder == null ? "null" : binder.Name)}");
+            if (binder != null)
+            {
+                //if (bindingOracle != null)
+                //{
+                //    SimpleConsole.AddLine(8, $"Getting from {bindingOracle.Name}");
+                //    bindingOracle.Get(binder);
+                //}
+                SimpleConsole.AddLine(8, $"Starting download from {binder.Name} for cloud anchor id: {cloudAnchorId}");
+                await spacePinBinder.DownloadOne(cloudAnchorId);
+            }
+            SimpleConsole.AddLine(8, $"Finished.");
+
+            //await ChangeColorForSeconds(finishSeconds, Color.green);
             working = false;
         }
 

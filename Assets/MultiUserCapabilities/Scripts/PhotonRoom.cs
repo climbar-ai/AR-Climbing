@@ -5,21 +5,39 @@ using TMPro;
 using UnityEngine;
 using AzureSpatialAnchors;
 using System.Threading.Tasks;
+using Scripts.WorldLocking;
+using Microsoft.MixedReality.WorldLocking.ASA;
 
 namespace Scripts
 {
+    using CloudAnchorId = System.String;
+
     public class PhotonRoom : MonoBehaviourPunCallbacks, IInRoomCallbacks
     {
         public static PhotonRoom Room;
 
         [SerializeField] private GameObject photonUserPrefab = default;
         [SerializeField] private GameObject longTapSpherePrefab = default;
-        [SerializeField] private GameObject roomStatsDisplay = default;
+        [SerializeField] private GameObject numPlayersDisplay = default;
+        [SerializeField] private GameObject publisherStatusDisplay = default;
+        [SerializeField] private GameObject roomStatusDisplay = default;
+        [SerializeField] private Scripts.WorldLocking.SpacePinBinder spacePinBinder = default;
+        
+        /// <summary>
+        /// Progress indicator object for publisher status
+        /// Tells us when we can publish/download spacepin
+        /// </summary>
+        [SerializeField]
+        private GameObject indicatorObject;
+
+        private IBinder binder;
 
         // private PhotonView pv;
         private Player[] photonPlayers;
         private int playersInRoom;
         private int myNumberInRoom;
+        private ActionPublish actionPublish;
+        private CloudAnchorId cloudAnchorId = null;
 
         // private GameObject module;
         // private Vector3 moduleLocation = Vector3.zero;
@@ -28,15 +46,17 @@ namespace Scripts
         {
             None,
             CreatedRoom,
+            CreatedRoomAndPublishedAnchor,
             JoinedRoom,
-            JoinedRoomDownloadedAnchor
+            JoinedRoomDownloadedAnchor,
+            JoinedRoomDownloadedAnchorId
         }
 
         public int emptyRoomTimeToLiveSeconds = 120;
 
         RoomStatus roomStatus = RoomStatus.None;
 
-        static readonly string ANCHOR_ID_CUSTOM_PROPERTY = "anchorId";
+        public static readonly string CLOUD_ANCHOR_ID_CUSTOM_PROPERTY = "cloudAnchorId";
         static readonly string ROOM_NAME = "HardCodedRoomName";
 
         //[SerializeField] public GameObject ASAObject;
@@ -47,7 +67,7 @@ namespace Scripts
             base.OnPlayerEnteredRoom(newPlayer);
             photonPlayers = PhotonNetwork.PlayerList;
             playersInRoom++;
-            roomStatsDisplay.GetComponent<TextMeshPro>().text = $"# Players in room: {playersInRoom}";
+            numPlayersDisplay.GetComponent<TextMeshPro>().text = $"# Players in room: {playersInRoom}";
             Debug.Log($"Player, {newPlayer.NickName}, entered room");
         }
 
@@ -56,7 +76,7 @@ namespace Scripts
             base.OnPlayerLeftRoom(otherPlayer);
             photonPlayers = PhotonNetwork.PlayerList;
             playersInRoom--;
-            roomStatsDisplay.GetComponent<TextMeshPro>().text = $"# Players in room: {playersInRoom}";
+            numPlayersDisplay.GetComponent<TextMeshPro>().text = $"# Players in room: {playersInRoom}";
             Debug.Log($"Player, {otherPlayer.NickName}, left room");
         }
 
@@ -100,6 +120,42 @@ namespace Scripts
 
                 if (longTapSpherePrefab != null) pool.ResourceCache.Add(longTapSpherePrefab.name, longTapSpherePrefab);
             }
+
+            binder = spacePinBinder;
+            actionPublish = GetComponent<ActionPublish>();
+            indicatorObject.SetActive(true);
+        }
+
+        private void Update()
+        {
+            var status = new ReadinessStatus();
+            if (binder != null)
+            {
+                status = binder.PublisherStatus;
+            }
+            publisherStatusDisplay.GetComponent<TextMeshPro>().text = $"Publisher Status: {status.readiness}";
+
+            if (status.readiness == PublisherReadiness.Ready)
+            {
+                indicatorObject.SetActive(false);
+
+                if (roomStatus == RoomStatus.CreatedRoom)
+                {
+                    // publish spacepin to share common origin
+                    actionPublish.DoPublish();
+                    roomStatus = RoomStatus.CreatedRoomAndPublishedAnchor;
+                    roomStatusDisplay.GetComponent<TextMeshPro>().text = $"Room Status: {roomStatus}";
+                } else if (roomStatus == RoomStatus.JoinedRoomDownloadedAnchorId)
+                {
+                    // cloudAnchorId will be set in room properties on changed callback
+                    if (cloudAnchorId != null)
+                    {
+                        actionPublish.DoDownloadOne(cloudAnchorId);
+                        roomStatus = RoomStatus.JoinedRoomDownloadedAnchor;
+                        roomStatusDisplay.GetComponent<TextMeshPro>().text = $"Room Status: {roomStatus}";
+                    }  
+                }
+            }
         }
 
         public async override void OnJoinedRoom()
@@ -113,13 +169,36 @@ namespace Scripts
 
             StartGame();
 
-            roomStatsDisplay.GetComponent<TextMeshPro>().text = $"# Players in room: {playersInRoom}";
+            numPlayersDisplay.GetComponent<TextMeshPro>().text = $"# Players in room: {playersInRoom}";
 
-            //// Note that the creator of the room also joins the room...
-            //if (this.roomStatus == RoomStatus.None)
-            //{
-            //    this.roomStatus = RoomStatus.JoinedRoom;
-            //}
+            // Note that the creator of the room also joins the room...
+            if (this.roomStatus == RoomStatus.None)
+            {
+                this.roomStatus = RoomStatus.JoinedRoom;
+                this.roomStatusDisplay.GetComponent<TextMeshPro>().text = $"Room Status: {this.roomStatus}";
+
+                // check to see if cloudAnchorId is present i.e. we joined after the room creator created the cloundAnchorId and triggered OnRoomPropertiesUpdate
+                object keyValue = null;
+
+#if UNITY_2020
+                if (PhotonNetwork.CurrentRoom.CustomProperties.TryGetValue(
+                    CLOUD_ANCHOR_ID_CUSTOM_PROPERTY, out keyValue))
+                {
+                    // If the anchorId property is present then we will try and get the
+                    // anchor but only once so change the status.
+                    this.cloudAnchorId = (CloudAnchorId)keyValue;
+                    this.roomStatus = RoomStatus.JoinedRoomDownloadedAnchorId;
+                    this.roomStatusDisplay.GetComponent<TextMeshPro>().text = $"Room Status: {this.roomStatus}";
+
+                    Debug.Log($"OnRoomPropertiesUpdate -> {keyValue}");
+
+                    // If we didn't create the room then we want to try and get the anchor
+                    // from the cloud and apply it.
+                    //await ASAScript.PopulateAnchorOnObjectAsync(
+                    //    (string)keyValue, this.gameObject);
+                }
+#endif
+            }
             //await this.PopulateAnchorAsync();
         }
 
@@ -166,69 +245,97 @@ namespace Scripts
         //    PhotonNetwork.ConnectUsingSettings();
         //}
 
-//        public override void OnConnectedToMaster()
-//        {
-//            base.OnConnectedToMaster();
+        //        public override void OnConnectedToMaster()
+        //        {
+        //            base.OnConnectedToMaster();
 
-//            var roomOptions = new RoomOptions();
-//            roomOptions.EmptyRoomTtl = this.emptyRoomTimeToLiveSeconds * 1000;
-//            PhotonNetwork.JoinOrCreateRoom(ROOM_NAME, roomOptions, null);
-//        }
-    
-//        public async override void OnCreatedRoom()
-//        {
-//            base.OnCreatedRoom();
-//            this.roomStatus = RoomStatus.CreatedRoom;
-//            await this.CreateAnchorAsync();
-//        }
+        //            var roomOptions = new RoomOptions();
+        //            roomOptions.EmptyRoomTtl = this.emptyRoomTimeToLiveSeconds * 1000;
+        //            PhotonNetwork.JoinOrCreateRoom(ROOM_NAME, roomOptions, null);
+        //        }
 
-//        async Task CreateAnchorAsync()
-//        {
-//            // If we created the room then we will attempt to create an anchor for the parent
-//            // of the cubes that we are creating.
-//            var anchorService = ASAScript;
+        public async override void OnCreatedRoom()
+        {
+            base.OnCreatedRoom();
+            this.roomStatus = RoomStatus.CreatedRoom;
+            this.roomStatusDisplay.GetComponent<TextMeshPro>().text = $"Room Status: {this.roomStatus}";
+            // publish spacepin to share common origin
+            //await this.CreateAnchorAsync();
+        }
 
-//            var anchorId = await anchorService.CreateAnchorOnObjectAsync(this.gameObject);
+        //        async Task CreateAnchorAsync()
+        //        {
+        //            // If we created the room then we will attempt to create an anchor for the parent
+        //            // of the cubes that we are creating.
+        //            var anchorService = ASAScript;
 
-//            // Put this ID into a custom property so that other devices joining the
-//            // room can get hold of it.
-//#if UNITY_2020 
-//             PhotonNetwork.CurrentRoom.SetCustomProperties(
-//                new Hashtable()
-//                {
-//                    { ANCHOR_ID_CUSTOM_PROPERTY, anchorId }
-//                }
-//             );
-//#endif
-//        }
-//        async Task PopulateAnchorAsync()
-//        {
-//            if (this.roomStatus == RoomStatus.JoinedRoom)
-//            {
-//                object keyValue = null;
+        //            var anchorId = await anchorService.CreateAnchorOnObjectAsync(this.gameObject);
 
-//#if UNITY_2020
-//                // First time around, this property may not be here so we see if is there.
-//                if (PhotonNetwork.CurrentRoom.CustomProperties.TryGetValue(
-//                    ANCHOR_ID_CUSTOM_PROPERTY, out keyValue))
-//                {
-//                    // If the anchorId property is present then we will try and get the
-//                    // anchor but only once so change the status.
-//                    this.roomStatus = RoomStatus.JoinedRoomDownloadedAnchor;
+        //            // Put this ID into a custom property so that other devices joining the
+        //            // room can get hold of it.
+        //#if UNITY_2020 
+        //             PhotonNetwork.CurrentRoom.SetCustomProperties(
+        //                new Hashtable()
+        //                {
+        //                    { ANCHOR_ID_CUSTOM_PROPERTY, anchorId }
+        //                }
+        //             );
+        //#endif
+        //        }
+        //        async Task PopulateAnchorAsync()
+        //        {
+        //            if (this.roomStatus == RoomStatus.JoinedRoom)
+        //            {
+        //                object keyValue = null;
 
-//                    // If we didn't create the room then we want to try and get the anchor
-//                    // from the cloud and apply it.
-//                    await ASAScript.PopulateAnchorOnObjectAsync(
-//                        (string)keyValue, this.gameObject);
-//                }
-//#endif
-//            }
-//        }
-//        public async override void OnRoomPropertiesUpdate(Hashtable propertiesThatChanged)
-//        {
-//            base.OnRoomPropertiesUpdate(propertiesThatChanged);
+        //#if UNITY_2020
+        //                // First time around, this property may not be here so we see if is there.
+        //                if (PhotonNetwork.CurrentRoom.CustomProperties.TryGetValue(
+        //                    ANCHOR_ID_CUSTOM_PROPERTY, out keyValue))
+        //                {
+        //                    // If the anchorId property is present then we will try and get the
+        //                    // anchor but only once so change the status.
+        //                    this.roomStatus = RoomStatus.JoinedRoomDownloadedAnchor;
 
-//            await this.PopulateAnchorAsync();
-//        }
+        //                    // If we didn't create the room then we want to try and get the anchor
+        //                    // from the cloud and apply it.
+        //                    await ASAScript.PopulateAnchorOnObjectAsync(
+        //                        (string)keyValue, this.gameObject);
+        //                }
+        //#endif
+        //            }
+        //        }
+
+        public async override void OnRoomPropertiesUpdate(Hashtable propertiesThatChanged)
+        {
+            base.OnRoomPropertiesUpdate(propertiesThatChanged);
+            
+            // room creator can skip this
+            if (this.roomStatus == RoomStatus.JoinedRoom)
+            {
+                object keyValue = null;
+
+#if UNITY_2020
+                if (PhotonNetwork.CurrentRoom.CustomProperties.TryGetValue(
+                    CLOUD_ANCHOR_ID_CUSTOM_PROPERTY, out keyValue))
+                {
+                    // If the anchorId property is present then we will try and get the
+                    // anchor but only once so change the status.
+                    this.cloudAnchorId = (CloudAnchorId)keyValue;
+                    this.roomStatus = RoomStatus.JoinedRoomDownloadedAnchorId;
+                    this.roomStatusDisplay.GetComponent<TextMeshPro>().text = $"Room Status: {this.roomStatus}";
+
+                    Debug.Log($"OnRoomPropertiesUpdate -> {keyValue}");
+
+                    // If we didn't create the room then we want to try and get the anchor
+                    // from the cloud and apply it.
+                    //await ASAScript.PopulateAnchorOnObjectAsync(
+                    //    (string)keyValue, this.gameObject);
+                }
+#endif
+
+                //await this.PopulateAnchorAsync();
+            }
+        }
     }
 }

@@ -17,6 +17,8 @@ using UnityEngine;
 using Microsoft.MixedReality.WorldLocking.Core;
 using Microsoft.MixedReality.WorldLocking.Tools;
 using Microsoft.MixedReality.WorldLocking.ASA;
+using ExitGames.Client.Photon;
+using Photon.Pun;
 
 /// <summary>
 /// NOTE DANGER OF RACE CONDITION ON REFIT EVENTS
@@ -244,6 +246,16 @@ namespace Scripts.WorldLocking
                 return false;
             }
             SetBinding(spacePin.SpacePinId, cloudAnchorId);
+
+#if UNITY_2020
+            PhotonNetwork.CurrentRoom.SetCustomProperties(
+                new ExitGames.Client.Photon.Hashtable()
+                {
+                    { PhotonRoom.CLOUD_ANCHOR_ID_CUSTOM_PROPERTY, cloudAnchorId }
+                }
+            );
+#endif
+
             return true;
         }
 
