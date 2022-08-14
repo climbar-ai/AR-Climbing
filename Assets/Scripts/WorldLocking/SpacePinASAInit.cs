@@ -1,20 +1,14 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License. See LICENSE in the project root for license information.
 
-using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-
-using Microsoft.MixedReality.WorldLocking.Core;
 using Microsoft.MixedReality.WorldLocking.ASA;
-using Microsoft.MixedReality.WorldLocking.Examples;
 
-namespace Microsoft.MixedReality.WorldLocking.ASA.Examples
+namespace Scripts.WorldLocking
 {
     /// <summary>
     /// Component that adds MRTK object manipulation capabilities on top of the auto-orienting SpacePinOrientable.
     /// </summary>
-    public class SpacePinASAStartup : SpacePinASA
+    public class SpacePinASAInit : SpacePinASA
     {
         #region Unity methods
 

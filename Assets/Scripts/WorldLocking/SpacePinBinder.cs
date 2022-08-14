@@ -16,6 +16,7 @@ using UnityEngine;
 
 using Microsoft.MixedReality.WorldLocking.Core;
 using Microsoft.MixedReality.WorldLocking.Tools;
+using Microsoft.MixedReality.WorldLocking.ASA;
 
 /// <summary>
 /// NOTE DANGER OF RACE CONDITION ON REFIT EVENTS
@@ -25,15 +26,15 @@ using Microsoft.MixedReality.WorldLocking.Tools;
 ///       FW correction will be applied to already corrected cloud anchor pose.
 /// </summary>
 
-namespace Microsoft.MixedReality.WorldLocking.ASA
+namespace Scripts.WorldLocking
 {
     using CloudAnchorId = System.String;
 
     /// <summary>
     /// Implementation of the IBinder interface, managing the relationship between space pins and cloud anchors.
     /// </summary>
-    [RequireComponent(typeof(Publisher))]
-    public partial class Binder : MonoBehaviour, IBinder
+    [RequireComponent(typeof(Microsoft.MixedReality.WorldLocking.ASA.PublisherASA))]
+    public partial class SpacePinBinder : MonoBehaviour, IBinder //.MixedReality.WorldLocking.ASA.SpacePinBinder
     {
         #region Inspector members
         [Tooltip("List of space pins to manage. These may also be added from script using AddSpacePin()")]
@@ -301,6 +302,43 @@ namespace Microsoft.MixedReality.WorldLocking.ASA
             return allSuccessful;
         }
 
+        public async Task<bool> DownloadOne(CloudAnchorId cloudAnchorId)
+        {
+            Debug.Log("Begin DownloadOne");
+
+            if (!IsReady)
+            {
+                return false;
+            }
+
+            LocalPegAndProperties found = await publisher.Read(cloudAnchorId);
+
+            var wltMgr = WorldLockingManager.GetInstance();
+
+            bool foundAny = false;
+            string spacePinId = found.properties[SpacePinIdKey];
+            //string cloudAnchorId = keyval.Key;
+            var pegAndProps = found;
+            int idx = FindSpacePinById(spacePinId);
+            if (idx >= 0)
+            {
+                CreateBinding(spacePinId, cloudAnchorId);
+                foundAny = true;
+                SpacePinASA spacePin = spacePins[idx];
+
+                Pose lockedPose = wltMgr.LockedFromFrozen.Multiply(pegAndProps.localPeg.GlobalPose);
+                SimpleConsole.AddLine(ConsoleLow, $"Srch: {lockedPose.ToString("F3")}");
+                spacePin.SetLockedPose(lockedPose);
+                spacePin.SetLocalPeg(pegAndProps.localPeg);
+            }
+            else
+            {
+                SimpleConsole.AddLine(ConsoleHigh, $"Found anchor for unknown SpacePin={spacePinId}.");
+            }
+            
+            return foundAny;
+        }
+
         /// <inheritdoc/>
         public async Task<bool> Search()
         {
@@ -389,7 +427,7 @@ namespace Microsoft.MixedReality.WorldLocking.ASA
         /// </summary>
         private void Awake()
         {
-            var publisherASA = GetComponent<PublisherASA>();
+            var publisherASA = GetComponent<Microsoft.MixedReality.WorldLocking.ASA.PublisherASA>();
             // When Setup is complete, publisher.IsReady will be true.
             publisherASA.Setup();
             SetSpacePinsPublisher(publisherASA);
@@ -412,7 +450,7 @@ namespace Microsoft.MixedReality.WorldLocking.ASA
         /// <remarks>
         /// SpacePinASA needs a reference to the publisher for the management of its ILocalPeg.
         /// </remarks>
-        private void SetSpacePinsPublisher(PublisherASA publisherASA)
+        private void SetSpacePinsPublisher(Microsoft.MixedReality.WorldLocking.ASA.PublisherASA publisherASA)
         {
             publisher = publisherASA;
             foreach (var spacePin in spacePins)
@@ -538,3 +576,4 @@ namespace Microsoft.MixedReality.WorldLocking.ASA
     }
 
 }
+
