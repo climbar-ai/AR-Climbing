@@ -13,6 +13,7 @@ using System.Collections;
 using TMPro;
 using Photon.Pun;
 using Microsoft.MixedReality.Toolkit.Utilities.Solvers;
+using MultiUserCapabilities;
 
 namespace AzureSpatialAnchors
 {
@@ -88,6 +89,11 @@ namespace AzureSpatialAnchors
         /// </summary>
         //private UnityEvent stoppedPlacement;
 
+        /// <summary>
+        /// Parent for created objects
+        /// </summary>
+        [SerializeField] private GameObject root;
+
         TaskCompletionSource<CloudSpatialAnchor> taskWaitForAnchorLocation;
 
         // <Start>
@@ -102,6 +108,7 @@ namespace AzureSpatialAnchors
             GameObject.Find("ToggleEditorMode").GetComponentInChildren<TextMeshPro>().text = "Mode: Move";
             indicatorObject.SetActive(false);
             hold = "Hold_1_Simple";
+            root = GameObject.Find("CommonOrigin");
             //stoppedPlacement.AddListener(HoldOnPlacingStopped);
         }
         // </Start>
@@ -493,14 +500,15 @@ namespace AzureSpatialAnchors
             // open loader
             indicatorObject.SetActive(true);
 
-            // Temporarily disable MRTK input because this function is async and could be called in quick succession with race issues.  Last answer here: https://stackoverflow.com/questions/56757620/how-to-temporarly-disable-mixedrealitytoolkit-inputsystem
-            StartCoroutine(DisableCoroutine());
+            //// Temporarily disable MRTK input because this function is async and could be called in quick succession with race issues.  Last answer here: https://stackoverflow.com/questions/56757620/how-to-temporarly-disable-mixedrealitytoolkit-inputsystem
+            //StartCoroutine(DisableCoroutine());
 
             Debug.Log("There");
 
             //GameObject newAnchorGameObject = Instantiate(hold);
             //GameObject newAnchorGameObject = PhotonNetwork.InstantiateRoomObject(go, position, rotation);
             GameObject newAnchorGameObject = PhotonNetwork.Instantiate(go, position, rotation);
+            newAnchorGameObject.transform.parent = root.transform;
 
             Debug.Log(newAnchorGameObject);
 
@@ -526,77 +534,88 @@ namespace AzureSpatialAnchors
 
             //Debug.Log($"ASA - Saving cloud anchor... ");
 
-            try
+            _foundOrCreatedAnchorGameObjects.Add(newAnchorGameObject);
+            //_createdAnchorIDs.Add(cloudSpatialAnchor.Identifier);
+            newAnchorGameObject.GetComponent<MeshRenderer>().material.color = Color.green;
+
+            // Disable maninpulation scripts if we are in 'Delete' mode
+            if (editingMode == EditingMode.Delete)
             {
-                // Now that the cloud spatial anchor has been prepared, we can try the actual save here.
-                //await _spatialAnchorManager.CreateAnchorAsync(cloudSpatialAnchor);
-
-                //bool saveSucceeded = cloudSpatialAnchor != null;
-                //if (!saveSucceeded)
-                //{
-                //    Debug.LogError("ASA - Failed to save, but no exception was thrown.");
-                //    return;
-                //}
-
-                //Debug.Log($"ASA - Saved cloud anchor with ID: {cloudSpatialAnchor.Identifier}");
-                _foundOrCreatedAnchorGameObjects.Add(newAnchorGameObject);
-                //_createdAnchorIDs.Add(cloudSpatialAnchor.Identifier);
-                newAnchorGameObject.GetComponent<MeshRenderer>().material.color = Color.green;
-
-                // add manipulation scripts: https://stackoverflow.com/questions/61663652/adding-manipulation-components-via-c-sharp-script-only-works-in-unity
-                Debug.Log($"Adding manipulation");
-                Mesh mesh = newAnchorGameObject.GetComponent<MeshFilter>().mesh;
-
-                //Add MeshCollider
-                MeshCollider collider = newAnchorGameObject.EnsureComponent<MeshCollider>();
-
-                //A lot of components are curved and need convex set to false
-                collider.convex = true;
-
-                //Add NearInteractionGrabbable
-                newAnchorGameObject.EnsureComponent<NearInteractionGrabbable>();
-
-                //Add ManipulationHandler with event listeners
-                Debug.Log(newAnchorGameObject.transform.position);
-                Debug.Log(newAnchorGameObject.transform.rotation);
-                var handler = newAnchorGameObject.EnsureComponent<ObjectManipulator>();
-                handler.OnHoverEntered.AddListener((eventData) => HoldOnHoverStartedHandler(eventData, newAnchorGameObject));
-                handler.OnHoverExited.AddListener((eventData) => HoldOnHoverExitedHandler(eventData, newAnchorGameObject));
-                handler.OnManipulationStarted.AddListener((eventData) => HoldOnManipulationStartedHandler(eventData, newAnchorGameObject));
-                handler.OnManipulationEnded.AddListener((eventData) => HoldOnManipulationEndedHandler(eventData, newAnchorGameObject));
-
-                //Add TapToPlace event listeners
-                TapToPlace ttp = newAnchorGameObject.EnsureComponent<TapToPlace>();
-                ttp.OnPlacingStarted.AddListener(() => HoldOnPlacingStarted(newAnchorGameObject));
-                ttp.OnPlacingStopped.AddListener(() => HoldOnPlacingStopped(newAnchorGameObject));
-
-                ////SurfaceMagnetism sm = newAnchorGameObject.EnsureComponent<SurfaceMagnetism>();
-                ////sm.enabled = false;
-
-                //Set mesh to MeshCollider
-                collider.sharedMesh = mesh;
-
-                // Disable maninpulation scripts if we are in 'Delete' mode
-                if (editingMode == EditingMode.Delete)
-                {
-                    newAnchorGameObject.GetComponent<NearInteractionGrabbable>().enabled = false;
-                    newAnchorGameObject.GetComponent<ObjectManipulator>().enabled = false;
-                }
-
-                //// share the created anchorId
-                //ShareAzureAnchorIds();
-            }
-            catch (Exception exception)
-            {
-                Debug.Log("ASA - Failed to save anchor: " + exception.ToString());
-                Debug.LogException(exception);
+                newAnchorGameObject.GetComponent<NearInteractionGrabbable>().enabled = false;
+                newAnchorGameObject.GetComponent<ObjectManipulator>().enabled = false;
             }
 
-            // turn on MRTK inputs
-            StartCoroutine(EnableCoroutine());
+            //try
+            //{
+            //    // Now that the cloud spatial anchor has been prepared, we can try the actual save here.
+            //    //await _spatialAnchorManager.CreateAnchorAsync(cloudSpatialAnchor);
 
-            // the gaze pointer comes back along with hand pointer so we disable the gaze pointer: https://docs.microsoft.com/en-us/windows/mixed-reality/mrtk-unity/mrtk2/features/input/pointers?view=mrtkunity-2021-05#disable-pointers
-            PointerUtils.SetGazePointerBehavior(PointerBehavior.AlwaysOff); // gives a warning concerning WindowsMixedReality inputs but so far seems OK to ignore
+            //    //bool saveSucceeded = cloudSpatialAnchor != null;
+            //    //if (!saveSucceeded)
+            //    //{
+            //    //    Debug.LogError("ASA - Failed to save, but no exception was thrown.");
+            //    //    return;
+            //    //}
+
+            //    //Debug.Log($"ASA - Saved cloud anchor with ID: {cloudSpatialAnchor.Identifier}");
+            //    _foundOrCreatedAnchorGameObjects.Add(newAnchorGameObject);
+            //    //_createdAnchorIDs.Add(cloudSpatialAnchor.Identifier);
+            //    newAnchorGameObject.GetComponent<MeshRenderer>().material.color = Color.green;
+
+            //    // add manipulation scripts: https://stackoverflow.com/questions/61663652/adding-manipulation-components-via-c-sharp-script-only-works-in-unity
+            //    Debug.Log($"Adding manipulation");
+            //    Mesh mesh = newAnchorGameObject.GetComponent<MeshFilter>().mesh;
+
+            //    //Add MeshCollider
+            //    MeshCollider collider = newAnchorGameObject.EnsureComponent<MeshCollider>();
+
+            //    //A lot of components are curved and need convex set to false
+            //    collider.convex = true;
+
+            //    //Add NearInteractionGrabbable
+            //    newAnchorGameObject.EnsureComponent<NearInteractionGrabbable>();
+
+            //    //Add ManipulationHandler with event listeners
+            //    Debug.Log(newAnchorGameObject.transform.position);
+            //    Debug.Log(newAnchorGameObject.transform.rotation);
+            //    var handler = newAnchorGameObject.EnsureComponent<ObjectManipulator>();
+            //    handler.OnHoverEntered.AddListener((eventData) => HoldOnHoverStartedHandler(eventData, newAnchorGameObject));
+            //    handler.OnHoverExited.AddListener((eventData) => HoldOnHoverExitedHandler(eventData, newAnchorGameObject));
+            //    handler.OnManipulationStarted.AddListener((eventData) => HoldOnManipulationStartedHandler(eventData, newAnchorGameObject));
+            //    handler.OnManipulationEnded.AddListener((eventData) => HoldOnManipulationEndedHandler(eventData, newAnchorGameObject));
+
+            //    //Add TapToPlace event listeners
+            //    TapToPlace ttp = newAnchorGameObject.EnsureComponent<TapToPlace>();
+            //    ttp.OnPlacingStarted.AddListener(() => HoldOnPlacingStarted(newAnchorGameObject));
+            //    ttp.OnPlacingStopped.AddListener(() => HoldOnPlacingStopped(newAnchorGameObject));
+
+            //    ////SurfaceMagnetism sm = newAnchorGameObject.EnsureComponent<SurfaceMagnetism>();
+            //    ////sm.enabled = false;
+
+            //    //Set mesh to MeshCollider
+            //    collider.sharedMesh = mesh;
+
+            //    // Disable maninpulation scripts if we are in 'Delete' mode
+            //    if (editingMode == EditingMode.Delete)
+            //    {
+            //        newAnchorGameObject.GetComponent<NearInteractionGrabbable>().enabled = false;
+            //        newAnchorGameObject.GetComponent<ObjectManipulator>().enabled = false;
+            //    }
+
+            //    //// share the created anchorId
+            //    //ShareAzureAnchorIds();
+            //}
+            //catch (Exception exception)
+            //{
+            //    Debug.Log("ASA - Failed to save anchor: " + exception.ToString());
+            //    Debug.LogException(exception);
+            //}
+
+            //// turn on MRTK inputs
+            //StartCoroutine(EnableCoroutine());
+
+            //// the gaze pointer comes back along with hand pointer so we disable the gaze pointer: https://docs.microsoft.com/en-us/windows/mixed-reality/mrtk-unity/mrtk2/features/input/pointers?view=mrtkunity-2021-05#disable-pointers
+            //PointerUtils.SetGazePointerBehavior(PointerBehavior.AlwaysOff); // gives a warning concerning WindowsMixedReality inputs but so far seems OK to ignore
 
             // close loader
             indicatorObject.SetActive(false);
@@ -640,8 +659,8 @@ namespace AzureSpatialAnchors
 
                     //Create GameObject
                     //GameObject anchorGameObject = Instantiate(hold);
-                    //GameObject anchorGameObject = PhotonNetwork.InstantiateRoomObject(hold, Vector3.zero, Quaternion.identity);
-                    GameObject anchorGameObject = PhotonNetwork.Instantiate(hold, Vector3.zero, Quaternion.identity);
+                    GameObject anchorGameObject = PhotonNetwork.InstantiateRoomObject(hold, Vector3.zero, Quaternion.identity);
+                    //GameObject anchorGameObject = PhotonNetwork.Instantiate(hold, Vector3.zero, Quaternion.identity);
                     anchorGameObject.transform.localScale = Vector3.one * 0.1f;
                     anchorGameObject.GetComponent<MeshRenderer>().material.shader = Shader.Find("Legacy Shaders/Diffuse");
                     anchorGameObject.GetComponent<MeshRenderer>().material.color = Color.blue;
