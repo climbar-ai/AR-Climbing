@@ -8,10 +8,35 @@ namespace MultiUserCapabilities
 {
     [RequireComponent(typeof(PhotonView))]//, typeof(GenericNetSync))]
     public class OwnershipHandler : MonoBehaviourPun, 
-        IPunOwnershipCallbacks, 
+        //IPunOwnershipCallbacks, 
         //IMixedRealityInputHandler, 
-        IMixedRealityFocusHandler
+        IMixedRealityFocusHandler,
+        IOnPhotonViewOwnerChange
     {
+        public void OnEnable()
+        {
+            var photonView = this.GetComponent<PhotonView>();
+            photonView.AddCallbackTarget(this);
+        }
+
+        public void OnDisable()
+        {
+            var photonView = this.GetComponent<PhotonView>();
+            photonView.RemoveCallbackTarget(this);
+        }
+
+        //public void Start()
+        //{
+        //    var photonView = this.GetComponent<PhotonView>();
+        //    photonView.AddCallbackTarget(this);
+        //}
+
+        //public void OnDestroy()
+        //{
+        //    var photonView = this.GetComponent<PhotonView>();
+        //    photonView.RemoveCallbackTarget(this);
+        //}
+
         public void OnFocusEnter(FocusEventData eventData)
         {
             Debug.Log("OnFocusEnter");
@@ -26,6 +51,11 @@ namespace MultiUserCapabilities
         {
         }
 
+        public void OnOwnerChange(Player newOwner, Player previousOwner)
+        {
+            Debug.Log($"OnOwnershipChange: ownership successfully transfered from {previousOwner.NickName} to {newOwner.NickName}");
+        }
+
         //public void OnInputDown(InputEventData eventData)
         //{
         //    photonView?.RequestOwnership();
@@ -35,21 +65,21 @@ namespace MultiUserCapabilities
         //{
         //}
 
-        public void OnOwnershipRequest(PhotonView targetView, Player requestingPlayer)
-        {
-            Debug.Log($"OnOwnershipRequest: ownership requested from {requestingPlayer.NickName}");
-            targetView.TransferOwnership(requestingPlayer);
-        }
+        //public void OnOwnershipRequest(PhotonView targetView, Player requestingPlayer)
+        //{
+        //    Debug.Log($"OnOwnershipRequest: ownership requested from {requestingPlayer.NickName}");
+        //    targetView.TransferOwnership(requestingPlayer);
+        //}
 
-        public void OnOwnershipTransfered(PhotonView targetView, Player previousOwner)
-        {
-            Debug.Log($"OnOwnershipTransfered: ownership successfully transfered from {previousOwner.NickName}");
-        }
+        //public void OnOwnershipTransfered(PhotonView targetView, Player previousOwner)
+        //{
+        //    Debug.Log($"OnOwnershipTransfered: ownership successfully transfered from {previousOwner.NickName}");
+        //}
 
-        public void OnOwnershipTransferFailed(PhotonView targetView, Player senderOfFailedRequest)
-        {
-            Debug.Log($"OnOwnershipTransferFailed: ownership failed transfer request from {senderOfFailedRequest.NickName}");
-        }
+        //public void OnOwnershipTransferFailed(PhotonView targetView, Player senderOfFailedRequest)
+        //{
+        //    Debug.Log($"OnOwnershipTransferFailed: ownership failed transfer request from {senderOfFailedRequest.NickName}");
+        //}
 
         //private void TransferControl(Player idPlayer)
         //{

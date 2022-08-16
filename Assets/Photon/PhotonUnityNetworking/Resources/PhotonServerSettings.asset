@@ -47,6 +47,8 @@ MonoBehaviour:
   - RespawnSpaceship
   - Rpc_SetModuleParent
   - PunRPC_ShareAzureAnchorIds
+  - BuildAnchor
+  - DeleteAnchor
   DisableAutoOpenWizard: 1
   ShowSettings: 1
   DevRegionSetOnce: 0

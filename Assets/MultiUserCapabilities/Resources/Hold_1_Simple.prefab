@@ -25,9 +25,10 @@ GameObject:
   - component: {fileID: 8283919076131219231}
   - component: {fileID: 6598863843132561944}
   - component: {fileID: 9018309465614955882}
+  - component: {fileID: -2715932451812406921}
   m_Layer: 0
   m_Name: Hold_1_Simple
-  m_TagString: Untagged
+  m_TagString: Hold
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -404,5 +405,17 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: deb93f51e861f0e4b86e67dc8e7e4918, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &-2715932451812406921
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6804333430780893325}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9ba37cf916b1f9c40ae263ab9daaf3a1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
