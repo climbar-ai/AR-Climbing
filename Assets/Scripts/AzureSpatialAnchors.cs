@@ -155,7 +155,8 @@ namespace AzureSpatialAnchors
                                             // we need the surface normal of the mesh we want to place the hold on
                                             if (Physics.Raycast(startPoint, endPoint - startPoint, out var hit)) // check if successful before calling ShortTap
                                             {
-                                                ShortTap(endPoint, hit.normal);
+                                                PhotonView photonView = PhotonView.Get(this);
+                                                ShortTap(endPoint, hit.normal, photonView);
                                             }
                                         }
                                     }
@@ -221,10 +222,11 @@ namespace AzureSpatialAnchors
 
         // <ShortTap>
         /// <summary>
-        /// Called when a user is air tapping for a short time 
+        /// Called when a user is air tapping for a short time.
+        /// We pass the PhotonView in since this is an async function and loses context
         /// </summary>
         /// <param name="handPosition">Location where tap was registered</param>
-        private async void ShortTap(Vector3 handPosition, Vector3 surfaceNormal)
+        private async void ShortTap(Vector3 handPosition, Vector3 surfaceNormal, PhotonView photonView)
         {
             Debug.Log("ShortTap");
 
@@ -235,7 +237,7 @@ namespace AzureSpatialAnchors
             if (!anchorNearby && editingMode == EditingMode.Move)
             {
                 //No Anchor Nearby, start session and create an anchor
-                await CreateAnchor(handPosition, surfaceNormal);
+                CreateAnchor(handPosition, surfaceNormal, photonView);
             }
             else if (anchorNearby && editingMode == EditingMode.Move)
             {
@@ -486,7 +488,7 @@ namespace AzureSpatialAnchors
         /// </summary>
         /// <param name="position">Position where Azure Spatial Anchor will be created</param>
         /// <returns>Async Task</returns>
-        private async Task CreateAnchor(Vector3 position, Vector3 surfaceNormal)
+        private void CreateAnchor(Vector3 position, Vector3 surfaceNormal, PhotonView photonView)
         {
             Debug.Log($"CreateAnchor");
 
@@ -500,7 +502,7 @@ namespace AzureSpatialAnchors
 
             //await BuildAnchor(hold, position, normalOrientation, Vector3.one * 0.1f);
             //BuildAnchor(hold, position, normalOrientation, Vector3.one * 0.1f);
-            PhotonView photonView = PhotonView.Get(this);
+            //PhotonView photonView = PhotonView.Get(this);
             Debug.Log(photonView);
             photonView.RPC("BuildAnchor", RpcTarget.MasterClient, hold, position, normalOrientation, Vector3.one * 0.1f);
         }
