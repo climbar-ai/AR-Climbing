@@ -49,7 +49,8 @@ namespace Scripts
             CreatedRoomAndPublishedAnchor,
             JoinedRoom,
             JoinedRoomDownloadedAnchor,
-            JoinedRoomDownloadedAnchorId
+            JoinedRoomDownloadedAnchorId,
+            JoinedRoomDownloadingAnchor
         }
 
         public int emptyRoomTimeToLiveSeconds = 120;
@@ -126,7 +127,7 @@ namespace Scripts
             indicatorObject.SetActive(true);
         }
 
-        private void Update()
+        private async void Update()
         {
             var status = new ReadinessStatus();
             if (binder != null)
@@ -150,6 +151,15 @@ namespace Scripts
                     // cloudAnchorId will be set in room properties on changed callback
                     if (cloudAnchorId != null)
                     {
+                        // change status so we don't keep firing calls to download the anchor during the Delay() below
+                        roomStatus = RoomStatus.JoinedRoomDownloadingAnchor;
+                        roomStatusDisplay.GetComponent<TextMeshPro>().text = $"Room Status: {roomStatus}";
+
+                        // arbitrary delay that is supposed to be long enough for anchorLocateCriteria within publisher to become setup (its setup is called in
+                        // SpacePinBinder's Awake())
+                        // Ideally this dealy would be replaced by better readiness checks within the publisher itself but I ran into issues trying to copy/modify the PublisherASA file
+                        // due to having been compiled in assembly that defines scripting symbols used throughout the PublisherASA code within directives 
+                        await Task.Delay(5000);
                         actionPublish.DoDownloadOne(cloudAnchorId);
                         roomStatus = RoomStatus.JoinedRoomDownloadedAnchor;
                         roomStatusDisplay.GetComponent<TextMeshPro>().text = $"Room Status: {roomStatus}";

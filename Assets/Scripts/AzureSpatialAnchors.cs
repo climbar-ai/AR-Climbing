@@ -553,7 +553,7 @@ namespace AzureSpatialAnchors
 
                 //_foundOrCreatedAnchorGameObjects.Add(newAnchorGameObject);
                 //_createdAnchorIDs.Add(cloudSpatialAnchor.Identifier);
-                newAnchorGameObject.GetComponent<MeshRenderer>().material.color = Color.green;
+                //newAnchorGameObject.GetComponent<MeshRenderer>().material.color = Color.green;
 
                 // Disable maninpulation scripts if we are in 'Delete' mode
                 if (editingMode == EditingMode.Delete)

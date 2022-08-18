@@ -247,6 +247,7 @@ namespace Scripts.WorldLocking
             }
             SetBinding(spacePin.SpacePinId, cloudAnchorId);
 
+            // Unfortunatley, we can't modify the Publish() signature of SpacePinBinder to return us the anchorId directly because we are implementing an interface
 #if UNITY_2020
             PhotonNetwork.CurrentRoom.SetCustomProperties(
                 new ExitGames.Client.Photon.Hashtable()
