@@ -159,7 +159,7 @@ namespace Scripts
                         // SpacePinBinder's Awake())
                         // Ideally this dealy would be replaced by better readiness checks within the publisher itself but I ran into issues trying to copy/modify the PublisherASA file
                         // due to having been compiled in assembly that defines scripting symbols used throughout the PublisherASA code within directives 
-                        await Task.Delay(5000);
+                        await Task.Delay(10000);
                         actionPublish.DoDownloadOne(cloudAnchorId);
                         roomStatus = RoomStatus.JoinedRoomDownloadedAnchor;
                         roomStatusDisplay.GetComponent<TextMeshPro>().text = $"Room Status: {roomStatus}";

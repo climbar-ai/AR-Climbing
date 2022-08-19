@@ -1,3 +1,4 @@
+using Photon.Pun;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -10,7 +11,8 @@ namespace MultiUserCapabilities
     public class OnHoldHover : MonoBehaviour
     {
         //When the pointer hovers over the GameObject, it turns to this color (red)
-        Color m_MouseOverColor = Color.red;
+        Color my_MouseOverColor = Color.red;
+        Color their_MouseOverColor = Color.blue;
 
         //This stores the GameObject’s original color
         Color m_OriginalColor;
@@ -38,7 +40,15 @@ namespace MultiUserCapabilities
         {
             Debug.Log("Hover entered");
             // Change the color of the GameObject to red when the pointer is over GameObject
-            m_Renderer.material.color = m_MouseOverColor;
+            PhotonView photonView = PhotonView.Get(this);
+            if (photonView.IsMine)
+            {
+                m_Renderer.material.color = my_MouseOverColor;
+            } else
+            {
+                m_Renderer.material.color = their_MouseOverColor;
+            }
+            
         }
 
         public void OnHoverExit()

@@ -503,7 +503,6 @@ namespace AzureSpatialAnchors
             //await BuildAnchor(hold, position, normalOrientation, Vector3.one * 0.1f);
             //BuildAnchor(hold, position, normalOrientation, Vector3.one * 0.1f);
             //PhotonView photonView = PhotonView.Get(this);
-            Debug.Log(photonView);
             photonView.RPC("BuildAnchor", RpcTarget.MasterClient, hold, position, normalOrientation, Vector3.one * 0.1f);
         }
         // </CreateAnchor>
@@ -521,20 +520,14 @@ namespace AzureSpatialAnchors
                 //// Temporarily disable MRTK input because this function is async and could be called in quick succession with race issues.  Last answer here: https://stackoverflow.com/questions/56757620/how-to-temporarly-disable-mixedrealitytoolkit-inputsystem
                 //StartCoroutine(DisableCoroutine());
 
-                Debug.Log("There");
-
                 //GameObject newAnchorGameObject = Instantiate(hold);
                 GameObject newAnchorGameObject = PhotonNetwork.InstantiateRoomObject(go, position, rotation);
                 //GameObject newAnchorGameObject = PhotonNetwork.Instantiate(go, position, rotation);
-
-                Debug.Log(newAnchorGameObject);
 
                 newAnchorGameObject.GetComponent<MeshRenderer>().material.shader = Shader.Find("Legacy Shaders/Diffuse");
                 newAnchorGameObject.transform.position = position;
                 newAnchorGameObject.transform.rotation = rotation;
                 newAnchorGameObject.transform.localScale = localScale;
-
-                Debug.Log("Here");
 
                 ////Add and configure ASA components
                 //CloudNativeAnchor cloudNativeAnchor = newAnchorGameObject.AddComponent<CloudNativeAnchor>();
