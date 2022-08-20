@@ -49,6 +49,8 @@ MonoBehaviour:
   - PunRPC_ShareAzureAnchorIds
   - BuildAnchor
   - DeleteAnchor
+  - OnHoverOverBegin
+  - OnHoverOverEnd
   DisableAutoOpenWizard: 1
   ShowSettings: 1
   DevRegionSetOnce: 0

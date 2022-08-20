@@ -1,8 +1,9 @@
 using Photon.Pun;
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
+/// <summary>
+/// Script to set OnHoverOver/OnHoverExit highlight colors for a photon networked GameObject
+/// </summary>
 namespace MultiUserCapabilities
 {
     /// <summary>
@@ -26,9 +27,6 @@ namespace MultiUserCapabilities
         // Start is called before the first frame update
         void Start()
         {
-            Debug.Log("OnHoldHover: Start");
-            Debug.Log(this);
-
             //Fetch the mesh renderer component from the GameObject
             m_Renderer = m_GameObject.GetComponent<MeshRenderer>();
 
@@ -38,23 +36,34 @@ namespace MultiUserCapabilities
 
         public void OnHoverOver()
         {
-            Debug.Log("Hover entered");
             // Change the color of the GameObject to red when the pointer is over GameObject
             PhotonView photonView = PhotonView.Get(this);
-            if (photonView.IsMine)
-            {
-                m_Renderer.material.color = my_MouseOverColor;
-            } else
-            {
-                m_Renderer.material.color = their_MouseOverColor;
-            }
-            
+            photonView.RPC("OnHoverOverBegin", RpcTarget.All);
         }
 
         public void OnHoverExit()
         {
-            Debug.Log("Hover exited");
             // Reset the color of the GameObject back to normal
+            PhotonView photonView = PhotonView.Get(this);
+            photonView.RPC("OnHoverOverEnd", RpcTarget.All);
+        }
+
+        [PunRPC]
+        void OnHoverOverBegin()
+        {
+            PhotonView photonView = PhotonView.Get(this);
+            if (photonView.IsMine)
+            {
+                this.m_Renderer.material.color = my_MouseOverColor;
+            } else
+            {
+                this.m_Renderer.material.color = their_MouseOverColor;
+            }
+        }
+
+        [PunRPC]
+        void OnHoverOverEnd()
+        {
             m_Renderer.material.color = m_OriginalColor;
         }
     }
