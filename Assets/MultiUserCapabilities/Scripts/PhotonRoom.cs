@@ -16,7 +16,8 @@ namespace Scripts
     {
         public static PhotonRoom Room;
 
-        [SerializeField] private GameObject photonUserPrefab = default;
+        [SerializeField] private GameObject photonUserPrefab = default; 
+        [SerializeField] private GameObject sharedCursorFocus = default;
         [SerializeField] private GameObject longTapSpherePrefab = default;
         [SerializeField] private GameObject numPlayersDisplay = default;
         [SerializeField] private GameObject publisherStatusDisplay = default;
@@ -215,6 +216,7 @@ namespace Scripts
         private void StartGame()
         {
             CreatPlayer();
+            CreateSharedCursorFocus();
 
             if (!PhotonNetwork.IsMasterClient) return;
 
@@ -224,6 +226,14 @@ namespace Scripts
         private void CreatPlayer()
         {
             var player = PhotonNetwork.Instantiate(photonUserPrefab.name, Vector3.zero, Quaternion.identity);
+        }
+
+        private void CreateSharedCursorFocus()
+        {
+            var cursor = PhotonNetwork.Instantiate(sharedCursorFocus.name, Vector3.zero, Quaternion.Euler(0f, 180f, 0f)); // instantiate for all to see
+            int layer = LayerMask.NameToLayer("Ignore Locally"); // hide for this user so we don't have two cursors
+            cursor.layer = layer;
+            cursor.transform.GetChild(0).gameObject.layer = layer; // setting layer only works at top level of object so we must also call it on the child object since it contains the visible mesh
         }
 
         //private void CreateInteractableObjects()
