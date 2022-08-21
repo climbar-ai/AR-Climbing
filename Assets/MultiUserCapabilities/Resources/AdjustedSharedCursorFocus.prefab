@@ -13,6 +13,7 @@ GameObject:
   - component: {fileID: 2803097180004346788}
   - component: {fileID: 1828898948467724512}
   - component: {fileID: 5785262266558822068}
+  - component: {fileID: 8682690927448180100}
   m_Layer: 0
   m_Name: AdjustedSharedCursorFocus
   m_TagString: Untagged
@@ -131,6 +132,18 @@ MonoBehaviour:
   m_SynchronizeRotation: 1
   m_SynchronizeScale: 0
   m_UseLocal: 1
+--- !u!114 &8682690927448180100
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8469232563483234268}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 922296dc2581cbc4c84fe2d93d6e4547, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1001 &6411319504609272696
 PrefabInstance:
   m_ObjectHideFlags: 0
