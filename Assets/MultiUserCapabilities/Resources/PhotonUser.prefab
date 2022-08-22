@@ -418,10 +418,43 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 114836466068092498, guid: 14e05d2e3eab0df479903e125064ce4b, type: 3}
+      propertyPath: m_Enabled
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 14e05d2e3eab0df479903e125064ce4b, type: 3}
+--- !u!1 &5509076789871224473 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 1974783559495832, guid: 14e05d2e3eab0df479903e125064ce4b, type: 3}
+  m_PrefabInstance: {fileID: 5508790924891510273}
+  m_PrefabAsset: {fileID: 0}
 --- !u!4 &5504279031984174899 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 4513173411586354, guid: 14e05d2e3eab0df479903e125064ce4b, type: 3}
   m_PrefabInstance: {fileID: 5508790924891510273}
   m_PrefabAsset: {fileID: 0}
+--- !u!23 &7372818748537589943 stripped
+MeshRenderer:
+  m_CorrespondingSourceObject: {fileID: 3036177931599709878, guid: 14e05d2e3eab0df479903e125064ce4b, type: 3}
+  m_PrefabInstance: {fileID: 5508790924891510273}
+  m_PrefabAsset: {fileID: 0}
+--- !u!102 &5557201918649632591 stripped
+TextMesh:
+  m_CorrespondingSourceObject: {fileID: 102471852742857038, guid: 14e05d2e3eab0df479903e125064ce4b, type: 3}
+  m_PrefabInstance: {fileID: 5508790924891510273}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &2827833784620797355
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5509076789871224473}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 19d4e6474977f2344a6aeac50c38988b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  originMarker: {fileID: 7372818748537589943}
+  originText: {fileID: 5557201918649632591}
