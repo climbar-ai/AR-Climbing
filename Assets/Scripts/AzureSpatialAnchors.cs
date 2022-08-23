@@ -500,9 +500,9 @@ namespace AzureSpatialAnchors
 
             Quaternion normalOrientation = Quaternion.LookRotation(-surfaceNormal, Vector3.up);
 
-            //await BuildAnchor(hold, position, normalOrientation, Vector3.one * 0.1f);
-            //BuildAnchor(hold, position, normalOrientation, Vector3.one * 0.1f);
-            //PhotonView photonView = PhotonView.Get(this);
+            Debug.Log($"Normal Orientation: {surfaceNormal}");
+            Debug.Log($"Dot Product with Normal: {Vector3.Dot(surfaceNormal, GameObject.Find("F1").transform.forward)}");
+
             photonView.RPC("BuildAnchor", RpcTarget.MasterClient, hold, position, normalOrientation, Vector3.one * 0.1f);
         }
         // </CreateAnchor>
@@ -528,6 +528,10 @@ namespace AzureSpatialAnchors
                 newAnchorGameObject.transform.position = position;
                 newAnchorGameObject.transform.rotation = rotation;
                 newAnchorGameObject.transform.localScale = localScale;
+
+                Debug.Log($"Forward Direction of Object: {newAnchorGameObject.transform.forward}");
+                Debug.Log($"Forward Direction of Frozen Frame: {GameObject.Find("F1").transform.forward}");
+                Debug.Log($"Dot Product with Object z: {Vector3.Dot(newAnchorGameObject.transform.forward, GameObject.Find("F1").transform.forward)}");
 
                 ////Add and configure ASA components
                 //CloudNativeAnchor cloudNativeAnchor = newAnchorGameObject.AddComponent<CloudNativeAnchor>();
