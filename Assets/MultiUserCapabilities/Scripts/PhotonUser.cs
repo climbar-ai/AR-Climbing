@@ -6,14 +6,16 @@ namespace MultiUserCapabilities
 {
     public class PhotonUser : MonoBehaviour
     {
-        //private GameObject asaScript;
         private PhotonView pv;
         private string username;
+
+        [SerializeField]
+        [Tooltip("Name text")]
+        private TextMesh nameTag = null;
 
         private void Start()
         {
             pv = GetComponent<PhotonView>();
-            //asaScript = GameObject.Find("AzureSpatialAnchors");
 
             if (!pv.IsMine) return;
 
@@ -25,6 +27,7 @@ namespace MultiUserCapabilities
         private void PunRPC_SetNickName(string nName)
         {
             gameObject.name = nName;
+            nameTag.text = nName;
         }
 
         [PunRPC]
@@ -45,11 +48,5 @@ namespace MultiUserCapabilities
             else
                 Debug.LogError("PV is null");
         }
-
-        //[PunRPC]
-        //private async void PunRPC_ShareAzureAnchorIds(List<string> anchorIds)
-        //{
-        //    asaScript.GetComponent<AzureSpatialAnchors>().restartAnchorWatcher(anchorIds);
-        //}
     }
 }

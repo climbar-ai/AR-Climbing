@@ -1,15 +1,14 @@
 // Derived from WLT -> FrameVisual.cs
 
-using Photon.Pun;
 using UnityEngine;
 
 namespace MultiUserCapabilities
 {
     /// <summary>
     /// Component for adjusting color and description text of visual origin markers in a frame (coordinate system axes).
-    /// Specifically used for displayign name of player
+    /// Specifically, don't automatically set text of FrameVisual as was done in the original script
     /// </summary>
-    public class NameTag : MonoBehaviourPunCallbacks
+    public class FrameVisual : MonoBehaviour
     {
         [SerializeField]
         [Tooltip("Visual marker to be colored")]
@@ -33,14 +32,6 @@ namespace MultiUserCapabilities
                     originMarker.materials[i].color = value;
                 }
             }
-        }
-
-        /// <summary>
-        /// Display nickname above player
-        /// </summary>
-        public override void OnJoinedRoom()
-        {
-            originText.text = PhotonNetwork.LocalPlayer.NickName;
         }
     }
 }
