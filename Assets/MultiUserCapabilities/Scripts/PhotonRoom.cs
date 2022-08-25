@@ -129,14 +129,13 @@ namespace Scripts
 
             if (status.readiness == PublisherReadiness.Ready)
             {
-                indicatorObject.SetActive(false);
-
                 if (roomStatus == RoomStatus.CreatedRoom)
                 {
                     // publish spacepin to share common origin
                     actionPublish.DoPublish();
                     roomStatus = RoomStatus.CreatedRoomAndPublishedAnchor;
                     roomStatusDisplay.GetComponent<TextMeshPro>().text = $"Room Status: {roomStatus}";
+                    indicatorObject.SetActive(false);
                 } else if (roomStatus == RoomStatus.JoinedRoomDownloadedAnchorId)
                 {
                     // cloudAnchorId will be set in room properties on changed callback
@@ -154,7 +153,8 @@ namespace Scripts
                         actionPublish.DoDownloadOne(cloudAnchorId);
                         roomStatus = RoomStatus.JoinedRoomDownloadedAnchor;
                         roomStatusDisplay.GetComponent<TextMeshPro>().text = $"Room Status: {roomStatus}";
-                    }  
+                        indicatorObject.SetActive(false);
+                    }
                 }
             }
         }
