@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 1301667806989722141}
   m_Layer: 0
   m_Name: Hold_1_Simple_Flipped
-  m_TagString: Untagged
+  m_TagString: Hold
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0

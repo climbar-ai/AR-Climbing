@@ -89,6 +89,8 @@ namespace AzureSpatialAnchors
         /// </summary>
         //private UnityEvent stoppedPlacement;
 
+        private GameObject ghost = default;
+
         TaskCompletionSource<CloudSpatialAnchor> taskWaitForAnchorLocation;
 
         // <Start>
@@ -152,11 +154,13 @@ namespace AzureSpatialAnchors
                                             var endPoint = p.Result.Details.Point;
                                             var hitObject = p.Result.Details.Object;
 
-                                            // we need the surface normal of the mesh we want to place the hold on
-                                            if (Physics.Raycast(startPoint, endPoint - startPoint, out var hit)) // check if successful before calling ShortTap
+                                            // we need the surface normal of the spatial mesh we want to place the hold on
+                                            LayerMask mask = LayerMask.GetMask("Spatial Awareness");
+                                            if (Physics.Raycast(startPoint, endPoint - startPoint, out var hit, Mathf.Infinity, mask)) // check if successful before calling ShortTap
                                             {
+                                                Debug.Log($"Hit layer: {hit.collider.gameObject.layer}");
                                                 PhotonView photonView = PhotonView.Get(this);
-                                                ShortTap(endPoint, hit.normal, photonView);
+                                                ShortTap(hit.point, hit.normal, photonView);
                                             }
                                         }
                                     }
@@ -228,44 +232,46 @@ namespace AzureSpatialAnchors
         /// <param name="handPosition">Location where tap was registered</param>
         private async void ShortTap(Vector3 handPosition, Vector3 surfaceNormal, PhotonView photonView)
         {
-            Debug.Log("ShortTap");
-
-            //await _spatialAnchorManager.StartSessionAsync();
             bool anchorNearby = IsAnchorNearby(handPosition, out GameObject anchorGameObject);
-            Debug.Log($"anchorNearby: {anchorNearby}");
 
             if (!anchorNearby && editingMode == EditingMode.Move)
             {
-                //No Anchor Nearby, start session and create an anchor
+                // No Anchor Nearby, start session and create an anchor
                 CreateAnchor(handPosition, surfaceNormal, photonView);
             }
             else if (anchorNearby && editingMode == EditingMode.Move)
             {
-                //Toggle TapToPlace on so we can start or end moving the object
+                // Toggle TapToPlace on so we can start or end moving the object
                 //anchorGameObject.GetComponent<TapToPlace>().enabled = !anchorGameObject.GetComponent<TapToPlace>().enabled;
                 bool isTappingToPlace = anchorGameObject.GetComponent<HoldData>().isTappingToPlace;
                 anchorGameObject.GetComponent<HoldData>().isTappingToPlace = !anchorGameObject.GetComponent<HoldData>().isTappingToPlace;
                 //TapToPlace ttp = anchorGameObject.GetComponent<TapToPlace>();
                 SurfaceMagnetism sm = anchorGameObject.EnsureComponent<SurfaceMagnetism>();
-                Debug.Log("isTappingToPlace:");
-                Debug.Log(isTappingToPlace);
-                Debug.Log(anchorGameObject.transform.rotation);
                 if (isTappingToPlace)
                 {
                     //ttp.StopPlacement();
                     sm.enabled = false;
-                    //stoppedPlacement.Invoke();
-                    await HoldOnPlacingStopped(anchorGameObject);
+
+                    // make visible and hide ghost hold
+                    PhotonNetwork.Destroy(ghost);
+                    //anchorGameObject.GetComponent<MeshRenderer>().enabled = true;
+                    anchorGameObject.GetComponent<OnHoldMove>().OnMoveExit();
+                    await HoldOnPlacingStopped(anchorGameObject, surfaceNormal, photonView);
                 }
                 else
                 {
                     //ttp.StartPlacement();
                     sm.enabled = true;
+
+                    // make invisible and show ghost hold instead
+                    //anchorGameObject.GetComponent<MeshRenderer>().enabled = false;
+                    anchorGameObject.GetComponent<OnHoldMove>().OnMoveStart();
+                    ghost = PhotonNetwork.Instantiate(hold + "_Ghost", handPosition, Quaternion.identity);
                 }
             }
             else if (anchorNearby && editingMode == EditingMode.Delete)
             {
-                //Delete nearby Anchor
+                // Delete nearby Anchor
                 DeleteAnchor(anchorGameObject);
             }
         }
@@ -282,19 +288,6 @@ namespace AzureSpatialAnchors
             if (editingMode == EditingMode.Delete)
             {
                 RemoveAllAnchorGameObjects();
-                //if (_spatialAnchorManager.IsSessionStarted)
-                //{
-                //    // Stop Session and remove all GameObjects. This does not delete the Anchors in the cloud
-                //    _spatialAnchorManager.DestroySession();
-                //    RemoveAllAnchorGameObjects();
-                //    Debug.Log("ASA - Stopped Session and removed all Anchor Objects");
-                //}
-                //else
-                //{
-                //    //Start session and search for all Anchors previously created
-                //    await _spatialAnchorManager.StartSessionAsync();
-                //    LocateAnchor();
-                //}
             }
         }
         // </LongTap>
@@ -311,7 +304,6 @@ namespace AzureSpatialAnchors
                 //Destroy(anchorGameObject);
                 PhotonNetwork.Destroy(anchorGameObject);
             }
-            //_foundOrCreatedAnchorGameObjects.Clear();
         }
         // </RemoveAllAnchorGameObjects>
 
@@ -364,7 +356,6 @@ namespace AzureSpatialAnchors
         private void HoldOnPlacingStarted(GameObject go)
         {
             Debug.Log("HoldOnPlacingStarted");
-            Debug.Log(go);
         }
         // </HoldOnPlacingStarted>
 
@@ -375,18 +366,17 @@ namespace AzureSpatialAnchors
         /// </summary>
         /// <param name="go"></param>
         /// <returns></returns>
-        private async Task HoldOnPlacingStopped(GameObject go)
+        private async Task HoldOnPlacingStopped(GameObject go, Vector3 surfaceNormal, PhotonView photonView)
         {
             Debug.Log("HoldOnPlacingStopped");
-            Debug.Log(go);
 
-            //Vector3 position = go.transform.position;
-            //Quaternion rotation = go.transform.rotation;
-            //Vector3 localScale = go.transform.localScale;
+            Vector3 position = go.transform.position;
 
-            //DeleteAnchor(go);
-
-            //await BuildAnchor(hold, position, rotation, localScale);
+            // the game object may have been moved to a new surface necessitating a change of its local coordinate frame (i.e. its z-axis now has a negative dot-product with the
+            // Frozen coordinate frame meaning that on manipulation, its rotation will be counter to whats expected)
+            // So we destroy it and recreate it (since the logic for checking this dot-product will be contained within CreateAnchor anyway)
+            DeleteAnchor(go);
+            CreateAnchor(position, surfaceNormal, photonView);
         }
         // </HoldOnPlacingStopped>
 
@@ -499,16 +489,25 @@ namespace AzureSpatialAnchors
             }
 
             Quaternion normalOrientation = Quaternion.LookRotation(-surfaceNormal, Vector3.up);
+            float normalDotProduct = Vector3.Dot(surfaceNormal, GameObject.Find("F1").transform.forward);
 
             Debug.Log($"Normal Orientation: {surfaceNormal}");
-            Debug.Log($"Dot Product with Normal: {Vector3.Dot(surfaceNormal, GameObject.Find("F1").transform.forward)}");
+            Debug.Log($"Dot Product with Normal: {Vector3.Dot(surfaceNormal, GameObject.Find("F1").transform.forward)}");            
 
-            photonView.RPC("BuildAnchor", RpcTarget.MasterClient, hold, position, normalOrientation, Vector3.one * 0.1f);
+            string hold_version = hold;
+            if (normalDotProduct > 0)
+            {
+                hold_version = hold + "_Flipped_New";
+                normalOrientation = Quaternion.LookRotation(surfaceNormal, Vector3.up);
+            }
+
+            Debug.Log($"Placing: {hold_version}");
+
+            photonView.RPC("BuildAnchor", RpcTarget.MasterClient, hold_version, position, normalOrientation, Vector3.one * 0.1f);
         }
         // </CreateAnchor>
 
         [PunRPC]
-        //private async Task BuildAnchor(string go, Vector3 position, Quaternion rotation, Vector3 localScale)
         void BuildAnchor(string go, Vector3 position, Quaternion rotation, Vector3 localScale)
         {
             // InstantiateRoomObject only succeeds for master client 
@@ -520,9 +519,9 @@ namespace AzureSpatialAnchors
                 //// Temporarily disable MRTK input because this function is async and could be called in quick succession with race issues.  Last answer here: https://stackoverflow.com/questions/56757620/how-to-temporarly-disable-mixedrealitytoolkit-inputsystem
                 //StartCoroutine(DisableCoroutine());
 
-                //GameObject newAnchorGameObject = Instantiate(hold);
                 GameObject newAnchorGameObject = PhotonNetwork.InstantiateRoomObject(go, position, rotation);
-                //GameObject newAnchorGameObject = PhotonNetwork.Instantiate(go, position, rotation);
+
+                Debug.Log(newAnchorGameObject);
 
                 newAnchorGameObject.GetComponent<MeshRenderer>().material.shader = Shader.Find("Legacy Shaders/Diffuse");
                 newAnchorGameObject.transform.position = position;
