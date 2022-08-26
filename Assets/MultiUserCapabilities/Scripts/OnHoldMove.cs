@@ -25,28 +25,28 @@ namespace MultiUserCapabilities
             m_Renderer = m_GameObject.GetComponent<MeshRenderer>();
         }
 
-        public void OnMoveStart()
+        public void OnMoveBegin()
         {
             // Hide game object while we move it
             PhotonView photonView = PhotonView.Get(this);
-            photonView.RPC("OnMoveBegin", RpcTarget.All);
+            photonView.RPC("PunRPC_OnMoveBegin", RpcTarget.All);
         }
 
-        public void OnMoveExit()
+        public void OnMoveEnd()
         {
             // Show game object after we are done moving it
             PhotonView photonView = PhotonView.Get(this);
-            photonView.RPC("OnMoveEnd", RpcTarget.All);
+            photonView.RPC("PunRPC_OnMoveEnd", RpcTarget.All);
         }
 
         [PunRPC]
-        void OnMoveBegin()
+        void PunRPC_OnMoveBegin()
         {
             this.m_Renderer.enabled = false;
         }
 
         [PunRPC]
-        void OnMoveEnd()
+        void PunRPC_OnMoveEnd()
         {
             this.m_Renderer.enabled = true;
         }

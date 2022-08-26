@@ -56,6 +56,8 @@ MonoBehaviour:
   - OnMoveEnd
   - PunRPC_SetUserIconColor
   - PunRPC_RemoveAllAnchorGameObjects
+  - PunRPC_OnMoveBegin
+  - PunRPC_OnMoveEnd
   DisableAutoOpenWizard: 1
   ShowSettings: 1
   DevRegionSetOnce: 1

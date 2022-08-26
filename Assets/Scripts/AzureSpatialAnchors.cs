@@ -17,12 +17,8 @@ using MultiUserCapabilities;
 
 namespace AzureSpatialAnchors
 {
-    [RequireComponent(typeof(SpatialAnchorManager))]
     public class AzureSpatialAnchors : MonoBehaviourPunCallbacks
     {
-        //[SerializeField]
-        //private GameObject player;
-
         /// <summary>
         /// Used to distinguish short taps and long taps
         /// </summary>
@@ -38,10 +34,10 @@ namespace AzureSpatialAnchors
         /// </summary>
         private GameObject[] _foundOrCreatedAnchorGameObjects;
 
-        /// <summary>
-        /// Used to keep track of all the created Anchor IDs
-        /// </summary>
-        private List<String> _createdAnchorIDs = new List<String>();
+        ///// <summary>
+        ///// Used to keep track of all the created Anchor IDs
+        ///// </summary>
+        //private List<String> _createdAnchorIDs = new List<String>();
 
         /// <summary>
         /// Editing modes
@@ -58,19 +54,9 @@ namespace AzureSpatialAnchors
         private EditingMode editingMode;
 
         /// <summary>
-        /// editor mode button
-        /// </summary>
-        //public Button editorModeButton;
-
-        /// <summary>
         /// hold prefab
         /// </summary>
         private string hold;
-
-        /// <summary>
-        /// hold hover script game object
-        /// </summary>
-        //public GameObject holdHoverScript;
 
         /// <summary>
         /// sphere prefab for long tap user feedback
@@ -89,6 +75,9 @@ namespace AzureSpatialAnchors
         /// </summary>
         //private UnityEvent stoppedPlacement;
 
+        /// <summary>
+        /// GameObject to represent currently chosen hold during movement of that hold
+        /// </summary>
         private GameObject ghost = default;
 
         TaskCompletionSource<CloudSpatialAnchor> taskWaitForAnchorLocation;
@@ -97,24 +86,10 @@ namespace AzureSpatialAnchors
         // Start is called before the first frame update
         void Start()
         {
-            //_spatialAnchorManager = GetComponent<SpatialAnchorManager>();
-            //_spatialAnchorManager.LogDebug += (sender, args) => Debug.Log($"ASA - Debug: {args.Message}");
-            //_spatialAnchorManager.Error += (sender, args) => Debug.LogError($"ASA - Error: {args.ErrorMessage}");
-            //_spatialAnchorManager.AnchorLocated += SpatialAnchorManager_AnchorLocated;
             editingMode = EditingMode.Move;
             GameObject.Find("ToggleEditorMode").GetComponentInChildren<TextMeshPro>().text = "Mode: Move";
             indicatorObject.SetActive(false);
             hold = "Hold_1_Simple";
-
-            // grab list of holds in case we have joined the room after other clients have created holds
-//#if UNITY_2020
-//            ExitGames.Client.Photon.Hashtable customRoomProperties = (ExitGames.Client.Photon.Hashtable)PhotonNetwork.CurrentRoom.CustomProperties;
-//            if (customRoomProperties.ContainsKey("holds"))
-//            {
-//                _foundOrCreatedAnchorGameObjects = (List<GameObject>)customRoomProperties["holds"];
-//            }
-//#endif
-            //stoppedPlacement.AddListener(HoldOnPlacingStopped);
         }
         // </Start>
 
@@ -199,13 +174,10 @@ namespace AzureSpatialAnchors
                                                     var hitObject = p.Result.Details.Object;
 
                                                     //Quaternion orientationTowardsHead = Quaternion.LookRotation(handPosition - headPosition, Vector3.up);
-                                                    //GameObject gameObject = GameObject.CreatePrimitive(PrimitiveType.Sphere);
                                                     GameObject gameObject = PhotonNetwork.Instantiate(longTapSphere.name, endPoint, Quaternion.identity);
-                                                    //gameObject.GetComponent<MeshRenderer>().material.shader = Shader.Find("Legacy Shaders/Diffuse");
                                                     gameObject.transform.position = endPoint;
                                                     gameObject.transform.rotation = Quaternion.identity;
                                                     gameObject.transform.localScale = Vector3.one * 0.05f;
-                                                    //gameObject.GetComponent<MeshRenderer>().material.color = Color.blue;
 
                                                     StartCoroutine(DestroyObjectDelayed(gameObject, .2f));
                                                 }
@@ -241,21 +213,22 @@ namespace AzureSpatialAnchors
             }
             else if (anchorNearby && editingMode == EditingMode.Move)
             {
-                // Toggle TapToPlace on so we can start or end moving the object
-                //anchorGameObject.GetComponent<TapToPlace>().enabled = !anchorGameObject.GetComponent<TapToPlace>().enabled;
+                //// Toggle TapToPlace on so we can start or end moving the object
+                ////anchorGameObject.GetComponent<TapToPlace>().enabled = !anchorGameObject.GetComponent<TapToPlace>().enabled;
+                ////TapToPlace ttp = anchorGameObject.GetComponent<TapToPlace>();
+                
+                // toggle surface magnetism component so we can start or end moving the object
                 bool isTappingToPlace = anchorGameObject.GetComponent<HoldData>().isTappingToPlace;
                 anchorGameObject.GetComponent<HoldData>().isTappingToPlace = !anchorGameObject.GetComponent<HoldData>().isTappingToPlace;
-                //TapToPlace ttp = anchorGameObject.GetComponent<TapToPlace>();
                 SurfaceMagnetism sm = anchorGameObject.EnsureComponent<SurfaceMagnetism>();
                 if (isTappingToPlace)
                 {
                     //ttp.StopPlacement();
                     sm.enabled = false;
 
-                    // make visible and hide ghost hold
+                    // make visible and remove ghost hold
                     PhotonNetwork.Destroy(ghost);
-                    //anchorGameObject.GetComponent<MeshRenderer>().enabled = true;
-                    anchorGameObject.GetComponent<OnHoldMove>().OnMoveExit();
+                    anchorGameObject.GetComponent<OnHoldMove>().OnMoveEnd();
                     await HoldOnPlacingStopped(anchorGameObject, surfaceNormal, photonView);
                 }
                 else
@@ -264,15 +237,14 @@ namespace AzureSpatialAnchors
                     sm.enabled = true;
 
                     // make invisible and show ghost hold instead
-                    //anchorGameObject.GetComponent<MeshRenderer>().enabled = false;
-                    anchorGameObject.GetComponent<OnHoldMove>().OnMoveStart();
+                    anchorGameObject.GetComponent<OnHoldMove>().OnMoveBegin();
                     ghost = PhotonNetwork.Instantiate(hold + "_Ghost", handPosition, Quaternion.identity);
                 }
             }
             else if (anchorNearby && editingMode == EditingMode.Delete)
             {
                 // Delete nearby Anchor
-                DeleteAnchor(anchorGameObject);
+                DeleteGameObject(anchorGameObject);
             }
         }
         // </ShortTap>
@@ -283,8 +255,6 @@ namespace AzureSpatialAnchors
         /// </summary>
         private async void LongTap()
         {
-            Debug.Log("LongTap");
-
             if (editingMode == EditingMode.Delete)
             {
                 PhotonView pv = this.gameObject.GetPhotonView();
@@ -295,7 +265,7 @@ namespace AzureSpatialAnchors
 
         // <RemoveAllAnchorGameObjects>
         /// <summary>
-        /// Destroys all Anchor GameObjects
+        /// Destroys all Anchor GameObjects.
         /// </summary>
         [PunRPC]
         private async void PunRPC_RemoveAllAnchorGameObjects()
@@ -305,7 +275,6 @@ namespace AzureSpatialAnchors
             foreach (var anchorGameObject in _foundOrCreatedAnchorGameObjects)
             {
                 PhotonView pv = anchorGameObject.GetComponent<PhotonView>();
-                Debug.Log($"pv: {pv}");
                 pv.RequestOwnership(); // we need ownership of the object to destroy it
             }
 
@@ -382,14 +351,12 @@ namespace AzureSpatialAnchors
         /// <returns></returns>
         private async Task HoldOnPlacingStopped(GameObject go, Vector3 surfaceNormal, PhotonView photonView)
         {
-            Debug.Log("HoldOnPlacingStopped");
-
             Vector3 position = go.transform.position;
 
             // the game object may have been moved to a new surface necessitating a change of its local coordinate frame (i.e. its z-axis now has a negative dot-product with the
             // Frozen coordinate frame meaning that on manipulation, its rotation will be counter to whats expected)
             // So we destroy it and recreate it (since the logic for checking this dot-product will be contained within CreateAnchor anyway)
-            DeleteAnchor(go);
+            DeleteGameObject(go);
             CreateAnchor(position, surfaceNormal, photonView);
         }
         // </HoldOnPlacingStopped>
@@ -479,7 +446,7 @@ namespace AzureSpatialAnchors
         //        Quaternion rotation = eventData.ManipulationSource.transform.rotation;
         //        Vector3 localScale = eventData.ManipulationSource.transform.localScale;
 
-        //        DeleteAnchor(eventData.ManipulationSource);
+        //        DeleteGameObject(eventData.ManipulationSource);
 
         //        await BuildAnchor(hold, position, rotation, localScale);
         //    }
@@ -517,6 +484,7 @@ namespace AzureSpatialAnchors
 
             Debug.Log($"Placing: {hold_version}");
 
+            // InstantiateRoomObject only succeeds for master client
             photonView.RPC("BuildAnchor", RpcTarget.MasterClient, hold_version, position, normalOrientation, Vector3.one * 0.1f);
         }
         // </CreateAnchor>
@@ -524,307 +492,51 @@ namespace AzureSpatialAnchors
         [PunRPC]
         void BuildAnchor(string go, Vector3 position, Quaternion rotation, Vector3 localScale)
         {
-            // InstantiateRoomObject only succeeds for master client 
-            if (PhotonNetwork.IsMasterClient)
+            // open loader
+            indicatorObject.SetActive(true);
+
+            //// Temporarily disable MRTK input because this function is async and could be called in quick succession with race issues.  Last answer here: https://stackoverflow.com/questions/56757620/how-to-temporarly-disable-mixedrealitytoolkit-inputsystem
+            //StartCoroutine(DisableCoroutine());
+
+            GameObject newAnchorGameObject = PhotonNetwork.InstantiateRoomObject(go, position, rotation);
+
+            Debug.Log(newAnchorGameObject);
+
+            newAnchorGameObject.GetComponent<MeshRenderer>().material.shader = Shader.Find("Legacy Shaders/Diffuse");
+            newAnchorGameObject.transform.position = position;
+            newAnchorGameObject.transform.rotation = rotation;
+            newAnchorGameObject.transform.localScale = localScale;
+
+            Debug.Log($"Forward Direction of Object: {newAnchorGameObject.transform.forward}");
+            Debug.Log($"Forward Direction of Frozen Frame: {GameObject.Find("F1").transform.forward}");
+            Debug.Log($"Dot Product with Object z: {Vector3.Dot(newAnchorGameObject.transform.forward, GameObject.Find("F1").transform.forward)}");
+
+            // Disable maninpulation scripts if we are in 'Delete' mode
+            if (editingMode == EditingMode.Delete)
             {
-                // open loader
-                indicatorObject.SetActive(true);
-
-                //// Temporarily disable MRTK input because this function is async and could be called in quick succession with race issues.  Last answer here: https://stackoverflow.com/questions/56757620/how-to-temporarly-disable-mixedrealitytoolkit-inputsystem
-                //StartCoroutine(DisableCoroutine());
-
-                GameObject newAnchorGameObject = PhotonNetwork.InstantiateRoomObject(go, position, rotation);
-
-                Debug.Log(newAnchorGameObject);
-
-                newAnchorGameObject.GetComponent<MeshRenderer>().material.shader = Shader.Find("Legacy Shaders/Diffuse");
-                newAnchorGameObject.transform.position = position;
-                newAnchorGameObject.transform.rotation = rotation;
-                newAnchorGameObject.transform.localScale = localScale;
-
-                Debug.Log($"Forward Direction of Object: {newAnchorGameObject.transform.forward}");
-                Debug.Log($"Forward Direction of Frozen Frame: {GameObject.Find("F1").transform.forward}");
-                Debug.Log($"Dot Product with Object z: {Vector3.Dot(newAnchorGameObject.transform.forward, GameObject.Find("F1").transform.forward)}");
-
-                ////Add and configure ASA components
-                //CloudNativeAnchor cloudNativeAnchor = newAnchorGameObject.AddComponent<CloudNativeAnchor>();
-                //await cloudNativeAnchor.NativeToCloud();
-                //CloudSpatialAnchor cloudSpatialAnchor = cloudNativeAnchor.CloudAnchor;
-                //cloudSpatialAnchor.Expiration = DateTimeOffset.Now.AddDays(3);
-
-                ////Collect Environment Data
-                //while (!_spatialAnchorManager.IsReadyForCreate)
-                //{
-                //    float createProgress = _spatialAnchorManager.SessionStatus.RecommendedForCreateProgress;
-                //    Debug.Log($"ASA - Move your device to capture more environment data: {createProgress:0%}");
-                //}
-
-                //Debug.Log($"ASA - Saving cloud anchor... ");
-
-                //_foundOrCreatedAnchorGameObjects.Add(newAnchorGameObject);
-                //_createdAnchorIDs.Add(cloudSpatialAnchor.Identifier);
-                //newAnchorGameObject.GetComponent<MeshRenderer>().material.color = Color.green;
-
-                // Disable maninpulation scripts if we are in 'Delete' mode
-                if (editingMode == EditingMode.Delete)
-                {
-                    newAnchorGameObject.GetComponent<NearInteractionGrabbable>().enabled = false;
-                    newAnchorGameObject.GetComponent<ObjectManipulator>().enabled = false;
-                }
-
-                // close loader
-                indicatorObject.SetActive(false);
+                newAnchorGameObject.GetComponent<NearInteractionGrabbable>().enabled = false;
+                newAnchorGameObject.GetComponent<ObjectManipulator>().enabled = false;
             }
-            //// open loader
-            //indicatorObject.SetActive(true);
-
-            ////// Temporarily disable MRTK input because this function is async and could be called in quick succession with race issues.  Last answer here: https://stackoverflow.com/questions/56757620/how-to-temporarly-disable-mixedrealitytoolkit-inputsystem
-            ////StartCoroutine(DisableCoroutine());
-
-            //Debug.Log("There");
-
-            ////GameObject newAnchorGameObject = Instantiate(hold);
-            //GameObject newAnchorGameObject = PhotonNetwork.InstantiateRoomObject(go, position, rotation);
-            ////GameObject newAnchorGameObject = PhotonNetwork.Instantiate(go, position, rotation);
-
-            //Debug.Log(newAnchorGameObject);
-
-            //newAnchorGameObject.GetComponent<MeshRenderer>().material.shader = Shader.Find("Legacy Shaders/Diffuse");
-            //newAnchorGameObject.transform.position = position;
-            //newAnchorGameObject.transform.rotation = rotation;
-            //newAnchorGameObject.transform.localScale = localScale;
-
-            //Debug.Log("Here");
-
-            //////Add and configure ASA components
-            ////CloudNativeAnchor cloudNativeAnchor = newAnchorGameObject.AddComponent<CloudNativeAnchor>();
-            ////await cloudNativeAnchor.NativeToCloud();
-            ////CloudSpatialAnchor cloudSpatialAnchor = cloudNativeAnchor.CloudAnchor;
-            ////cloudSpatialAnchor.Expiration = DateTimeOffset.Now.AddDays(3);
-
-            //////Collect Environment Data
-            ////while (!_spatialAnchorManager.IsReadyForCreate)
-            ////{
-            ////    float createProgress = _spatialAnchorManager.SessionStatus.RecommendedForCreateProgress;
-            ////    Debug.Log($"ASA - Move your device to capture more environment data: {createProgress:0%}");
-            ////}
-
-            ////Debug.Log($"ASA - Saving cloud anchor... ");
-
-            ////_foundOrCreatedAnchorGameObjects.Add(newAnchorGameObject);
-            ////_createdAnchorIDs.Add(cloudSpatialAnchor.Identifier);
-            //newAnchorGameObject.GetComponent<MeshRenderer>().material.color = Color.green;
-
-            //// Disable maninpulation scripts if we are in 'Delete' mode
-            //if (editingMode == EditingMode.Delete)
-            //{
-            //    newAnchorGameObject.GetComponent<NearInteractionGrabbable>().enabled = false;
-            //    newAnchorGameObject.GetComponent<ObjectManipulator>().enabled = false;
-            //}
-
-            //// close loader
-            //indicatorObject.SetActive(false);
-
-            // share the created holds for other clients to be able to detect them on short tap
-            //ShareHolds();
-
-            //try
-            //{
-            //    // Now that the cloud spatial anchor has been prepared, we can try the actual save here.
-            //    //await _spatialAnchorManager.CreateAnchorAsync(cloudSpatialAnchor);
-
-            //    //bool saveSucceeded = cloudSpatialAnchor != null;
-            //    //if (!saveSucceeded)
-            //    //{
-            //    //    Debug.LogError("ASA - Failed to save, but no exception was thrown.");
-            //    //    return;
-            //    //}
-
-            //    //Debug.Log($"ASA - Saved cloud anchor with ID: {cloudSpatialAnchor.Identifier}");
-            //    _foundOrCreatedAnchorGameObjects.Add(newAnchorGameObject);
-            //    //_createdAnchorIDs.Add(cloudSpatialAnchor.Identifier);
-            //    newAnchorGameObject.GetComponent<MeshRenderer>().material.color = Color.green;
-
-            //    // add manipulation scripts: https://stackoverflow.com/questions/61663652/adding-manipulation-components-via-c-sharp-script-only-works-in-unity
-            //    Debug.Log($"Adding manipulation");
-            //    Mesh mesh = newAnchorGameObject.GetComponent<MeshFilter>().mesh;
-
-            //    //Add MeshCollider
-            //    MeshCollider collider = newAnchorGameObject.EnsureComponent<MeshCollider>();
-
-            //    //A lot of components are curved and need convex set to false
-            //    collider.convex = true;
-
-            //    //Add NearInteractionGrabbable
-            //    newAnchorGameObject.EnsureComponent<NearInteractionGrabbable>();
-
-            //    //Add ManipulationHandler with event listeners
-            //    Debug.Log(newAnchorGameObject.transform.position);
-            //    Debug.Log(newAnchorGameObject.transform.rotation);
-            //    var handler = newAnchorGameObject.EnsureComponent<ObjectManipulator>();
-            //    handler.OnHoverEntered.AddListener((eventData) => HoldOnHoverStartedHandler(eventData, newAnchorGameObject));
-            //    handler.OnHoverExited.AddListener((eventData) => HoldOnHoverExitedHandler(eventData, newAnchorGameObject));
-            //    handler.OnManipulationStarted.AddListener((eventData) => HoldOnManipulationStartedHandler(eventData, newAnchorGameObject));
-            //    handler.OnManipulationEnded.AddListener((eventData) => HoldOnManipulationEndedHandler(eventData, newAnchorGameObject));
-
-            //    //Add TapToPlace event listeners
-            //    TapToPlace ttp = newAnchorGameObject.EnsureComponent<TapToPlace>();
-            //    ttp.OnPlacingStarted.AddListener(() => HoldOnPlacingStarted(newAnchorGameObject));
-            //    ttp.OnPlacingStopped.AddListener(() => HoldOnPlacingStopped(newAnchorGameObject));
-
-            //    ////SurfaceMagnetism sm = newAnchorGameObject.EnsureComponent<SurfaceMagnetism>();
-            //    ////sm.enabled = false;
-
-            //    //Set mesh to MeshCollider
-            //    collider.sharedMesh = mesh;
-
-            //    // Disable maninpulation scripts if we are in 'Delete' mode
-            //    if (editingMode == EditingMode.Delete)
-            //    {
-            //        newAnchorGameObject.GetComponent<NearInteractionGrabbable>().enabled = false;
-            //        newAnchorGameObject.GetComponent<ObjectManipulator>().enabled = false;
-            //    }
-
-            //    //// share the created anchorId
-            //    //ShareAzureAnchorIds();
-            //}
-            //catch (Exception exception)
-            //{
-            //    Debug.Log("ASA - Failed to save anchor: " + exception.ToString());
-            //    Debug.LogException(exception);
-            //}
-
-            //// turn on MRTK inputs
-            //StartCoroutine(EnableCoroutine());
-
-            //// the gaze pointer comes back along with hand pointer so we disable the gaze pointer: https://docs.microsoft.com/en-us/windows/mixed-reality/mrtk-unity/mrtk2/features/input/pointers?view=mrtkunity-2021-05#disable-pointers
-            //PointerUtils.SetGazePointerBehavior(PointerBehavior.AlwaysOff); // gives a warning concerning WindowsMixedReality inputs but so far seems OK to ignore
 
             // close loader
-            //indicatorObject.SetActive(false);
+            indicatorObject.SetActive(false);
         }
 
-        //// <LocateAnchor>
-        ///// <summary>
-        ///// Looking for anchors with ID in _createdAnchorIDs
-        ///// </summary>
-        //private void LocateAnchor()
-        //{
-        //    if (_createdAnchorIDs.Count > 0)
-        //    {
-        //        //Create watcher to look for all stored anchor IDs
-        //        Debug.Log($"ASA - Creating watcher to look for {_createdAnchorIDs.Count} spatial anchors");
-        //        AnchorLocateCriteria anchorLocateCriteria = new AnchorLocateCriteria();
-        //        anchorLocateCriteria.Identifiers = _createdAnchorIDs.ToArray();
-        //        var watcher = _spatialAnchorManager.Session.CreateWatcher(anchorLocateCriteria);
-        //        Debug.Log($"ASA - Watcher created!");
-        //    }
-        //}
-        //// </LocateAnchor>
-
-        //// <SpatialAnchorManagerAnchorLocated>
-        ///// <summary>
-        ///// Callback when an anchor is located
-        ///// </summary>
-        ///// <param name="sender">Callback sender</param>
-        ///// <param name="args">Callback AnchorLocatedEventArgs</param>
-        //private void SpatialAnchorManager_AnchorLocated(object sender, AnchorLocatedEventArgs args)
-        //{
-        //    Debug.Log($"ASA - Anchor recognized as a possible anchor {args.Identifier} {args.Status}");
-
-        //    if (args.Status == LocateAnchorStatus.Located)
-        //    {
-        //        //Creating and adjusting GameObjects have to run on the main thread. We are using the UnityDispatcher to make sure this happens.
-        //        UnityDispatcher.InvokeOnAppThread(() =>
-        //        {
-        //            // Read out Cloud Anchor values
-        //            CloudSpatialAnchor cloudSpatialAnchor = args.Anchor;
-
-        //            //Create GameObject
-        //            //GameObject anchorGameObject = Instantiate(hold);
-        //            GameObject anchorGameObject = PhotonNetwork.InstantiateRoomObject(hold, Vector3.zero, Quaternion.identity);
-        //            //GameObject anchorGameObject = PhotonNetwork.Instantiate(hold, Vector3.zero, Quaternion.identity);
-        //            anchorGameObject.transform.localScale = Vector3.one * 0.1f;
-        //            anchorGameObject.GetComponent<MeshRenderer>().material.shader = Shader.Find("Legacy Shaders/Diffuse");
-        //            anchorGameObject.GetComponent<MeshRenderer>().material.color = Color.blue;
-
-        //            // change color to green after a delay
-        //            StartCoroutine(ChangeColorDelayed(anchorGameObject, Color.green, 2f));
-
-        //            // Link to Cloud Anchor
-        //            anchorGameObject.AddComponent<CloudNativeAnchor>().CloudToNative(cloudSpatialAnchor);
-        //            _foundOrCreatedAnchorGameObjects.Add(anchorGameObject);
-
-        //            // Add and then disable maninpulation scripts since we are in 'Delete' mode
-        //            Debug.Log($"Adding manipulation");
-        //            Mesh mesh = anchorGameObject.GetComponent<MeshFilter>().mesh;
-
-        //            //Add MeshCollider
-        //            MeshCollider collider = anchorGameObject.EnsureComponent<MeshCollider>();
-
-        //            //A lot of components are curved and need convex set to false
-        //            collider.convex = true;
-
-        //            //Add NearInteractionGrabbable
-        //            anchorGameObject.EnsureComponent<NearInteractionGrabbable>();
-
-        //            //Add manipulation event listeners
-        //            var omHandler = anchorGameObject.EnsureComponent<ObjectManipulator>();
-        //            omHandler.OnHoverEntered.AddListener((eventData) => HoldOnHoverStartedHandler(eventData, anchorGameObject));
-        //            omHandler.OnHoverExited.AddListener((eventData) => HoldOnHoverExitedHandler(eventData, anchorGameObject));
-        //            omHandler.OnManipulationStarted.AddListener((eventData) => HoldOnManipulationStartedHandler(eventData, anchorGameObject));
-        //            omHandler.OnManipulationEnded.AddListener((eventData) => HoldOnManipulationEndedHandler(eventData, anchorGameObject));
-
-        //            ////Add TapToPlace event listeners
-        //            //TapToPlace ttp = anchorGameObject.EnsureComponent<TapToPlace>();
-        //            //ttp.OnPlacingStarted.AddListener(() => HoldOnPlacingStarted(anchorGameObject));
-        //            //ttp.OnPlacingStopped.AddListener(() => HoldOnPlacingStopped(anchorGameObject));
-
-        //            //Set mesh to MeshCollider
-        //            collider.sharedMesh = mesh;
-
-        //            // Disable maninpulation scripts if we are in 'Delete' mode
-        //            if (editingMode == EditingMode.Delete)
-        //            {
-        //                anchorGameObject.GetComponent<NearInteractionGrabbable>().enabled = false;
-        //                anchorGameObject.GetComponent<ObjectManipulator>().enabled = false;
-        //            }
-        //            //// Disable maninpulation scripts since we are in 'Delete' mode
-        //            //anchorGameObject.GetComponent<NearInteractionGrabbable>().enabled = false;
-        //            //anchorGameObject.GetComponent<ObjectManipulator>().enabled = false;
-        //        });
-        //    }
-        //}
-        //// </SpatialAnchorManagerAnchorLocated>
-
-        // <DeleteAnchor>
+        // <DeleteGameObject>
         /// <summary>
         /// Deleting Cloud Anchor attached to the given GameObject and deleting the GameObject
         /// </summary>
         /// <param name="anchorGameObject">Anchor GameObject that is to be deleted</param>
-        private void DeleteAnchor(GameObject anchorGameObject)
+        private void DeleteGameObject(GameObject anchorGameObject)
         {
             if (anchorGameObject != null)
             {
-                //CloudNativeAnchor cloudNativeAnchor = anchorGameObject.GetComponent<CloudNativeAnchor>();
-                //CloudSpatialAnchor cloudSpatialAnchor = cloudNativeAnchor.CloudAnchor;
-
-                //Debug.Log($"ASA - Deleting cloud anchor: {cloudSpatialAnchor.Identifier}");
-
-                ////Request Deletion of Cloud Anchor
-                //await _spatialAnchorManager.DeleteAnchorAsync(cloudSpatialAnchor);
-
-                ////Remove local references
-                //_createdAnchorIDs.Remove(cloudSpatialAnchor.Identifier);
-                //_foundOrCreatedAnchorGameObjects = GameObject.FindGameObjectsWithTag("Hold");
-                //_foundOrCreatedAnchorGameObjects.Remove(anchorGameObject);
-                //Destroy(anchorGameObject);
                 PhotonNetwork.Destroy(anchorGameObject);
 
                 Debug.Log($"ASA - Cloud anchor deleted!");
             }
         }
-        // </DeleteAnchor>
+        // </DeleteGameObject>
 
         // <ToggleEditingMode>
         /// <summary>
@@ -896,7 +608,6 @@ namespace AzureSpatialAnchors
         private IEnumerator DestroyObjectDelayed(GameObject gameObject, float time)
         {
             yield return new WaitForSeconds(time);
-            //Destroy(gameObject);
             PhotonNetwork.Destroy(gameObject);
         }
         // </destroyObjectDelayed>
@@ -940,65 +651,6 @@ namespace AzureSpatialAnchors
             }
         }
 
-        //private async void restartAnchorWatcher(List<string> anchorIds)
-        //{
-        //    Debug.Log("restartAnchorWatcher");
-        //    _createdAnchorIDs = anchorIds;
-
-        //    // there doesn't appear to be a method to simply remove the watcher so we need to stop/restart the session and reattach a new watcher for the updated list of anchorIds
-        //    if (_spatialAnchorManager.IsSessionStarted)
-        //    {
-        //        // Stop Session and remove all GameObjects. This does not delete the Anchors in the cloud
-        //        _spatialAnchorManager.DestroySession();
-        //        RemoveAllAnchorGameObjects();
-        //        Debug.Log("ASA - Stopped Session and removed all Anchor Objects");
-        //    }
-
-        //    //Start session and search for all Anchors previously created
-        //    await _spatialAnchorManager.StartSessionAsync();
-        //    LocateAnchor();
-        //}
-
-//        public void ShareAzureAnchorIds()
-//        {
-//            Debug.Log("ShareAzureAnchorIds");
-//#if UNITY_2020
-//            ExitGames.Client.Photon.Hashtable setValue = new ExitGames.Client.Photon.Hashtable();
-//            setValue.Add("anchorIDs", _createdAnchorIDs.ToArray());
-//            PhotonNetwork.CurrentRoom.SetCustomProperties(setValue);
-//            //if (player != null)
-//            //    player.GetComponent<PhotonView>().RPC("PunRPC_ShareAzureAnchorIds", RpcTarget.OthersBuffered, _createdAnchorIDs);
-//            //else
-//            //    Debug.LogError("PV is null");
-//#endif
-//        }
-
-//        public void ShareHolds()
-//        {
-//            Debug.Log("ShareObjects");
-//#if UNITY_2020
-//            ExitGames.Client.Photon.Hashtable setValue = new ExitGames.Client.Photon.Hashtable();
-//            setValue.Add("holds", _foundOrCreatedAnchorGameObjects);
-//            PhotonNetwork.CurrentRoom.SetCustomProperties(setValue);
-//#endif
-//        }
-
-//        public override void OnRoomPropertiesUpdate(ExitGames.Client.Photon.Hashtable propertiesThatChanged)
-//        {
-//            base.OnRoomPropertiesUpdate(propertiesThatChanged);
-
-//            Debug.Log("OnRoomPropertiesUpdate");
-//            //if (propertiesThatChanged.ContainsKey("anchorIDs"))
-//            //{
-//            //    String[] anchorIDs = (String[])propertiesThatChanged["anchorIDs"];
-//            //    restartAnchorWatcher(anchorIDs.ToList());
-//            //}
-//            if (propertiesThatChanged.ContainsKey("holds"))
-//            {
-//                _foundOrCreatedAnchorGameObjects = (List<GameObject>)propertiesThatChanged["holds"];
-//            }
-//        }
-
         public override void OnEnable()
         {
             base.OnEnable();
@@ -1010,91 +662,5 @@ namespace AzureSpatialAnchors
             base.OnDisable();
             PhotonNetwork.RemoveCallbackTarget(this);
         }
-
-        //public async Task<string> CreateAnchorOnObjectAsync(GameObject gameObjectForAnchor)
-        //{
-        //    Debug.Log("CreateAnchorOnObjectAsync");
-
-        //    string anchorId = string.Empty;
-
-        //    await _spatialAnchorManager.StartSessionAsync();
-
-        //    //Add and configure ASA components
-        //    CloudNativeAnchor cloudNativeAnchor = gameObjectForAnchor.AddComponent<CloudNativeAnchor>();
-        //    await cloudNativeAnchor.NativeToCloud();
-        //    CloudSpatialAnchor cloudSpatialAnchor = cloudNativeAnchor.CloudAnchor;
-        //    cloudSpatialAnchor.Expiration = DateTimeOffset.Now.AddDays(3);
-
-        //    //Collect Environment Data
-        //    while (!_spatialAnchorManager.IsReadyForCreate)
-        //    {
-        //        float createProgress = _spatialAnchorManager.SessionStatus.RecommendedForCreateProgress;
-        //        Debug.Log($"ASA - Move your device to capture more environment data: {createProgress:0%}");
-        //    }
-
-        //    Debug.Log($"ASA - Saving room cloud anchor... ");
-
-        //    try
-        //    {
-        //        // Now that the cloud spatial anchor has been prepared, we can try the actual save here.
-        //        await _spatialAnchorManager.CreateAnchorAsync(cloudSpatialAnchor);
-
-        //        bool saveSucceeded = cloudSpatialAnchor != null;
-        //        if (!saveSucceeded)
-        //        {
-        //            Debug.LogError("ASA - Failed to save, but no exception was thrown.");
-        //            return anchorId;
-        //        }
-
-        //        anchorId = cloudSpatialAnchor.Identifier;
-        //        Debug.Log($"ASA - Saved room cloud anchor with ID: {anchorId}");
-        //    }
-        //    catch (Exception exception)
-        //    {
-        //        Debug.Log("ASA - Failed to save room anchor: " + exception.ToString());
-        //        Debug.LogException(exception);
-        //    }
-
-        //    return anchorId;
-        //}
-
-        //public async Task<bool> PopulateAnchorOnObjectAsync(string anchorId, GameObject gameObjectForAnchor)
-        //{
-        //    Debug.Log("PopulateAnchorOnObjectAsync");
-
-        //    bool anchorLocated = false;
-
-        //    try
-        //    {
-        //        await _spatialAnchorManager.StartSessionAsync();
-
-        //        this.taskWaitForAnchorLocation = new TaskCompletionSource<CloudSpatialAnchor>();
-
-        //        var watcher = _spatialAnchorManager.Session.CreateWatcher(
-        //            new AnchorLocateCriteria()
-        //            {
-        //                Identifiers = new string[] { anchorId },
-        //                BypassCache = true,
-        //                Strategy = LocateStrategy.AnyStrategy,
-        //                RequestedCategories = AnchorDataCategory.Spatial
-        //            }
-        //        );
-
-        //        var cloudAnchor = await this.taskWaitForAnchorLocation.Task;
-
-        //        anchorLocated = cloudAnchor != null;
-
-        //        if (anchorLocated)
-        //        {
-        //            gameObjectForAnchor.AddComponent<CloudNativeAnchor>().CloudToNative(cloudAnchor);
-        //        }
-        //        watcher.Stop();
-        //    }
-        //    catch (Exception ex) // TODO: reasonable exceptions here.
-        //    {
-        //        Debug.Log($"Caught {ex.Message}");
-        //    }
-        //    return (anchorLocated);
-        //}
     }
 }

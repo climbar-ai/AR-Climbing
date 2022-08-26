@@ -6,12 +6,12 @@ using UnityEngine;
 using System.Threading.Tasks;
 using Scripts.WorldLocking;
 using Microsoft.MixedReality.WorldLocking.ASA;
-//using MultiUserCapabilities;
+using UnityEngine.Events;
 
 namespace MultiUserCapabilities
 {
     using CloudAnchorId = System.String;
-
+    
     public class PhotonRoom : MonoBehaviourPunCallbacks, IInRoomCallbacks
     {
         public static PhotonRoom Room;
@@ -22,6 +22,7 @@ namespace MultiUserCapabilities
         [SerializeField] private GameObject numPlayersDisplay = default;
         [SerializeField] private GameObject publisherStatusDisplay = default;
         [SerializeField] private GameObject roomStatusDisplay = default;
+        [SerializeField] private UnityEvent JoinedRoomEvent;
         [SerializeField] private Scripts.WorldLocking.SpacePinBinder spacePinBinder = default;
 
         /// <summary>
@@ -107,6 +108,8 @@ namespace MultiUserCapabilities
 
         private void Start()
         {
+            indicatorObject.SetActive(true);
+
             // Allow prefabs not in a Resources folder
             if (PhotonNetwork.PrefabPool is DefaultPool pool)
             {
@@ -117,7 +120,6 @@ namespace MultiUserCapabilities
 
             binder = spacePinBinder;
             actionPublish = GetComponent<ActionPublish>();
-            indicatorObject.SetActive(true);
         }
 
         private async void Update()
@@ -134,10 +136,12 @@ namespace MultiUserCapabilities
                 if (roomStatus == RoomStatus.CreatedRoom)
                 {
                     // publish spacepin to share common origin
+                    await Task.Delay(5000); // wait for user to stare at wall TODO: replace with count-down
                     actionPublish.DoPublish();
                     roomStatus = RoomStatus.CreatedRoomAndPublishedAnchor;
                     roomStatusDisplay.GetComponent<TextMeshPro>().text = $"Room Status: {roomStatus}";
                     playerPV.RPC("PunRPC_SetUserIconColor", RpcTarget.All, roomStatus);
+                    JoinedRoomEvent?.Invoke();
                     indicatorObject.SetActive(false);
                 } else if (roomStatus == RoomStatus.JoinedRoomDownloadedAnchorId)
                 {
