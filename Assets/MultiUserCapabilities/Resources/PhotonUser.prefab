@@ -86,6 +86,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   nameTag: {fileID: 5557201918649632591}
+  icon_renderer: {fileID: 6597680887072564715}
 --- !u!1 &3000569308611278184
 GameObject:
   m_ObjectHideFlags: 0
@@ -350,6 +351,11 @@ PrefabInstance:
 --- !u!4 &5459637164545924740 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 6b51f0f693cb1bb48b7cba7f7afbba02, type: 3}
+  m_PrefabInstance: {fileID: 5498400838809991535}
+  m_PrefabAsset: {fileID: 0}
+--- !u!23 &6597680887072564715 stripped
+MeshRenderer:
+  m_CorrespondingSourceObject: {fileID: -7511558181221131132, guid: 6b51f0f693cb1bb48b7cba7f7afbba02, type: 3}
   m_PrefabInstance: {fileID: 5498400838809991535}
   m_PrefabAsset: {fileID: 0}
 --- !u!1001 &5508790924891510273

@@ -19,6 +19,7 @@ using Microsoft.MixedReality.WorldLocking.Tools;
 using Microsoft.MixedReality.WorldLocking.ASA;
 using ExitGames.Client.Photon;
 using Photon.Pun;
+using MultiUserCapabilities;
 
 /// <summary>
 /// NOTE DANGER OF RACE CONDITION ON REFIT EVENTS

@@ -6,9 +6,9 @@ using UnityEngine;
 using System.Threading.Tasks;
 using Scripts.WorldLocking;
 using Microsoft.MixedReality.WorldLocking.ASA;
-using MultiUserCapabilities;
+//using MultiUserCapabilities;
 
-namespace Scripts
+namespace MultiUserCapabilities
 {
     using CloudAnchorId = System.String;
 
@@ -38,8 +38,10 @@ namespace Scripts
         private int myNumberInRoom;
         private ActionPublish actionPublish;
         private CloudAnchorId cloudAnchorId = null;
+        GameObject player = null;
+        PhotonView playerPV = null;
 
-        enum RoomStatus
+        public enum RoomStatus
         {
             None,
             CreatedRoom,
@@ -135,6 +137,7 @@ namespace Scripts
                     actionPublish.DoPublish();
                     roomStatus = RoomStatus.CreatedRoomAndPublishedAnchor;
                     roomStatusDisplay.GetComponent<TextMeshPro>().text = $"Room Status: {roomStatus}";
+                    playerPV.RPC("PunRPC_SetUserIconColor", RpcTarget.All, roomStatus);
                     indicatorObject.SetActive(false);
                 } else if (roomStatus == RoomStatus.JoinedRoomDownloadedAnchorId)
                 {
@@ -144,6 +147,7 @@ namespace Scripts
                         // change status so we don't keep firing calls to download the anchor during the Delay() below
                         roomStatus = RoomStatus.JoinedRoomDownloadingAnchor;
                         roomStatusDisplay.GetComponent<TextMeshPro>().text = $"Room Status: {roomStatus}";
+                        playerPV.RPC("PunRPC_SetUserIconColor", RpcTarget.All, roomStatus);
 
                         // arbitrary delay that is supposed to be long enough for anchorLocateCriteria within publisher to become setup (its setup is called in
                         // SpacePinBinder's Awake())
@@ -153,6 +157,7 @@ namespace Scripts
                         actionPublish.DoDownloadOne(cloudAnchorId);
                         roomStatus = RoomStatus.JoinedRoomDownloadedAnchor;
                         roomStatusDisplay.GetComponent<TextMeshPro>().text = $"Room Status: {roomStatus}";
+                        playerPV.RPC("PunRPC_SetUserIconColor", RpcTarget.All, roomStatus);
                         indicatorObject.SetActive(false);
                     }
                 }
@@ -177,6 +182,7 @@ namespace Scripts
             {
                 this.roomStatus = RoomStatus.JoinedRoom;
                 this.roomStatusDisplay.GetComponent<TextMeshPro>().text = $"Room Status: {this.roomStatus}";
+                playerPV.RPC("PunRPC_SetUserIconColor", RpcTarget.All, this.roomStatus);
 
                 // check to see if cloudAnchorId is present i.e. we joined after the room creator created the cloundAnchorId and triggered OnRoomPropertiesUpdate
                 object keyValue = null;
@@ -190,6 +196,7 @@ namespace Scripts
                     this.cloudAnchorId = (CloudAnchorId)keyValue;
                     this.roomStatus = RoomStatus.JoinedRoomDownloadedAnchorId;
                     this.roomStatusDisplay.GetComponent<TextMeshPro>().text = $"Room Status: {this.roomStatus}";
+                    this.playerPV.RPC("PunRPC_SetUserIconColor", RpcTarget.All, this.roomStatus);
 
                     Debug.Log($"OnRoomPropertiesUpdate -> {keyValue}");
                 }
@@ -207,7 +214,8 @@ namespace Scripts
 
         private void CreatPlayer()
         {
-            var player = PhotonNetwork.Instantiate(photonUserPrefab.name, Vector3.zero, Quaternion.identity);
+            player = PhotonNetwork.Instantiate(photonUserPrefab.name, Vector3.zero, Quaternion.identity);
+            playerPV = player.GetPhotonView();
         }
 
         private void CreateSharedCursorFocus()
@@ -240,6 +248,7 @@ namespace Scripts
                     this.cloudAnchorId = (CloudAnchorId)keyValue;
                     this.roomStatus = RoomStatus.JoinedRoomDownloadedAnchorId;
                     this.roomStatusDisplay.GetComponent<TextMeshPro>().text = $"Room Status: {this.roomStatus}";
+                    this.playerPV.RPC("PunRPC_SetUserIconColor", RpcTarget.All, this.roomStatus);
 
                     Debug.Log($"OnRoomPropertiesUpdate -> {keyValue}");
                 }
