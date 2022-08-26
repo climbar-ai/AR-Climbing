@@ -31,8 +31,6 @@ namespace MultiUserCapabilities
         {
             // ask the photonview for permission
             var photonView = this.GetComponent<PhotonView>();
-            Debug.Log(photonView);
-
             photonView.RequestOwnership();
         }
 

@@ -287,7 +287,8 @@ namespace AzureSpatialAnchors
 
             if (editingMode == EditingMode.Delete)
             {
-                RemoveAllAnchorGameObjects();
+                PhotonView pv = this.gameObject.GetPhotonView();
+                pv.RPC("PunRPC_RemoveAllAnchorGameObjects", RpcTarget.MasterClient);
             }
         }
         // </LongTap>
@@ -296,14 +297,27 @@ namespace AzureSpatialAnchors
         /// <summary>
         /// Destroys all Anchor GameObjects
         /// </summary>
-        private void RemoveAllAnchorGameObjects()
+        [PunRPC]
+        private async void PunRPC_RemoveAllAnchorGameObjects()
         {
+            indicatorObject.gameObject.SetActive(true);
             _foundOrCreatedAnchorGameObjects = GameObject.FindGameObjectsWithTag("Hold");
             foreach (var anchorGameObject in _foundOrCreatedAnchorGameObjects)
             {
-                //Destroy(anchorGameObject);
+                PhotonView pv = anchorGameObject.GetComponent<PhotonView>();
+                Debug.Log($"pv: {pv}");
+                pv.RequestOwnership(); // we need ownership of the object to destroy it
+            }
+
+            // the RequestOwnership calls above are asynchronous and need time to complete before we call Destroy() below
+            await Task.Delay(1000);
+            
+            foreach (var anchorGameObject in _foundOrCreatedAnchorGameObjects)
+            {
+                PhotonView pv = anchorGameObject.GetComponent<PhotonView>();
                 PhotonNetwork.Destroy(anchorGameObject);
             }
+            indicatorObject.gameObject.SetActive(false);
         }
         // </RemoveAllAnchorGameObjects>
 
