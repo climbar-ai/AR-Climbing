@@ -46,6 +46,7 @@ namespace MultiUserCapabilities
         {
             None,
             CreatedRoom,
+            CreatedRoomAndPublishingAnchor,
             CreatedRoomAndPublishedAnchor,
             JoinedRoom,
             JoinedRoomDownloadedAnchor,
@@ -135,6 +136,10 @@ namespace MultiUserCapabilities
             {
                 if (roomStatus == RoomStatus.CreatedRoom)
                 {
+                    // we don't want the Update() to call the following Delay multiple times
+                    roomStatus = RoomStatus.CreatedRoomAndPublishingAnchor;
+                    roomStatusDisplay.GetComponent<TextMeshPro>().text = $"Room Status: {roomStatus}";
+
                     // publish spacepin to share common origin
                     await Task.Delay(5000); // wait for user to stare at wall TODO: replace with count-down
                     actionPublish.DoPublish();

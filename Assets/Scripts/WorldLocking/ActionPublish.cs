@@ -153,7 +153,7 @@ namespace Scripts.WorldLocking
             }
             SimpleConsole.AddLine(8, $"Finished.");
 
-            await ChangeColorForSeconds(finishSeconds, Color.green);
+            //await ChangeColorForSeconds(finishSeconds, Color.green);
             working = false;
         }
 
