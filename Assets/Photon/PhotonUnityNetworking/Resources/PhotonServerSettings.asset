@@ -58,6 +58,8 @@ MonoBehaviour:
   - PunRPC_RemoveAllAnchorGameObjects
   - PunRPC_OnMoveBegin
   - PunRPC_OnMoveEnd
+  - PunRPC_OnHoverExit
+  - PunRPC_OnHoverOver
   DisableAutoOpenWizard: 1
   ShowSettings: 1
   DevRegionSetOnce: 1

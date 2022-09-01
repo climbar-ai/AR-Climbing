@@ -1,4 +1,6 @@
-using Photon.Pun; 
+using Photon.Pun;
+using Photon.Realtime;
+using System.Threading.Tasks;
 using UnityEngine;
 
 /// <summary>
@@ -9,7 +11,8 @@ namespace MultiUserCapabilities
     /// <summary>
     /// https://docs.unity3d.com/ScriptReference/MonoBehaviour.OnMouseOver.html
     /// </summary>
-    public class OnHoldHover : MonoBehaviour
+    public class OnHoldHover : MonoBehaviour,
+         IOnPhotonViewOwnerChange
     {
         //When the pointer hovers over the GameObject, it turns to this color (red)
         Color my_MouseOverColor = Color.red;
@@ -23,6 +26,9 @@ namespace MultiUserCapabilities
 
         //GameObject
         public GameObject m_GameObject;
+
+        // is currently hovering
+        private bool isHover = false;
 
         // Start is called before the first frame update
         void Start()
@@ -38,18 +44,20 @@ namespace MultiUserCapabilities
         {
             // Change the color of the GameObject to red when the pointer is over GameObject
             PhotonView photonView = PhotonView.Get(this);
-            photonView.RPC("OnHoverOverBegin", RpcTarget.All);
+            photonView.RPC("PunRPC_OnHoverOver", RpcTarget.All);
+            isHover = true;
         }
 
         public void OnHoverExit()
         {
             // Reset the color of the GameObject back to normal
             PhotonView photonView = PhotonView.Get(this);
-            photonView.RPC("OnHoverOverEnd", RpcTarget.All);
+            photonView.RPC("PunRPC_OnHoverExit", RpcTarget.All);
+            isHover = false;
         }
 
         [PunRPC]
-        void OnHoverOverBegin()
+        void PunRPC_OnHoverOver()
         {
             PhotonView photonView = PhotonView.Get(this);
             if (photonView.IsMine)
@@ -62,9 +70,32 @@ namespace MultiUserCapabilities
         }
 
         [PunRPC]
-        void OnHoverOverEnd()
+        void PunRPC_OnHoverExit()
         {
             m_Renderer.material.color = m_OriginalColor;
+        }
+
+        public async void OnOwnerChange(Player newOwner, Player previousOwner)
+        {
+            Debug.Log($"OnOwnershipChange: ownership successfully transfered from {previousOwner.NickName} to {newOwner.NickName}");
+            if (isHover)
+            {
+                await Task.Delay(100); // even though ownership change is signaled, there is still a slight delay until photonView.IsMine becomes true (necessary for PunRPC)
+                PhotonView photonView = PhotonView.Get(this);
+                photonView.RPC("PunRPC_OnHoverOver", RpcTarget.All);
+            }
+        }
+
+        public void OnEnable()
+        {
+            var photonView = this.GetComponent<PhotonView>();
+            photonView.AddCallbackTarget(this);
+        }
+
+        public void OnDisable()
+        {
+            var photonView = this.GetComponent<PhotonView>();
+            photonView.RemoveCallbackTarget(this);
         }
     }
 }

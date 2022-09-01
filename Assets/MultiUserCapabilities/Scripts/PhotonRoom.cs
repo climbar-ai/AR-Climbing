@@ -107,7 +107,7 @@ namespace MultiUserCapabilities
             PhotonNetwork.RemoveCallbackTarget(this);
         }
 
-        private void Start()
+        private async void Start()
         {
             indicatorObject.SetActive(true);
 
@@ -121,6 +121,7 @@ namespace MultiUserCapabilities
 
             binder = spacePinBinder;
             actionPublish = GetComponent<ActionPublish>();
+            await Task.Delay(5000); // wait for user to stare at wall TODO: replace with count-down
         }
 
         private async void Update()
@@ -136,12 +137,11 @@ namespace MultiUserCapabilities
             {
                 if (roomStatus == RoomStatus.CreatedRoom)
                 {
-                    // we don't want the Update() to call the following Delay multiple times
+                    // we don't want the Update() to call the following DoPublish() method multiple times in case there is a delay in DoPublish()
                     roomStatus = RoomStatus.CreatedRoomAndPublishingAnchor;
                     roomStatusDisplay.GetComponent<TextMeshPro>().text = $"Room Status: {roomStatus}";
 
                     // publish spacepin to share common origin
-                    await Task.Delay(5000); // wait for user to stare at wall TODO: replace with count-down
                     actionPublish.DoPublish();
                     roomStatus = RoomStatus.CreatedRoomAndPublishedAnchor;
                     roomStatusDisplay.GetComponent<TextMeshPro>().text = $"Room Status: {roomStatus}";
@@ -208,6 +208,9 @@ namespace MultiUserCapabilities
                     this.playerPV.RPC("PunRPC_SetUserIconColor", RpcTarget.All, this.roomStatus);
 
                     Debug.Log($"OnRoomPropertiesUpdate -> {keyValue}");
+                } else 
+                {
+                    Debug.Log("OnJoinedRoom: AnchorId not present in room properties");
                 }
 #endif
             }
@@ -260,6 +263,9 @@ namespace MultiUserCapabilities
                     this.playerPV.RPC("PunRPC_SetUserIconColor", RpcTarget.All, this.roomStatus);
 
                     Debug.Log($"OnRoomPropertiesUpdate -> {keyValue}");
+                } else 
+                {
+                    Debug.Log("OnRoomPropertiesUpdate: AnchorId not present in room properties");
                 }
 #endif
             }
