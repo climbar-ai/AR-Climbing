@@ -239,6 +239,8 @@ namespace AzureSpatialAnchors
                     // make invisible and show ghost hold instead
                     anchorGameObject.GetComponent<OnHoldMove>().OnMoveBegin();
                     ghost = PhotonNetwork.Instantiate(hold + "_Ghost", handPosition, Quaternion.identity);
+                    //PhotonView gpv = ghost.GetComponent<PhotonView>();
+                    //gpv.RPC("PunRPC_DisableGhostSurfaceMagnetism", RpcTarget.All); // disable SM for other player's version of the ghost so it only follows the current player's movement
                 }
             }
             else if (anchorNearby && editingMode == EditingMode.Delete)
