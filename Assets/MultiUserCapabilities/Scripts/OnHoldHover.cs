@@ -1,3 +1,4 @@
+using Microsoft.MixedReality.Toolkit.Input;
 using Photon.Pun;
 using Photon.Realtime;
 using System.Threading.Tasks;
@@ -12,7 +13,8 @@ namespace MultiUserCapabilities
     /// https://docs.unity3d.com/ScriptReference/MonoBehaviour.OnMouseOver.html
     /// </summary>
     public class OnHoldHover : MonoBehaviour,
-         IOnPhotonViewOwnerChange
+         IOnPhotonViewOwnerChange,
+        IMixedRealityFocusHandler
     {
         //When the pointer hovers over the GameObject, it turns to this color (red)
         Color my_MouseOverColor = Color.red;
@@ -38,6 +40,26 @@ namespace MultiUserCapabilities
 
             //Fetch the original color of the GameObject
             m_OriginalColor = m_Renderer.material.color;
+        }
+
+        /// <summary>
+        /// Bind hover events to focus so that when we need to disable the MRTK's NearInteractionGrabble and ObjectManipulator scripts on the game object within 
+        /// AzureSpatialAnchors.cs, we don't lose the hover color interaction
+        /// </summary>
+        /// <param name="eventData"></param>
+        public void OnFocusEnter(FocusEventData eventData)
+        {
+            OnHoverOver();
+        }
+
+        /// <summary>
+        /// Bind hover events to focus so that when we need to disable the MRTK's NearInteractionGrabble and ObjectManipulator scripts on the game object within 
+        /// AzureSpatialAnchors.cs, we don't lose the hover color interaction
+        /// </summary>
+        /// <param name="eventData"></param>
+        public void OnFocusExit(FocusEventData eventData)
+        {
+            OnHoverExit();
         }
 
         public void OnHoverOver()
