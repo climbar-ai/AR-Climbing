@@ -82,6 +82,27 @@ namespace AzureSpatialAnchors
 
         TaskCompletionSource<CloudSpatialAnchor> taskWaitForAnchorLocation;
 
+        // we have to apply audio sources for create/delete/moveStart/moveEnd events here because we will be disabling/enabling manipulation components depending on the
+        // mode we are in
+        // manipulation audio (i.e. rotation) is supplied by the manipulation component since it only applies in the mode when the manipulation component is enabled
+        [SerializeField]
+        private AudioSource audioData;
+
+        [SerializeField]
+        private AudioClip createAudio;
+
+        [SerializeField]
+        private AudioClip deleteOneAudio;
+
+        [SerializeField]
+        private AudioClip deleteAllAudio;
+
+        [SerializeField]
+        private AudioClip moveStartAudio;
+
+        [SerializeField]
+        private AudioClip moveEndAudio;
+
         // <Start>
         // Start is called before the first frame update
         void Start()
@@ -208,6 +229,8 @@ namespace AzureSpatialAnchors
 
             if (!anchorNearby && editingMode == EditingMode.Move)
             {
+                audioData.PlayOneShot(createAudio);
+
                 // No Anchor Nearby, start session and create an anchor
                 CreateAnchor(handPosition, surfaceNormal, photonView);
             }
@@ -216,13 +239,15 @@ namespace AzureSpatialAnchors
                 //// Toggle TapToPlace on so we can start or end moving the object
                 ////anchorGameObject.GetComponent<TapToPlace>().enabled = !anchorGameObject.GetComponent<TapToPlace>().enabled;
                 ////TapToPlace ttp = anchorGameObject.GetComponent<TapToPlace>();
-                
+
                 // toggle surface magnetism component so we can start or end moving the object
                 bool isTappingToPlace = anchorGameObject.GetComponent<HoldData>().isTappingToPlace;
                 anchorGameObject.GetComponent<HoldData>().isTappingToPlace = !anchorGameObject.GetComponent<HoldData>().isTappingToPlace;
                 SurfaceMagnetism sm = anchorGameObject.EnsureComponent<SurfaceMagnetism>();
                 if (isTappingToPlace)
                 {
+                    audioData.PlayOneShot(moveEndAudio);
+
                     //ttp.StopPlacement();
                     sm.enabled = false;
 
@@ -233,6 +258,8 @@ namespace AzureSpatialAnchors
                 }
                 else
                 {
+                    audioData.PlayOneShot(moveStartAudio);
+
                     //ttp.StartPlacement();
                     sm.enabled = true;
 
@@ -243,6 +270,8 @@ namespace AzureSpatialAnchors
             }
             else if (anchorNearby && editingMode == EditingMode.Delete)
             {
+                audioData.PlayOneShot(deleteOneAudio);
+
                 // Delete nearby Anchor
                 DeleteGameObject(anchorGameObject);
             }
@@ -257,6 +286,7 @@ namespace AzureSpatialAnchors
         {
             if (editingMode == EditingMode.Delete)
             {
+                audioData.PlayOneShot(deleteAllAudio);
                 PhotonView pv = this.gameObject.GetPhotonView();
                 pv.RPC("PunRPC_RemoveAllAnchorGameObjects", RpcTarget.MasterClient);
             }
