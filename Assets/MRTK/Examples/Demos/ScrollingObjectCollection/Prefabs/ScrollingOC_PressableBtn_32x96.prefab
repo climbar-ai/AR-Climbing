@@ -127,7 +127,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultMaterials:
   - {fileID: 2100000, guid: fa419ab56051229449e3b813df8f295f, type: 2}
-  cacheSharedMaterialsFromRenderer: 0
 --- !u!1 &266051739895710290
 GameObject:
   m_ObjectHideFlags: 0
@@ -357,7 +356,7 @@ MonoBehaviour:
   startDimensionIndex: 0
   CanSelect: 0
   CanDeselect: 0
-  voiceCommand: Select
+  VoiceCommand: 
   voiceRequiresFocus: 1
   profiles:
   - Target: {fileID: 8678628090444740098}
@@ -788,7 +787,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultMaterials:
   - {fileID: 2100000, guid: 329cdefad4cf0f14e9b6767d0af094b0, type: 2}
-  cacheSharedMaterialsFromRenderer: 0
 --- !u!1 &433882955904784930
 GameObject:
   m_ObjectHideFlags: 0
@@ -1018,7 +1016,7 @@ MonoBehaviour:
   startDimensionIndex: 0
   CanSelect: 0
   CanDeselect: 0
-  voiceCommand: Select
+  VoiceCommand: 
   voiceRequiresFocus: 1
   profiles:
   - Target: {fileID: 1373741550563726885}
@@ -1567,7 +1565,7 @@ MonoBehaviour:
   startDimensionIndex: 0
   CanSelect: 0
   CanDeselect: 0
-  voiceCommand: Select
+  VoiceCommand: 
   voiceRequiresFocus: 1
   profiles:
   - Target: {fileID: 7374671457476847370}
@@ -2086,7 +2084,7 @@ MonoBehaviour:
   startDimensionIndex: 0
   CanSelect: 0
   CanDeselect: 0
-  voiceCommand: Select
+  VoiceCommand: 
   voiceRequiresFocus: 1
   profiles:
   - Target: {fileID: 5368109179490686246}
@@ -2602,7 +2600,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultMaterials:
   - {fileID: 21202819797275496, guid: 6a84f857bec7e7345843ae29404c57ce, type: 2}
-  cacheSharedMaterialsFromRenderer: 0
 --- !u!1 &1163143472246138815
 GameObject:
   m_ObjectHideFlags: 0
@@ -2827,7 +2824,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultMaterials:
   - {fileID: 21202819797275496, guid: 6a84f857bec7e7345843ae29404c57ce, type: 2}
-  cacheSharedMaterialsFromRenderer: 0
 --- !u!1 &1284815330652391464
 GameObject:
   m_ObjectHideFlags: 0
@@ -3025,7 +3021,7 @@ MonoBehaviour:
   startDimensionIndex: 0
   CanSelect: 0
   CanDeselect: 0
-  voiceCommand: Select
+  VoiceCommand: 
   voiceRequiresFocus: 1
   profiles:
   - Target: {fileID: 3532836016420203336}
@@ -3456,7 +3452,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultMaterials:
   - {fileID: 2100000, guid: 329cdefad4cf0f14e9b6767d0af094b0, type: 2}
-  cacheSharedMaterialsFromRenderer: 0
 --- !u!1 &1373741550563726885
 GameObject:
   m_ObjectHideFlags: 0
@@ -3567,7 +3562,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultMaterials:
   - {fileID: 2100000, guid: 38a587e9218b3284485088c9925af61f, type: 2}
-  cacheSharedMaterialsFromRenderer: 0
 --- !u!1 &1459238153518776024
 GameObject:
   m_ObjectHideFlags: 0
@@ -3765,7 +3759,7 @@ MonoBehaviour:
   startDimensionIndex: 0
   CanSelect: 0
   CanDeselect: 0
-  voiceCommand: Select
+  VoiceCommand: 
   voiceRequiresFocus: 1
   profiles:
   - Target: {fileID: 3875889991607149760}
@@ -4183,7 +4177,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultMaterials:
   - {fileID: 2100000, guid: fa419ab56051229449e3b813df8f295f, type: 2}
-  cacheSharedMaterialsFromRenderer: 0
 --- !u!1 &1611650355121825522
 GameObject:
   m_ObjectHideFlags: 0
@@ -4280,7 +4273,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultMaterials:
   - {fileID: 2100000, guid: fa419ab56051229449e3b813df8f295f, type: 2}
-  cacheSharedMaterialsFromRenderer: 0
 --- !u!1 &1611650355147260603
 GameObject:
   m_ObjectHideFlags: 0
@@ -4391,7 +4383,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultMaterials:
   - {fileID: 2100000, guid: 38a587e9218b3284485088c9925af61f, type: 2}
-  cacheSharedMaterialsFromRenderer: 0
 --- !u!1 &1611650355172525534
 GameObject:
   m_ObjectHideFlags: 0
@@ -4502,7 +4493,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultMaterials:
   - {fileID: 2100000, guid: 38a587e9218b3284485088c9925af61f, type: 2}
-  cacheSharedMaterialsFromRenderer: 0
 --- !u!1 &1611650355230191463
 GameObject:
   m_ObjectHideFlags: 0
@@ -4700,7 +4690,7 @@ MonoBehaviour:
   startDimensionIndex: 0
   CanSelect: 0
   CanDeselect: 0
-  voiceCommand: Select
+  VoiceCommand: 
   voiceRequiresFocus: 1
   profiles:
   - Target: {fileID: 1611650356674027751}
@@ -5216,7 +5206,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultMaterials:
   - {fileID: 21202819797275496, guid: 6a84f857bec7e7345843ae29404c57ce, type: 2}
-  cacheSharedMaterialsFromRenderer: 0
 --- !u!1 &1611650355474458705
 GameObject:
   m_ObjectHideFlags: 0
@@ -5471,7 +5460,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultMaterials:
   - {fileID: 21202819797275496, guid: 6a84f857bec7e7345843ae29404c57ce, type: 2}
-  cacheSharedMaterialsFromRenderer: 0
 --- !u!1 &1611650355840893740
 GameObject:
   m_ObjectHideFlags: 0
@@ -5669,7 +5657,7 @@ MonoBehaviour:
   startDimensionIndex: 0
   CanSelect: 0
   CanDeselect: 0
-  voiceCommand: Select
+  VoiceCommand: 
   voiceRequiresFocus: 1
   profiles:
   - Target: {fileID: 1611650356545588396}
@@ -6087,7 +6075,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultMaterials:
   - {fileID: 2100000, guid: fa419ab56051229449e3b813df8f295f, type: 2}
-  cacheSharedMaterialsFromRenderer: 0
 --- !u!1 &1611650355997379670
 GameObject:
   m_ObjectHideFlags: 0
@@ -6198,7 +6185,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultMaterials:
   - {fileID: 2100000, guid: 38a587e9218b3284485088c9925af61f, type: 2}
-  cacheSharedMaterialsFromRenderer: 0
 --- !u!1 &1611650356095949740
 GameObject:
   m_ObjectHideFlags: 0
@@ -6393,7 +6379,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultMaterials:
   - {fileID: 21202819797275496, guid: 6a84f857bec7e7345843ae29404c57ce, type: 2}
-  cacheSharedMaterialsFromRenderer: 0
 --- !u!1 &1611650356136418505
 GameObject:
   m_ObjectHideFlags: 0
@@ -6588,7 +6573,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultMaterials:
   - {fileID: 21202819797275496, guid: 6a84f857bec7e7345843ae29404c57ce, type: 2}
-  cacheSharedMaterialsFromRenderer: 0
 --- !u!1 &1611650356218472006
 GameObject:
   m_ObjectHideFlags: 0
@@ -6745,7 +6729,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultMaterials:
   - {fileID: 2100000, guid: fa419ab56051229449e3b813df8f295f, type: 2}
-  cacheSharedMaterialsFromRenderer: 0
 --- !u!1 &1611650356433142742
 GameObject:
   m_ObjectHideFlags: 0
@@ -6943,7 +6926,7 @@ MonoBehaviour:
   startDimensionIndex: 0
   CanSelect: 0
   CanDeselect: 0
-  voiceCommand: Select
+  VoiceCommand: 
   voiceRequiresFocus: 1
   profiles:
   - Target: {fileID: 1611650355997379670}
@@ -7375,7 +7358,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultMaterials:
   - {fileID: 2100000, guid: 38a587e9218b3284485088c9925af61f, type: 2}
-  cacheSharedMaterialsFromRenderer: 0
 --- !u!1 &1611650356674027751
 GameObject:
   m_ObjectHideFlags: 0
@@ -7486,7 +7468,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultMaterials:
   - {fileID: 2100000, guid: 38a587e9218b3284485088c9925af61f, type: 2}
-  cacheSharedMaterialsFromRenderer: 0
 --- !u!1 &1611650356683442782
 GameObject:
   m_ObjectHideFlags: 0
@@ -7684,7 +7665,7 @@ MonoBehaviour:
   startDimensionIndex: 0
   CanSelect: 0
   CanDeselect: 0
-  voiceCommand: Select
+  VoiceCommand: 
   voiceRequiresFocus: 1
   profiles:
   - Target: {fileID: 1611650355172525534}
@@ -8203,7 +8184,7 @@ MonoBehaviour:
   startDimensionIndex: 0
   CanSelect: 0
   CanDeselect: 0
-  voiceCommand: Select
+  VoiceCommand: 
   voiceRequiresFocus: 1
   profiles:
   - Target: {fileID: 1611650355147260603}
@@ -8621,7 +8602,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultMaterials:
   - {fileID: 2100000, guid: fa419ab56051229449e3b813df8f295f, type: 2}
-  cacheSharedMaterialsFromRenderer: 0
 --- !u!1 &1611650356885901860
 GameObject:
   m_ObjectHideFlags: 0
@@ -8816,7 +8796,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultMaterials:
   - {fileID: 21202819797275496, guid: 6a84f857bec7e7345843ae29404c57ce, type: 2}
-  cacheSharedMaterialsFromRenderer: 0
 --- !u!1 &1611650357073340587
 GameObject:
   m_ObjectHideFlags: 0
@@ -8987,7 +8966,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultMaterials:
   - {fileID: 2100000, guid: 329cdefad4cf0f14e9b6767d0af094b0, type: 2}
-  cacheSharedMaterialsFromRenderer: 0
 --- !u!1 &1914088296384771467
 GameObject:
   m_ObjectHideFlags: 0
@@ -9084,7 +9062,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultMaterials:
   - {fileID: 2100000, guid: fa419ab56051229449e3b813df8f295f, type: 2}
-  cacheSharedMaterialsFromRenderer: 0
 --- !u!1 &1972752288791891015
 GameObject:
   m_ObjectHideFlags: 0
@@ -9226,7 +9203,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultMaterials:
   - {fileID: 2100000, guid: 329cdefad4cf0f14e9b6767d0af094b0, type: 2}
-  cacheSharedMaterialsFromRenderer: 0
 --- !u!1 &2208753150411687020
 GameObject:
   m_ObjectHideFlags: 0
@@ -9399,7 +9375,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultMaterials:
   - {fileID: 2100000, guid: 329cdefad4cf0f14e9b6767d0af094b0, type: 2}
-  cacheSharedMaterialsFromRenderer: 0
 --- !u!1 &3267227724812879308
 GameObject:
   m_ObjectHideFlags: 0
@@ -9594,7 +9569,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultMaterials:
   - {fileID: 21202819797275496, guid: 6a84f857bec7e7345843ae29404c57ce, type: 2}
-  cacheSharedMaterialsFromRenderer: 0
 --- !u!1 &3393243178507291398
 GameObject:
   m_ObjectHideFlags: 0
@@ -9705,7 +9679,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultMaterials:
   - {fileID: 2100000, guid: 38a587e9218b3284485088c9925af61f, type: 2}
-  cacheSharedMaterialsFromRenderer: 0
 --- !u!1 &3395916780957532036
 GameObject:
   m_ObjectHideFlags: 0
@@ -9879,7 +9852,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultMaterials:
   - {fileID: 2100000, guid: 38a587e9218b3284485088c9925af61f, type: 2}
-  cacheSharedMaterialsFromRenderer: 0
 --- !u!1 &3532836016420203336
 GameObject:
   m_ObjectHideFlags: 0
@@ -9990,7 +9962,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultMaterials:
   - {fileID: 2100000, guid: 38a587e9218b3284485088c9925af61f, type: 2}
-  cacheSharedMaterialsFromRenderer: 0
 --- !u!1 &3670873714553293010
 GameObject:
   m_ObjectHideFlags: 0
@@ -10133,7 +10104,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultMaterials:
   - {fileID: 2100000, guid: 38a587e9218b3284485088c9925af61f, type: 2}
-  cacheSharedMaterialsFromRenderer: 0
 --- !u!1 &3875889991607149760
 GameObject:
   m_ObjectHideFlags: 0
@@ -10244,7 +10214,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultMaterials:
   - {fileID: 2100000, guid: 38a587e9218b3284485088c9925af61f, type: 2}
-  cacheSharedMaterialsFromRenderer: 0
 --- !u!1 &4034068879761662167
 GameObject:
   m_ObjectHideFlags: 0
@@ -10354,7 +10323,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultMaterials:
   - {fileID: 2100000, guid: 329cdefad4cf0f14e9b6767d0af094b0, type: 2}
-  cacheSharedMaterialsFromRenderer: 0
 --- !u!1 &4197506128946816242
 GameObject:
   m_ObjectHideFlags: 0
@@ -10679,7 +10647,6 @@ MonoBehaviour:
   clippingSide: -1
   useOnPreRender: 1
   applyToSharedMaterial: 0
-  cacheSharedMaterialsFromRenderer: 0
 --- !u!65 &4411601542682591988
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -11378,7 +11345,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultMaterials:
   - {fileID: 21202819797275496, guid: 6a84f857bec7e7345843ae29404c57ce, type: 2}
-  cacheSharedMaterialsFromRenderer: 0
 --- !u!1 &4832884704841420214
 GameObject:
   m_ObjectHideFlags: 0
@@ -11488,7 +11454,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultMaterials:
   - {fileID: 2100000, guid: 329cdefad4cf0f14e9b6767d0af094b0, type: 2}
-  cacheSharedMaterialsFromRenderer: 0
 --- !u!1 &4900137683020972128
 GameObject:
   m_ObjectHideFlags: 0
@@ -11683,7 +11648,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultMaterials:
   - {fileID: 21202819797275496, guid: 6a84f857bec7e7345843ae29404c57ce, type: 2}
-  cacheSharedMaterialsFromRenderer: 0
 --- !u!1 &4938643914818340009
 GameObject:
   m_ObjectHideFlags: 0
@@ -11854,7 +11818,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultMaterials:
   - {fileID: 2100000, guid: 329cdefad4cf0f14e9b6767d0af094b0, type: 2}
-  cacheSharedMaterialsFromRenderer: 0
 --- !u!1 &5218683682312939275
 GameObject:
   m_ObjectHideFlags: 0
@@ -11994,7 +11957,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultMaterials:
   - {fileID: 2100000, guid: 329cdefad4cf0f14e9b6767d0af094b0, type: 2}
-  cacheSharedMaterialsFromRenderer: 0
 --- !u!1 &5357882377722611189
 GameObject:
   m_ObjectHideFlags: 0
@@ -12104,7 +12066,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultMaterials:
   - {fileID: 2100000, guid: 329cdefad4cf0f14e9b6767d0af094b0, type: 2}
-  cacheSharedMaterialsFromRenderer: 0
 --- !u!1 &5357882378371482895
 GameObject:
   m_ObjectHideFlags: 0
@@ -12214,7 +12175,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultMaterials:
   - {fileID: 2100000, guid: 329cdefad4cf0f14e9b6767d0af094b0, type: 2}
-  cacheSharedMaterialsFromRenderer: 0
 --- !u!1 &5357882379138239458
 GameObject:
   m_ObjectHideFlags: 0
@@ -12324,7 +12284,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultMaterials:
   - {fileID: 2100000, guid: 329cdefad4cf0f14e9b6767d0af094b0, type: 2}
-  cacheSharedMaterialsFromRenderer: 0
 --- !u!1 &5357882379161799815
 GameObject:
   m_ObjectHideFlags: 0
@@ -12434,7 +12393,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultMaterials:
   - {fileID: 2100000, guid: 329cdefad4cf0f14e9b6767d0af094b0, type: 2}
-  cacheSharedMaterialsFromRenderer: 0
 --- !u!1 &5368109179490686246
 GameObject:
   m_ObjectHideFlags: 0
@@ -12545,7 +12503,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultMaterials:
   - {fileID: 2100000, guid: 38a587e9218b3284485088c9925af61f, type: 2}
-  cacheSharedMaterialsFromRenderer: 0
 --- !u!1 &5406122223930887667
 GameObject:
   m_ObjectHideFlags: 0
@@ -12642,7 +12599,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultMaterials:
   - {fileID: 2100000, guid: fa419ab56051229449e3b813df8f295f, type: 2}
-  cacheSharedMaterialsFromRenderer: 0
 --- !u!1 &5591694463188852704
 GameObject:
   m_ObjectHideFlags: 0
@@ -12869,7 +12825,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultMaterials:
   - {fileID: 21202819797275496, guid: 6a84f857bec7e7345843ae29404c57ce, type: 2}
-  cacheSharedMaterialsFromRenderer: 0
 --- !u!1 &6045093228770150839
 GameObject:
   m_ObjectHideFlags: 0
@@ -13345,7 +13300,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultMaterials:
   - {fileID: 21202819797275496, guid: 6a84f857bec7e7345843ae29404c57ce, type: 2}
-  cacheSharedMaterialsFromRenderer: 0
 --- !u!1 &6254541063541587829
 GameObject:
   m_ObjectHideFlags: 0
@@ -13474,7 +13428,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultMaterials:
   - {fileID: 2100000, guid: fa419ab56051229449e3b813df8f295f, type: 2}
-  cacheSharedMaterialsFromRenderer: 0
 --- !u!1 &6323322999639777151
 GameObject:
   m_ObjectHideFlags: 0
@@ -13571,7 +13524,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultMaterials:
   - {fileID: 2100000, guid: fa419ab56051229449e3b813df8f295f, type: 2}
-  cacheSharedMaterialsFromRenderer: 0
 --- !u!1 &6324957135686711993
 GameObject:
   m_ObjectHideFlags: 0
@@ -13858,7 +13810,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultMaterials:
   - {fileID: 21202819797275496, guid: 6a84f857bec7e7345843ae29404c57ce, type: 2}
-  cacheSharedMaterialsFromRenderer: 0
 --- !u!1 &6828409376679002142
 GameObject:
   m_ObjectHideFlags: 0
@@ -13986,7 +13937,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultMaterials:
   - {fileID: 2100000, guid: fa419ab56051229449e3b813df8f295f, type: 2}
-  cacheSharedMaterialsFromRenderer: 0
 --- !u!1 &6957097767706601428
 GameObject:
   m_ObjectHideFlags: 0
@@ -14211,7 +14161,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultMaterials:
   - {fileID: 21202819797275496, guid: 6a84f857bec7e7345843ae29404c57ce, type: 2}
-  cacheSharedMaterialsFromRenderer: 0
 --- !u!1 &7109780857529737593
 GameObject:
   m_ObjectHideFlags: 0
@@ -14409,7 +14358,7 @@ MonoBehaviour:
   startDimensionIndex: 0
   CanSelect: 0
   CanDeselect: 0
-  voiceCommand: Select
+  VoiceCommand: 
   voiceRequiresFocus: 1
   profiles:
   - Target: {fileID: 8667093683414257757}
@@ -15032,7 +14981,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultMaterials:
   - {fileID: 2100000, guid: 38a587e9218b3284485088c9925af61f, type: 2}
-  cacheSharedMaterialsFromRenderer: 0
 --- !u!1 &7424673523029473732
 GameObject:
   m_ObjectHideFlags: 0
@@ -15160,7 +15108,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultMaterials:
   - {fileID: 2100000, guid: fa419ab56051229449e3b813df8f295f, type: 2}
-  cacheSharedMaterialsFromRenderer: 0
 --- !u!1 &7557504973963449058
 GameObject:
   m_ObjectHideFlags: 0
@@ -15270,7 +15217,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultMaterials:
   - {fileID: 2100000, guid: 329cdefad4cf0f14e9b6767d0af094b0, type: 2}
-  cacheSharedMaterialsFromRenderer: 0
 --- !u!1 &7610075028434994198
 GameObject:
   m_ObjectHideFlags: 0
@@ -15468,7 +15414,7 @@ MonoBehaviour:
   startDimensionIndex: 0
   CanSelect: 0
   CanDeselect: 0
-  voiceCommand: Select
+  VoiceCommand: 
   voiceRequiresFocus: 1
   profiles:
   - Target: {fileID: 3393243178507291398}
@@ -15987,7 +15933,7 @@ MonoBehaviour:
   startDimensionIndex: 0
   CanSelect: 0
   CanDeselect: 0
-  voiceCommand: Select
+  VoiceCommand: 
   voiceRequiresFocus: 1
   profiles:
   - Target: {fileID: 3498560013527990194}
@@ -16405,7 +16351,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultMaterials:
   - {fileID: 2100000, guid: fa419ab56051229449e3b813df8f295f, type: 2}
-  cacheSharedMaterialsFromRenderer: 0
 --- !u!1 &8549547697362317856
 GameObject:
   m_ObjectHideFlags: 0
@@ -16546,7 +16491,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultMaterials:
   - {fileID: 2100000, guid: 38a587e9218b3284485088c9925af61f, type: 2}
-  cacheSharedMaterialsFromRenderer: 0
 --- !u!1 &8678628090444740098
 GameObject:
   m_ObjectHideFlags: 0
@@ -16657,7 +16601,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultMaterials:
   - {fileID: 2100000, guid: 38a587e9218b3284485088c9925af61f, type: 2}
-  cacheSharedMaterialsFromRenderer: 0
 --- !u!1 &8681212516600472267
 GameObject:
   m_ObjectHideFlags: 0
@@ -16767,7 +16710,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultMaterials:
   - {fileID: 2100000, guid: 329cdefad4cf0f14e9b6767d0af094b0, type: 2}
-  cacheSharedMaterialsFromRenderer: 0
 --- !u!1 &8789463155650619249
 GameObject:
   m_ObjectHideFlags: 0
@@ -16962,7 +16904,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultMaterials:
   - {fileID: 21202819797275496, guid: 6a84f857bec7e7345843ae29404c57ce, type: 2}
-  cacheSharedMaterialsFromRenderer: 0
 --- !u!1 &8940038626284065729
 GameObject:
   m_ObjectHideFlags: 0
@@ -17059,7 +17000,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultMaterials:
   - {fileID: 2100000, guid: fa419ab56051229449e3b813df8f295f, type: 2}
-  cacheSharedMaterialsFromRenderer: 0
 --- !u!1 &9001175850948789650
 GameObject:
   m_ObjectHideFlags: 0
@@ -17289,7 +17229,7 @@ MonoBehaviour:
   startDimensionIndex: 0
   CanSelect: 0
   CanDeselect: 0
-  voiceCommand: Select
+  VoiceCommand: 
   voiceRequiresFocus: 1
   profiles:
   - Target: {fileID: 3704610326931353790}
@@ -17707,7 +17647,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultMaterials:
   - {fileID: 2100000, guid: fa419ab56051229449e3b813df8f295f, type: 2}
-  cacheSharedMaterialsFromRenderer: 0
 --- !u!1 &9060894806328194018
 GameObject:
   m_ObjectHideFlags: 0
