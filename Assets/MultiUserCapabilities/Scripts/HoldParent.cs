@@ -1,17 +1,20 @@
-using Photon.Pun;
+using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
-/// <summary>
-/// Parent each created hold to the root game object so we can easily track their relative positions with respect to each other across each device running the application
-/// </summary>
-namespace MultiUserCapabilities
+public class HoldParent : MonoBehaviour
 {
-    public class HoldParent : MonoBehaviour, IPunInstantiateMagicCallback
+    [SerializeField] private AudioSource m_AudioSource;
+    [SerializeField] private AudioClip onManipulationStartedAudio;
+    [SerializeField] private AudioClip onManipulationEndedAudio;
+
+    public void PlayOnManipulationStartedAudio()
     {
-        public void OnPhotonInstantiate(PhotonMessageInfo info)
-        {
-            GameObject root = GameObject.Find("CommonOrigin");
-            this.transform.SetParent(root.transform, true);
-        }
+        m_AudioSource.PlayOneShot(onManipulationStartedAudio);
+    }
+
+    public void PlayOnManipulationEndedAudio()
+    {
+        m_AudioSource.PlayOneShot(onManipulationEndedAudio);
     }
 }

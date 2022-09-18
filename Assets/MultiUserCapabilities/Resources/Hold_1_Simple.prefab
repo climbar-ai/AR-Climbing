@@ -384,6 +384,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   isTappingToPlace: 0
+  surfaceNormalOffset: 0
 --- !u!114 &6598863843132561944
 MonoBehaviour:
   m_ObjectHideFlags: 0

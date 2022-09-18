@@ -244,6 +244,7 @@ namespace AzureSpatialAnchors
                 bool isTappingToPlace = anchorGameObject.GetComponent<HoldData>().isTappingToPlace;
                 anchorGameObject.GetComponent<HoldData>().isTappingToPlace = !anchorGameObject.GetComponent<HoldData>().isTappingToPlace;
                 SurfaceMagnetism sm = anchorGameObject.EnsureComponent<SurfaceMagnetism>();
+               
                 if (isTappingToPlace)
                 {
                     audioData.PlayOneShot(moveEndAudio);
@@ -508,7 +509,7 @@ namespace AzureSpatialAnchors
             string hold_version = hold;
             if (normalDotProduct > 0)
             {
-                hold_version = hold + "_Flipped_New";
+                hold_version = hold + "_Flipped";
                 normalOrientation = Quaternion.LookRotation(surfaceNormal, Vector3.up);
             }
 
@@ -535,7 +536,7 @@ namespace AzureSpatialAnchors
             newAnchorGameObject.GetComponent<MeshRenderer>().material.shader = Shader.Find("Legacy Shaders/Diffuse");
             newAnchorGameObject.transform.position = position;
             newAnchorGameObject.transform.rotation = rotation;
-            newAnchorGameObject.transform.localScale = localScale;
+            //newAnchorGameObject.transform.localScale = localScale; // don't set to localScale because we need to be able to parent the holds arbitrarily
 
             Debug.Log($"Forward Direction of Object: {newAnchorGameObject.transform.forward}");
             Debug.Log($"Forward Direction of Frozen Frame: {GameObject.Find("F1").transform.forward}");
