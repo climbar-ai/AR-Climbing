@@ -9,6 +9,7 @@ using UnityEngine;
 using System.Threading.Tasks;
 #endif
 
+
 public class TCPClient : MonoBehaviour
 {
     [SerializeField] private GameObject holdsParent;
@@ -26,9 +27,11 @@ public class TCPClient : MonoBehaviour
     private Thread exchangeThread;
 #endif
 
-    private Byte[] bytes = new Byte[256];
+    //private Byte[] bytes = new Byte[256];
     private StreamWriter writer;
     private StreamReader reader;
+
+    private int BUFFER_SIZE = 1024;
 
     public void Start()
     {
@@ -59,7 +62,7 @@ public class TCPClient : MonoBehaviour
 #else
         try
         {
-            if (exchangeTask != null) StopExchange();
+            if (exchangeTask != null) CloseConnection();
 
             socket = new Windows.Networking.Sockets.StreamSocket();
             Windows.Networking.HostName serverHost = new Windows.Networking.HostName(host);
@@ -87,7 +90,7 @@ public class TCPClient : MonoBehaviour
 #else
         try
         {
-            if (exchangeThread != null) StopExchange();
+            if (exchangeThread != null) CloseConnection();
 
             client = new System.Net.Sockets.TcpClient(host, Int32.Parse(port));
             stream = client.GetStream();
@@ -122,25 +125,48 @@ public class TCPClient : MonoBehaviour
             Debug.Log(successStatus);
             successStatus = null;
         }
-    }
+    } 
 
     public void SendFile(string filename="")
     {
         try
         {
+            char[] response = new char[BUFFER_SIZE];
+
             // notify server of endpoint to use
-            writer.Write("startAlarm");
+            writer.Write("receiveFile");
+
+            // get receipt confirmation
+            reader.Read(response, 0, response.Length);
+            Debug.Log($"response: {response}");
+            if (response.Length <= 0 || !response.Equals("received")) { return; }
 
             // send filename
             writer.Write(filename);
 
+            // get receipt confirmation
+            reader.Read(response, 0, response.Length);
+            Debug.Log($"response: {response}");
+            if (response.Length <= 0 || !response.Equals("received")) { return; }
+
             // send file contents
             string path = Path.Combine(Application.persistentDataPath, filename);
-            using (TextReader fReader = File.OpenRead(path))
+            using (TextReader sr = File.OpenText(path))
             {
-                for (int i=0; i < fReader.read)
-                fReader.ReadLine();
+                string s = "";
+                while ((s = sr.ReadLine()) != null)
+                {
+                    // send line of file to server
+                    Debug.Log($"Tx: {s}");
+                    writer.Write(s);
 
+                    // get receipt confirmation
+                    reader.Read(response, 0, response.Length);
+                    Debug.Log($"response: {response}");
+                    if (response.Length <= 0 || !response.Equals("received")) { return; }
+                }
+                Debug.Log("Tx: Finished");
+                //writer.Write("done");
             }
         }
         catch (Exception e)
@@ -198,16 +224,32 @@ public class TCPClient : MonoBehaviour
         // close connection so we can later reconnect
         CloseConnection();
 
-        //DeleteFile();
+        // remove the file so we don't accrue files
+        DeleteFile(filename: filename);
     }
 
+    /// <summary>
+    /// Creates file with specified filename
+    /// </summary>
+    /// <param name="filename"></param>
     private void CreateFile(string filename="")
     {
         string path = Path.Combine(Application.persistentDataPath, filename);
-        using (TextWriter fWriter = File.CreateText(path))
+        using (StreamWriter sw = File.CreateText(path))
         {
-            fWriter.WriteLine($"Time: {Time.time}");
-            fWriter.WriteLine("Hello World");
+            sw.WriteLine($"Time: {Time.time}");
+            sw.WriteLine("Hello World");
         }
+    }
+
+    /// <summary>
+    /// Deletes file with specified filename
+    /// Assumes file exists at Application.persistentDataPath
+    /// </summary>
+    /// <param name="filename"></param>
+    private void DeleteFile(string filename="")
+    {
+        string path = Path.Combine(Application.persistentDataPath, filename);
+        File.Delete(path);
     }
 }
