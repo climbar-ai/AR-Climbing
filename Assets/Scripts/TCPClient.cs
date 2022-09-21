@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 using UnityEngine;
 
 #if !UNITY_EDITOR
@@ -125,29 +126,51 @@ public class TCPClient : MonoBehaviour
             Debug.Log(successStatus);
             successStatus = null;
         }
-    } 
+    }
 
-    public void SendFile(string filename="")
+    /// <summary>
+    /// Sends a file to server
+    /// NOTE: must be async because we are using threading: https://stackoverflow.com/questions/45717656/losing-variable-after-async-call.  
+    /// Once a synchronous function sees an await, it will turn over control and when it resumes,
+    /// a new thread with a new context will take over after the await.  Thus, object references will be null after the await if using a synchronous call.
+    /// NOTE: the reader must be async as otherwise it hangs the main thread in unity and the app exits when trying to perform Read()
+    /// </summary>
+    /// <param name="filename"></param>
+    /// <returns></returns>
+    public async Task SendFile(string filename="")
     {
         try
         {
+            Debug.Log($"filename: {filename}");
+
             char[] response = new char[BUFFER_SIZE];
 
             // notify server of endpoint to use
+            Debug.Log(writer);
             writer.Write("receiveFile");
 
             // get receipt confirmation
-            reader.Read(response, 0, response.Length);
-            Debug.Log($"response: {response}");
-            if (response.Length <= 0 || !response.Equals("received")) { return; }
+            await reader.ReadAsync(response, 0, BUFFER_SIZE);
+            string responseStr = new string(response);
+            responseStr = responseStr.Trim(new Char[] { '\0' }); // trim any empty bytes in the buffer
+            if (responseStr.Length <= 0 || !responseStr.Equals("ready")) { return; }
+
+            Debug.Log($"response: {responseStr}");
+            Debug.Log(writer);
+            Debug.Log("sending filename...");
 
             // send filename
             writer.Write(filename);
 
             // get receipt confirmation
-            reader.Read(response, 0, response.Length);
-            Debug.Log($"response: {response}");
-            if (response.Length <= 0 || !response.Equals("received")) { return; }
+            await reader.ReadAsync(response, 0, BUFFER_SIZE);
+            responseStr = new string(response);
+            responseStr = responseStr.Trim(new Char[] { '\0' }); // trim any empty bytes in the buffer
+            if (responseStr.Length <= 0 || !responseStr.Equals("ready")) { return; }
+
+            Debug.Log($"response: {responseStr}");
+
+            Debug.Log("sending file contents...");
 
             // send file contents
             string path = Path.Combine(Application.persistentDataPath, filename);
@@ -161,9 +184,12 @@ public class TCPClient : MonoBehaviour
                     writer.Write(s);
 
                     // get receipt confirmation
-                    reader.Read(response, 0, response.Length);
-                    Debug.Log($"response: {response}");
-                    if (response.Length <= 0 || !response.Equals("received")) { return; }
+                    await reader.ReadAsync(response, 0, BUFFER_SIZE);
+                    responseStr = new string(response);
+                    responseStr = responseStr.Trim(new Char[] { '\0' }); // trim any empty bytes in the buffer
+                    if (responseStr.Length <= 0 || !responseStr.Equals("ready")) { return; }
+
+                    Debug.Log($"response: {responseStr}");
                 }
                 Debug.Log("Tx: Finished");
                 //writer.Write("done");
@@ -181,28 +207,24 @@ public class TCPClient : MonoBehaviour
         exchangeStopRequested = true;
 
 #if UNITY_EDITOR
-        if (exchangeThread != null)
-        {
-            exchangeThread.Abort();
-            stream.Close();
-            client.Close();
-            writer.Close();
-            reader.Close();
+        exchangeThread.Abort();
+        stream.Close();
+        client.Close();
+        writer.Close();
+        reader.Close();
 
-            stream = null;
-            exchangeThread = null;
-        }
+        stream = null;
+        exchangeThread = null;
 #else
-        if (exchangeTask != null)
-        {
-            exchangeTask.Wait();
-            socket.Dispose();
-            writer.Dispose();
-            reader.Dispose();
+        //exchangeTask.Wait();
+        socket.Dispose();
+        writer.Dispose();
+        reader.Dispose();
 
-            socket = null;
-            exchangeTask = null;
-        }
+        Debug.Log("after Dispose");
+
+        socket = null;
+        //exchangeTask = null;
 #endif
         writer = null;
         reader = null;
@@ -213,13 +235,13 @@ public class TCPClient : MonoBehaviour
         CloseConnection();
     }
 
-    public void SaveHolds()
+    public async void SaveHolds()
     {
         string filename = "holds.txt";
         CreateFile(filename: filename);
 
         // send data
-        SendFile(filename: filename);
+        await SendFile(filename: filename);
 
         // close connection so we can later reconnect
         CloseConnection();
@@ -249,6 +271,7 @@ public class TCPClient : MonoBehaviour
     /// <param name="filename"></param>
     private void DeleteFile(string filename="")
     {
+        Debug.Log("DeleteFile");
         string path = Path.Combine(Application.persistentDataPath, filename);
         File.Delete(path);
     }
