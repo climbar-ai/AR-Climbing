@@ -37,7 +37,7 @@ public class TCPClient : MonoBehaviour
     public void Start()
     {
         //Server ip address and port
-        Connect("10.203.94.234", "8081");
+        //Connect("10.203.94.234", "8081");
     }
 
     public void Connect(string host, string port)
@@ -146,8 +146,22 @@ public class TCPClient : MonoBehaviour
             char[] response = new char[BUFFER_SIZE];
 
             // notify server of endpoint to use
+#if UNITY_EDITOR
+          
+
+            //client.Close();
+            client = new System.Net.Sockets.TcpClient("10.203.94.234", 8081);
+            stream = client.GetStream();
+            reader = new StreamReader(stream);
+            writer = new StreamWriter(stream) { AutoFlush = true };
+
+            Debug.Log(client.Connected);
+            Debug.Log(client.Available);
+#endif
             Debug.Log(writer);
+            
             writer.Write("receiveFile");
+            Debug.Log("written");
 
             // get receipt confirmation
             await reader.ReadAsync(response, 0, BUFFER_SIZE);
@@ -252,7 +266,7 @@ public class TCPClient : MonoBehaviour
         await SendFile(filename: filename);
 
         // remove the file so we don't accrue files
-        DeleteFile(filename: filename);
+        //DeleteFile(filename: filename);
     }
 
     /// <summary>
