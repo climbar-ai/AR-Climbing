@@ -192,7 +192,7 @@ public class TCPClient : MonoBehaviour
                     Debug.Log($"response: {responseStr}");
                 }
                 Debug.Log("Tx: Finished");
-                //writer.Write("done");
+                writer.Write("done");
             }
         }
         catch (Exception e)
@@ -207,24 +207,28 @@ public class TCPClient : MonoBehaviour
         exchangeStopRequested = true;
 
 #if UNITY_EDITOR
-        exchangeThread.Abort();
-        stream.Close();
-        client.Close();
-        writer.Close();
-        reader.Close();
+        if (exchangeThread != null)
+        {
+            exchangeThread.Abort();
+            stream.Close();
+            client.Close();
+            writer.Close();
+            reader.Close();
 
-        stream = null;
-        exchangeThread = null;
+            stream = null;
+            exchangeThread = null;
+        }
 #else
-        //exchangeTask.Wait();
-        socket.Dispose();
-        writer.Dispose();
-        reader.Dispose();
+        if (exchangeTask != null)
+        {
+            exchangeTask.Wait();
+            socket.Dispose();
+            writer.Dispose();
+            reader.Dispose();
 
-        Debug.Log("after Dispose");
-
-        socket = null;
-        //exchangeTask = null;
+            socket = null;
+            exchangeTask = null;
+        }
 #endif
         writer = null;
         reader = null;
@@ -235,6 +239,10 @@ public class TCPClient : MonoBehaviour
         CloseConnection();
     }
 
+    /// <summary>
+    /// Registered in Inspector.
+    /// NOTE: need async void here: https://stackoverflow.com/questions/28601678/calling-async-method-on-button-click
+    /// </summary>
     public async void SaveHolds()
     {
         string filename = "holds.txt";
@@ -242,9 +250,6 @@ public class TCPClient : MonoBehaviour
 
         // send data
         await SendFile(filename: filename);
-
-        // close connection so we can later reconnect
-        CloseConnection();
 
         // remove the file so we don't accrue files
         DeleteFile(filename: filename);
