@@ -181,7 +181,7 @@ public class TCPClient : MonoBehaviour
                 {
                     // send line of file to server
                     Debug.Log($"Tx: {s}");
-                    writer.Write(s);
+                    writer.Write(s + "\n");
 
                     // get receipt confirmation
                     await reader.ReadAsync(response, 0, BUFFER_SIZE);
