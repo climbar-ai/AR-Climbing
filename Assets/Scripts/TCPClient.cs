@@ -15,6 +15,9 @@ public class TCPClient : MonoBehaviour
 {
     [SerializeField] private GameObject holdsParent;
 
+    private string host = "10.203.94.234";
+    private int port = 8081;
+
 #if !UNITY_EDITOR
     private bool _useUWP = true;
     private Windows.Networking.Sockets.StreamSocket socket;
@@ -94,9 +97,9 @@ public class TCPClient : MonoBehaviour
             if (exchangeThread != null) CloseConnection();
 
             client = new System.Net.Sockets.TcpClient(host, Int32.Parse(port));
-            stream = client.GetStream();
-            reader = new StreamReader(stream);
-            writer = new StreamWriter(stream) { AutoFlush = true };
+            //stream = client.GetStream();
+            //reader = new StreamReader(stream);
+            //writer = new StreamWriter(stream) { AutoFlush = true };
 
             successStatus = "Connected!";
         }
@@ -137,82 +140,90 @@ public class TCPClient : MonoBehaviour
     /// </summary>
     /// <param name="filename"></param>
     /// <returns></returns>
-    public async Task SendFile(string filename="")
+
+    public async Task SendFileUnity(string filename = "")
     {
-        try
+#if !UNITY_EDITOR
+        errorStatus = "Unity TCP client used in UWP!";
+#else
+        // connect to server
+        using (System.Net.Sockets.TcpClient client = new System.Net.Sockets.TcpClient(host, port))
+        using (System.Net.Sockets.NetworkStream stream = client.GetStream())
+        using (StreamReader reader = new StreamReader(stream))
+        using (StreamWriter writer = new StreamWriter(stream) { AutoFlush = true })
         {
-            Debug.Log($"filename: {filename}");
-
-            char[] response = new char[BUFFER_SIZE];
-
-            // notify server of endpoint to use
-#if UNITY_EDITOR
-          
-
-            //client.Close();
-            client = new System.Net.Sockets.TcpClient("10.203.94.234", 8081);
-            stream = client.GetStream();
-            reader = new StreamReader(stream);
-            writer = new StreamWriter(stream) { AutoFlush = true };
-
-            Debug.Log(client.Connected);
-            Debug.Log(client.Available);
-#endif
-            Debug.Log(writer);
-            
-            writer.Write("receiveFile");
-            Debug.Log("written");
-
-            // get receipt confirmation
-            await reader.ReadAsync(response, 0, BUFFER_SIZE);
-            string responseStr = new string(response);
-            responseStr = responseStr.Trim(new Char[] { '\0' }); // trim any empty bytes in the buffer
-            if (responseStr.Length <= 0 || !responseStr.Equals("ready")) { return; }
-
-            Debug.Log($"response: {responseStr}");
-            Debug.Log(writer);
-            Debug.Log("sending filename...");
-
-            // send filename
-            writer.Write(filename);
-
-            // get receipt confirmation
-            await reader.ReadAsync(response, 0, BUFFER_SIZE);
-            responseStr = new string(response);
-            responseStr = responseStr.Trim(new Char[] { '\0' }); // trim any empty bytes in the buffer
-            if (responseStr.Length <= 0 || !responseStr.Equals("ready")) { return; }
-
-            Debug.Log($"response: {responseStr}");
-
-            Debug.Log("sending file contents...");
-
-            // send file contents
-            string path = Path.Combine(Application.persistentDataPath, filename);
-            using (TextReader sr = File.OpenText(path))
+            try
             {
-                string s = "";
-                while ((s = sr.ReadLine()) != null)
+                Debug.Log($"filename: {filename}");
+
+                char[] response = new char[BUFFER_SIZE];
+
+                // notify server of endpoint to use
+
+                //client = new System.Net.Sockets.TcpClient("10.203.94.234", 8081);
+                //stream = client.GetStream();
+                //reader = new StreamReader(stream);
+                //writer = new StreamWriter(stream) { AutoFlush = true };
+
+                Debug.Log(client.Connected);
+                Debug.Log(client.Available);
+                Debug.Log(writer);
+            
+                writer.Write("receiveFile");
+                Debug.Log("written");
+
+                // get receipt confirmation
+                await reader.ReadAsync(response, 0, BUFFER_SIZE);
+                string responseStr = new string(response);
+                responseStr = responseStr.Trim(new Char[] { '\0' }); // trim any empty bytes in the buffer
+                if (responseStr.Length <= 0 || !responseStr.Equals("ready")) { return; }
+
+                Debug.Log($"response: {responseStr}");
+                Debug.Log(writer);
+                Debug.Log("sending filename...");
+
+                // send filename
+                writer.Write(filename);
+
+                // get receipt confirmation
+                await reader.ReadAsync(response, 0, BUFFER_SIZE);
+                responseStr = new string(response);
+                responseStr = responseStr.Trim(new Char[] { '\0' }); // trim any empty bytes in the buffer
+                if (responseStr.Length <= 0 || !responseStr.Equals("ready")) { return; }
+
+                Debug.Log($"response: {responseStr}");
+
+                Debug.Log("sending file contents...");
+
+                // send file contents
+                string path = Path.Combine(Application.persistentDataPath, filename);
+                using (TextReader sr = File.OpenText(path))
                 {
-                    // send line of file to server
-                    Debug.Log($"Tx: {s}");
-                    writer.Write(s + "\n");
+                    string s = "";
+                    while ((s = sr.ReadLine()) != null)
+                    {
+                        // send line of file to server
+                        Debug.Log($"Tx: {s}");
+                        writer.Write(s + "\n");
 
-                    // get receipt confirmation
-                    await reader.ReadAsync(response, 0, BUFFER_SIZE);
-                    responseStr = new string(response);
-                    responseStr = responseStr.Trim(new Char[] { '\0' }); // trim any empty bytes in the buffer
-                    if (responseStr.Length <= 0 || !responseStr.Equals("ready")) { return; }
+                        // get receipt confirmation
+                        await reader.ReadAsync(response, 0, BUFFER_SIZE);
+                        responseStr = new string(response);
+                        responseStr = responseStr.Trim(new Char[] { '\0' }); // trim any empty bytes in the buffer
+                        if (responseStr.Length <= 0 || !responseStr.Equals("ready")) { return; }
 
-                    Debug.Log($"response: {responseStr}");
+                        Debug.Log($"response: {responseStr}");
+                    }
+                    Debug.Log("Tx: Finished");
+                    writer.Write("done");
                 }
-                Debug.Log("Tx: Finished");
-                writer.Write("done");
+            }
+            catch (Exception e)
+            {
+                Debug.Log(e.ToString());
             }
         }
-        catch (Exception e)
-        {
-            Debug.Log(e.ToString());
-        }
+#endif
     }
 
 
@@ -263,7 +274,9 @@ public class TCPClient : MonoBehaviour
         CreateFile(filename: filename);
 
         // send data
-        await SendFile(filename: filename);
+#if UNITY_EDITOR
+        await SendFileUnity(filename: filename);
+#endif
 
         // remove the file so we don't accrue files
         //DeleteFile(filename: filename);
