@@ -16,6 +16,8 @@ using UnityEngine;
 public class TCPClient : MonoBehaviour
 {
     [SerializeField] private GameObject holdsParent;
+
+    //Server ip address and port
     [SerializeField] private string host = "10.203.94.234";
     [SerializeField] private string port = "8081";
 
@@ -35,13 +37,7 @@ public class TCPClient : MonoBehaviour
 
     private int BUFFER_SIZE = 1024;
 
-    public void Start()
-    {
-        //Server ip address and port
-        Connect(host, port);
-    }
-
-    public void Connect(string host, string port)
+    public void Connect()
     {
         if (_useUWP)
         {

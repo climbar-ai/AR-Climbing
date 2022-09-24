@@ -24,13 +24,13 @@ namespace MultiUserCapabilities
         [SerializeField] private GameObject roomStatusDisplay = default;
         [SerializeField] private UnityEvent JoinedRoomEvent;
         [SerializeField] private Scripts.WorldLocking.SpacePinBinder spacePinBinder = default;
+        [SerializeField] private GameObject TCPClient = default;
 
         /// <summary>
         /// Progress indicator object for publisher status
         /// Tells us when we can publish/download spacepin
         /// </summary>
-        [SerializeField]
-        private GameObject indicatorObject;
+        [SerializeField] private GameObject indicatorObject;
 
         private IBinder binder;
 
@@ -240,6 +240,9 @@ namespace MultiUserCapabilities
             base.OnCreatedRoom();
             this.roomStatus = RoomStatus.CreatedRoom;
             this.roomStatusDisplay.GetComponent<TextMeshPro>().text = $"Room Status: {this.roomStatus}";
+
+            // connect to TCP server for later save/recall of data e.g. hold configurations
+            TCPClient.GetComponent<TCPClient>().Connect();
         }
 
         public override void OnRoomPropertiesUpdate(Hashtable propertiesThatChanged)
