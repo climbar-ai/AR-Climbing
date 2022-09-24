@@ -16,9 +16,8 @@ using UnityEngine;
 public class TCPClient : MonoBehaviour
 {
     [SerializeField] private GameObject holdsParent;
-
-    private string host = "10.203.94.234";
-    private string port = "8081";
+    [SerializeField] private string host = "10.203.94.234";
+    [SerializeField] private string port = "8081";
 
 #if !UNITY_EDITOR
     private bool _useUWP = true;
