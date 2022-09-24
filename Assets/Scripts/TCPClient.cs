@@ -4,6 +4,7 @@
 /// 3. https://stackoverflow.com/questions/56194446/send-big-file-over-socket
 /// 4. https://nikhilroxtomar.medium.com/file-transfer-using-tcp-socket-in-python3-idiot-developer-c5cf3899819c
 
+using Microsoft.MixedReality.Toolkit.Experimental.UI;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -11,15 +12,20 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using UnityEngine;
-
+using UnityEngine.UI;
 
 public class TCPClient : MonoBehaviour
 {
     [SerializeField] private GameObject holdsParent;
 
-    //Server ip address and port
+    // server ip address and port
     [SerializeField] private string host = "10.203.94.234";
     [SerializeField] private string port = "8081";
+
+    // filename keyboard/input related fields
+    [SerializeField] private InputField keyboardInput = default;
+    [SerializeField] private GameObject keyboardInputContainer = default;
+    private string filename = default;
 
 #if !UNITY_EDITOR
     private bool _useUWP = true;
@@ -36,6 +42,12 @@ public class TCPClient : MonoBehaviour
     private StreamReader reader;
 
     private int BUFFER_SIZE = 1024;
+
+    private void Start()
+    {
+        // hide filename prompt until we want it shown
+        keyboardInputContainer.SetActive(false);
+    }
 
     public void Connect()
     {
@@ -131,13 +143,13 @@ public class TCPClient : MonoBehaviour
     {
         try
         {
-            Debug.Log($"filename: {filename}");
+            //Debug.Log($"filename: {filename}");
 
             char[] response = new char[BUFFER_SIZE];
 
             // notify server of endpoint to use
             writer.Write("receiveFile");
-            Debug.Log("written");
+            //Debug.Log("written");
 
             // get receipt confirmation
             await reader.ReadAsync(response, 0, BUFFER_SIZE);
@@ -145,9 +157,9 @@ public class TCPClient : MonoBehaviour
             responseStr = responseStr.Trim(new Char[] { '\0' }); // trim any empty bytes in the buffer
             if (responseStr.Length <= 0 || !responseStr.Equals("ready")) { return; }
 
-            Debug.Log($"response: {responseStr}");
-            Debug.Log(writer);
-            Debug.Log("sending filename...");
+            //Debug.Log($"response: {responseStr}");
+            //Debug.Log(writer);
+            //Debug.Log("sending filename...");
 
             // send filename
             writer.Write(filename);
@@ -158,9 +170,9 @@ public class TCPClient : MonoBehaviour
             responseStr = responseStr.Trim(new Char[] { '\0' }); // trim any empty bytes in the buffer
             if (responseStr.Length <= 0 || !responseStr.Equals("ready")) { return; }
 
-            Debug.Log($"response: {responseStr}");
+            //Debug.Log($"response: {responseStr}");
 
-            Debug.Log("sending file contents...");
+            //Debug.Log("sending file contents...");
 
             // send file contents
             string path = Path.Combine(Application.persistentDataPath, filename);
@@ -170,7 +182,7 @@ public class TCPClient : MonoBehaviour
                 while ((s = sr.ReadLine()) != null)
                 {
                     // send line of file to server
-                    Debug.Log($"Tx: {s}");
+                    //Debug.Log($"Tx: {s}");
                     writer.Write(s + "\n");
 
                     // get receipt confirmation
@@ -179,11 +191,11 @@ public class TCPClient : MonoBehaviour
                     responseStr = responseStr.Trim(new Char[] { '\0' }); // trim any empty bytes in the buffer
                     if (responseStr.Length <= 0 || !responseStr.Equals("ready")) { return; }
 
-                    Debug.Log($"response: {responseStr}");
+                    //Debug.Log($"response: {responseStr}");
                 }
                     
                 // signal done to server
-                Debug.Log("Tx: Finished");
+                //Debug.Log("Tx: Finished");
                 writer.Write("done");
             }
         }
@@ -225,7 +237,6 @@ public class TCPClient : MonoBehaviour
 #if UNITY_EDITOR
     private void OnDestroy()
     {
-        Debug.Log("OnDestroy");
         writer.Write("closeSock");
         CloseConnection();
     }
@@ -247,7 +258,8 @@ public class TCPClient : MonoBehaviour
     /// </summary>
     public async void SaveHolds()
     {
-        string filename = "holds.txt";
+        //string filename = "holds.txt";
+        filename += ".txt";
         CreateFile(filename: filename);
 
         // send data
@@ -278,8 +290,20 @@ public class TCPClient : MonoBehaviour
     /// <param name="filename"></param>
     private void DeleteFile(string filename="")
     {
-        Debug.Log("DeleteFile");
         string path = Path.Combine(Application.persistentDataPath, filename);
         File.Delete(path);
+    }
+
+    public void ShowKeyboardInput()
+    {
+        keyboardInputContainer.SetActive(true);
+        keyboardInput.text = "";
+    }
+
+    public void GetFilename(string text)
+    {
+        filename = text;
+        SaveHolds();
+        keyboardInputContainer.SetActive(false);
     }
 }
