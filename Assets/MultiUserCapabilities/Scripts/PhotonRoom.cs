@@ -218,13 +218,13 @@ namespace MultiUserCapabilities
 
         private void StartGame()
         {
-            CreatPlayer();
+            CreatePlayer();
             CreateSharedCursorFocus();
 
             if (!PhotonNetwork.IsMasterClient) return;
         }
 
-        private void CreatPlayer()
+        private void CreatePlayer()
         {
             player = PhotonNetwork.Instantiate(photonUserPrefab.name, Vector3.zero, Quaternion.identity);
             playerPV = player.GetPhotonView();
