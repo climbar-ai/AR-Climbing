@@ -8,6 +8,7 @@ using Microsoft.MixedReality.Toolkit.Experimental.UI;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -62,13 +63,13 @@ public class TCPClient : MonoBehaviour
     }
 
 #if UNITY_EDITOR
-        private void ConnectUWP(string host, string port)
+    private void ConnectUWP(string host, string port)
 #else
     private async void ConnectUWP(string host, string port)
 #endif
     {
 #if UNITY_EDITOR
-            errorStatus = "UWP TCP client used in Unity!";
+        errorStatus = "UWP TCP client used in Unity!";
 #else
         try
         {
@@ -96,19 +97,19 @@ public class TCPClient : MonoBehaviour
 #if !UNITY_EDITOR
         errorStatus = "Unity TCP client used in UWP!";
 #else
-            try
-            {
-                client = new System.Net.Sockets.TcpClient(host, Int32.Parse(port));
-                stream = client.GetStream();
-                reader = new StreamReader(stream);
-                writer = new StreamWriter(stream) { AutoFlush = true };
+        try
+        {
+            client = new System.Net.Sockets.TcpClient(host, Int32.Parse(port));
+            stream = client.GetStream();
+            reader = new StreamReader(stream);
+            writer = new StreamWriter(stream) { AutoFlush = true };
 
-                successStatus = "Connected!";
-            }
-            catch (Exception e)
-            {
-                errorStatus = e.ToString();
-            }
+            successStatus = "Connected!";
+        }
+        catch (Exception e)
+        {
+            errorStatus = e.ToString();
+        }
 #endif
     }
 
@@ -193,7 +194,7 @@ public class TCPClient : MonoBehaviour
 
                     //Debug.Log($"response: {responseStr}");
                 }
-                    
+
                 // signal done to server
                 //Debug.Log("Tx: Finished");
                 writer.Write("done");
@@ -224,8 +225,6 @@ public class TCPClient : MonoBehaviour
         writer = null;
         reader = null;
     }
-
-
 
     /// <summary>
     /// Perform cleanup
@@ -258,8 +257,6 @@ public class TCPClient : MonoBehaviour
     /// </summary>
     public async void SaveHolds()
     {
-        //string filename = "holds.txt";
-        filename += ".txt";
         CreateFile(filename: filename);
 
         // send data
@@ -270,10 +267,42 @@ public class TCPClient : MonoBehaviour
     }
 
     /// <summary>
+    /// Retrieves the list of saved hold configurations currently on the server (list of filenames)
+    /// TODO: maybe use serialization/deserialization and/or JSON?
+    /// </summary>
+    public async void GetHoldConfigurations()
+    {
+        List<string> configList = new List<string>();
+
+        // notify server of endpoint
+        writer.Write("listFiles");
+
+        // get list of filenames
+        while (true)
+        {
+            char[] response = new char[BUFFER_SIZE];
+            await reader.ReadAsync(response, 0, BUFFER_SIZE);
+            string responseStr = new string(response);
+            responseStr = responseStr.Trim(new Char[] { '\0' }); // trim any empty bytes in the buffer
+            if (responseStr.Length <= 0 || responseStr.Equals("done")) { break; }
+            configList.Add(responseStr);
+
+            // send ready signal to server to get next file (if there is one)
+            writer.Write("ready");
+        }
+
+        // print what we got
+        for (int i = 0; i < configList.Count; i++)
+        {
+            Debug.Log($"retreived file: {configList[i]}");
+        }
+    }
+
+    /// <summary>
     /// Creates file with specified filename
     /// </summary>
     /// <param name="filename"></param>
-    private void CreateFile(string filename="")
+    private void CreateFile(string filename = "")
     {
         string path = Path.Combine(Application.persistentDataPath, filename);
         using (StreamWriter sw = File.CreateText(path))
@@ -288,21 +317,28 @@ public class TCPClient : MonoBehaviour
     /// Assumes file exists at Application.persistentDataPath
     /// </summary>
     /// <param name="filename"></param>
-    private void DeleteFile(string filename="")
+    private void DeleteFile(string filename = "")
     {
         string path = Path.Combine(Application.persistentDataPath, filename);
         File.Delete(path);
     }
 
+    /// <summary>
+    /// Show container holding input field that triggers keyboard
+    /// </summary>
     public void ShowKeyboardInput()
     {
         keyboardInputContainer.SetActive(true);
         keyboardInput.text = "";
     }
 
+    /// <summary>
+    /// Called by closing keyboard in Inspector to retrieve the user's text
+    /// </summary>
+    /// <param name="text"></param>
     public void GetFilename(string text)
     {
-        filename = text;
+        filename = text + ".txt";
         SaveHolds();
         keyboardInputContainer.SetActive(false);
     }
