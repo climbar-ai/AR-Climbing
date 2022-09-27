@@ -9,6 +9,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using UnityEngine;
@@ -143,20 +144,18 @@ namespace Scripts
         /// </summary>
         /// <param name="filename"></param>
         /// <returns></returns>
-
         public async Task SendFile(string filename = "")
         {
             try
             {
                 //Debug.Log($"filename: {filename}");
 
-                char[] response = new char[BUFFER_SIZE];
-
                 // notify server of endpoint to use
                 writer.Write("receiveFile");
                 //Debug.Log("written");
 
                 // get receipt confirmation
+                char[] response = new char[BUFFER_SIZE];
                 await reader.ReadAsync(response, 0, BUFFER_SIZE);
                 string responseStr = new string(response);
                 responseStr = responseStr.Trim(new Char[] { '\0' }); // trim any empty bytes in the buffer
@@ -170,6 +169,7 @@ namespace Scripts
                 writer.Write(filename);
 
                 // get receipt confirmation
+                response = new char[BUFFER_SIZE]; // reset buffer so we don't accrue/read garabage accidentally for different size buffers
                 await reader.ReadAsync(response, 0, BUFFER_SIZE);
                 responseStr = new string(response);
                 responseStr = responseStr.Trim(new Char[] { '\0' }); // trim any empty bytes in the buffer
@@ -191,6 +191,7 @@ namespace Scripts
                         writer.Write(s + "\n");
 
                         // get receipt confirmation
+                        response = new char[BUFFER_SIZE]; // reset buffer so we don't accrue/read garabage accidentally for different size buffers
                         await reader.ReadAsync(response, 0, BUFFER_SIZE);
                         responseStr = new string(response);
                         responseStr = responseStr.Trim(new Char[] { '\0' }); // trim any empty bytes in the buffer
@@ -289,6 +290,9 @@ namespace Scripts
                 string responseStr = new string(response);
                 responseStr = responseStr.Trim(new Char[] { '\0' }); // trim any empty bytes in the buffer
                 if (responseStr.Length <= 0 || responseStr.Equals("done")) { break; }
+
+                // trim file extension, i.e. .txt
+                responseStr = Path.GetFileNameWithoutExtension(responseStr);
                 configList.Add(responseStr);
 
                 // send ready signal to server to get next file (if there is one)
@@ -307,7 +311,72 @@ namespace Scripts
         }
 
         /// <summary>
-        /// Creates file with specified filename
+        /// Retrieves the list of saved hold configurations currently on the server (list of filenames)
+        /// TODO: maybe use serialization/deserialization and/or JSON?
+        /// </summary>
+        public async void GetHoldConfiguration(string config)
+        {
+            // list of hold names and their respective transforms
+            List<string> holds = new List<string>();
+            List<Vector3> positions = new List<Vector3>();
+            List<Quaternion> rotations = new List<Quaternion>();
+
+            // notify server of endpoint
+            writer.Write("sendFile");
+
+            // get receipt
+            char[] response = new char[BUFFER_SIZE];
+            await reader.ReadAsync(response, 0, BUFFER_SIZE);
+            string responseStr = new string(response);
+            responseStr = responseStr.Trim(new Char[] { '\0' }); // trim any empty bytes in the buffer
+            if (responseStr.Length <= 0 || !responseStr.Equals("ready")) { return; }
+
+            // notify server of config to retrieve
+            string filename = config + ".txt";
+            writer.Write(filename);
+
+            // get file line-by-line
+            while (true)
+            {
+                response = new char[BUFFER_SIZE]; // reset buffer so we don't accrue/read garabage accidentally for different size buffers
+                await reader.ReadAsync(response, 0, BUFFER_SIZE);
+                responseStr = new string(response);
+                responseStr = responseStr.Trim(new Char[] { '\0' }); // trim any empty bytes in the buffer
+                if (responseStr.Length <= 0 || responseStr.Equals("done")) { break; }
+
+                // semi-colon delimited string with position and rotation comma-delimited of form:
+                // "holdname;transform.position;transform.rotation"
+                String[] holdInfo = responseStr.Split(';');
+
+                // collect hold name
+                holds.Add(holdInfo[0]);
+
+                // collect position
+                string[] positionStr = holdInfo[1].Split(',');
+                Vector3 position = new Vector3(float.Parse(positionStr[0].Trim()), float.Parse(positionStr[1].Trim()), float.Parse(positionStr[2].Trim()));
+                positions.Add(position);
+
+                // collect rotation
+                string[] rotationStr = holdInfo[2].Split(',');
+                Quaternion rotation = new Quaternion(float.Parse(rotationStr[0].Trim()), 
+                    float.Parse(rotationStr[1].Trim()), 
+                    float.Parse(rotationStr[2].Trim()), 
+                    float.Parse(rotationStr[3].Trim()));
+                rotations.Add(rotation);
+
+                // send ready signal to server to get next line of file (if there is one)
+                writer.Write("ready");
+            }
+
+            // print what we got
+            for (int i = 0; i < holds.Count; i++)
+            {
+                Debug.Log($"hold: {holds[i]}; {positions[i]}; {rotations[i]}");
+            }
+        }
+
+        /// <summary>
+        /// Creates text file with specified filename that contains information for each hold in a scene (one hold per line)
         /// </summary>
         /// <param name="filename"></param>
         private void CreateFile(string filename = "")
@@ -315,8 +384,29 @@ namespace Scripts
             string path = Path.Combine(Application.persistentDataPath, filename);
             using (StreamWriter sw = File.CreateText(path))
             {
-                sw.WriteLine($"Time: {Time.time}");
-                sw.WriteLine("Hello World");
+                GameObject[] holds = GameObject.FindGameObjectsWithTag("Hold");
+
+                for (int i = 0; i < holds.Length; i++)
+                {
+                    // compile semi-colon delimited string of form with position and rotation comma-delimited:
+                    // "holdname;transform.position;transform.rotation" 
+                    string info = "";
+                    
+                    // name (type of hold)
+                    info += holds[i].name + ";";
+                    
+                    // position
+                    string position = holds[i].transform.position.ToString("F9"); // get as much precision as possible
+                    position = position.Trim('(').Trim(')');
+                    info += position + ";";
+
+                    // rotation
+                    string rotation = holds[i].transform.rotation.ToString("F9"); // get as much precision as possible
+                    rotation = rotation.Trim('(').Trim(')');
+                    info += rotation;
+
+                    sw.WriteLine(info);
+                }
             }
         }
 
@@ -358,12 +448,14 @@ namespace Scripts
         /// <param name="go"></param>
         public void ScrollHoldConfigsMenuClick(GameObject go)
         {
-            Debug.Log(go);
             if (go != null)
             {
                 // PhotonNetwork.PrefabPool lets us refer to prefabs by name under Resources folder without having to manually add them to the ResourceCache: https://forum.unity.com/threads/solved-photon-instantiating-prefabs-without-putting-them-in-a-resources-folder.293853/
                 string holdConfig = $"{go.name}";
                 Debug.Log($"holdConfig: {holdConfig}");
+
+                // retrieve hold configuration
+                GetHoldConfiguration(holdConfig);
             }
         }
     }
