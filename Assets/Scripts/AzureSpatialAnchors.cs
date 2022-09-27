@@ -27,7 +27,7 @@ namespace AzureSpatialAnchors
         /// <summary>
         /// Main interface to anything Spatial Anchors related
         /// </summary>
-        private SpatialAnchorManager _spatialAnchorManager = null;
+        //private SpatialAnchorManager _spatialAnchorManager = null;
 
         /// <summary>
         /// Used to keep track of all GameObjects that represent a found or created anchor

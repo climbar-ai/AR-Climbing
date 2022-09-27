@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Scripts.WorldLocking;
 using Microsoft.MixedReality.WorldLocking.ASA;
 using UnityEngine.Events;
+using Scripts;
 
 namespace MultiUserCapabilities
 {
@@ -59,7 +60,7 @@ namespace MultiUserCapabilities
         RoomStatus roomStatus = RoomStatus.None;
 
         public static readonly string CLOUD_ANCHOR_ID_CUSTOM_PROPERTY = "cloudAnchorId";
-        static readonly string ROOM_NAME = "HardCodedRoomName";
+        //static readonly string ROOM_NAME = "HardCodedRoomName";
 
         public override void OnPlayerEnteredRoom(Player newPlayer)
         {

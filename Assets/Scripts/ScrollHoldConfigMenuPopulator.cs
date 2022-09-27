@@ -1,9 +1,17 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+/// Script that can create a scrollable MRTK menu.  
+/// It has a bit of flexibility in that it can either fully create a menu programmatically, or it can be given empty containers for subcomponents of a
+/// menu to then fill in.  We currently target the latter work flow for the hold configuration menu.
+/// Used in such menus as the scroll menu for hold configurations.
+/// Taken from Assets/MRTK/Examples/Demos/ScrollingObjectCollection/Scripts
+
 using Microsoft.MixedReality.Toolkit.UI;
 using Microsoft.MixedReality.Toolkit.Utilities;
 using System.Collections;
+using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 
 namespace Scripts
@@ -12,7 +20,7 @@ namespace Scripts
     /// Simple demonstration of how to instantiate a <see cref="Microsoft.MixedReality.Toolkit.UI.ScrollingObjectCollection"/> as well as use lazy loading to mitigate the perf cost of a large list of items.
     /// </summary>
     [AddComponentMenu("Scripts/ScrollableListPopulator")]
-    public class ScrollableListPopulator : MonoBehaviour
+    public class ScrollHoldConfigMenuPopulator : MonoBehaviour
     {
         [SerializeField]
         [Tooltip("The ScrollingObjectCollection to populate, if left empty. the populator will create on your behalf.")]
@@ -112,11 +120,6 @@ namespace Scripts
             set { loader = value; }
         }
 
-        private void Start()
-        {
-            MakeScrollingList();
-        }
-
         private void OnEnable()
         {
             // Make sure we find a collection
@@ -126,11 +129,10 @@ namespace Scripts
             }
         }
 
-        public void MakeScrollingList()
+        public void MakeScrollingList(List<string> names)
         {
             if (scrollView == null)
             {
-                Debug.Log("ScrollingObjectCollection");
                 GameObject newScroll = new GameObject("Scrolling Object Collection");
                 newScroll.transform.parent = scrollPositionRef ? scrollPositionRef : transform;
                 newScroll.transform.localPosition = Vector3.zero;
@@ -150,7 +152,6 @@ namespace Scripts
 
             if (gridObjectCollection == null)
             {
-                Debug.Log("No GridObjectCollection");
                 GameObject collectionGameObject = new GameObject("Grid Object Collection");
                 collectionGameObject.transform.position = scrollView.transform.position;
                 collectionGameObject.transform.rotation = scrollView.transform.rotation;
@@ -170,7 +171,7 @@ namespace Scripts
             {
                 for (int i = 0; i < numItems; i++)
                 {
-                    MakeItem(dynamicItem);
+                    MakeItem(dynamicItem, names[i]);
                 }
                 scrollView.gameObject.SetActive(true);
                 gridObjectCollection.UpdateCollection();
@@ -182,17 +183,17 @@ namespace Scripts
                     loader.SetActive(true);
                 }
 
-                StartCoroutine(UpdateListOverTime(loader, itemsPerFrame));
+                StartCoroutine(UpdateListOverTime(loader, itemsPerFrame, names));
             }
         }
 
-        private IEnumerator UpdateListOverTime(GameObject loaderViz, int instancesPerFrame)
+        private IEnumerator UpdateListOverTime(GameObject loaderViz, int instancesPerFrame, List<string> names)
         {
             for (int currItemCount = 0; currItemCount < numItems; currItemCount++)
             {
                 for (int i = 0; i < instancesPerFrame; i++)
                 {
-                    MakeItem(dynamicItem);
+                    MakeItem(dynamicItem, names[currItemCount]);
                 }
                 yield return null;
             }
@@ -205,11 +206,18 @@ namespace Scripts
             gridObjectCollection.UpdateCollection();
         }
 
-        private void MakeItem(GameObject item)
+        private void MakeItem(GameObject item, string name)
         {
             GameObject itemInstance = Instantiate(item, gridObjectCollection.transform);
-            Debug.Log($"{gridObjectCollection.transform.position.x}, {gridObjectCollection.transform.position.y}, {gridObjectCollection.transform.position.z}");
             itemInstance.SetActive(true);
+
+            // update the name and display text of the instantiated object (assumed to be a button prefab from the scrolling menu MRTK tool stored in
+            // prefabs folder for this project)
+            itemInstance.name = name;
+            TextMeshPro tmPro = itemInstance.transform.Find("IconAndText").transform.Find("TextMeshPro").gameObject.GetComponent<TextMeshPro>();
+            Debug.Log(tmPro.text);
+            Debug.Log(name);
+            tmPro.SetText(name);
         }
     }
 }
