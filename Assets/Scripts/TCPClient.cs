@@ -342,4 +342,20 @@ public class TCPClient : MonoBehaviour
         SaveHolds();
         keyboardInputContainer.SetActive(false);
     }
+
+    // <ScrollHoldConfigsMenuClick>
+    /// <summary>
+    /// Handle scoll hold config menu selection
+    /// </summary>
+    /// <param name="go"></param>
+    public void ScrollHoldConfigsMenuClick(GameObject go)
+    {
+        Debug.Log(go);
+        if (go != null)
+        {
+            // PhotonNetwork.PrefabPool lets us refer to prefabs by name under Resources folder without having to manually add them to the ResourceCache: https://forum.unity.com/threads/solved-photon-instantiating-prefabs-without-putting-them-in-a-resources-folder.293853/
+            string holdConfig = $"{go.name}";
+            Debug.Log($"holdConfig: {holdConfig}");
+        }
+    }
 }
