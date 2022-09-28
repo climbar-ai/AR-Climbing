@@ -33,6 +33,9 @@ namespace Scripts
         // scroll menu for config choices
         [SerializeField] private ScrollHoldConfigMenuPopulator scrollHoldConfigMenuScript = default;
 
+        // hold config manipulator for instantiating retrieved hold configs
+        [SerializeField] private HoldConfigManipulator holdConfigManipulator = default;
+
 #if !UNITY_EDITOR
     private bool _useUWP = true;
     private Windows.Networking.Sockets.StreamSocket socket;
@@ -373,6 +376,8 @@ namespace Scripts
             {
                 Debug.Log($"hold: {holds[i]}; {positions[i]}; {rotations[i]}");
             }
+
+            holdConfigManipulator.InstantiateHoldConfig(holds, positions, rotations);
         }
 
         /// <summary>
@@ -391,9 +396,12 @@ namespace Scripts
                     // compile semi-colon delimited string of form with position and rotation comma-delimited:
                     // "holdname;transform.position;transform.rotation" 
                     string info = "";
-                    
+
                     // name (type of hold)
-                    info += holds[i].name + ";";
+                    // remove the "(Clone)" string from the name since this is added by unity at runtime
+                    string name = holds[i].name;
+                    name = name.Replace("(Clone)", string.Empty);
+                    info += name + ";";
                     
                     // position
                     string position = holds[i].transform.position.ToString("F9"); // get as much precision as possible

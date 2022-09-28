@@ -15,9 +15,9 @@ using Photon.Pun;
 using Microsoft.MixedReality.Toolkit.Utilities.Solvers;
 using MultiUserCapabilities;
 
-namespace AzureSpatialAnchors
+namespace Scripts
 {
-    public class AzureSpatialAnchors : MonoBehaviourPunCallbacks
+    public class HoldManipulator : MonoBehaviourPunCallbacks
     {
         /// <summary>
         /// Used to distinguish short taps and long taps
@@ -516,12 +516,12 @@ namespace AzureSpatialAnchors
             Debug.Log($"Placing: {hold_version}");
 
             // InstantiateRoomObject only succeeds for master client
-            photonView.RPC("BuildAnchor", RpcTarget.MasterClient, hold_version, position, normalOrientation, Vector3.one * 0.1f);
+            photonView.RPC("BuildAnchor", RpcTarget.MasterClient, hold_version, position, normalOrientation, Vector3.one * 0.1f, "Hold");
         }
         // </CreateAnchor>
 
         [PunRPC]
-        void BuildAnchor(string go, Vector3 position, Quaternion rotation, Vector3 localScale)
+        void BuildAnchor(string go, Vector3 position, Quaternion rotation, Vector3 localScale, string tag="Hold")
         {
             // open loader
             indicatorObject.SetActive(true);
@@ -536,7 +536,8 @@ namespace AzureSpatialAnchors
             newAnchorGameObject.GetComponent<MeshRenderer>().material.shader = Shader.Find("Legacy Shaders/Diffuse");
             newAnchorGameObject.transform.position = position;
             newAnchorGameObject.transform.rotation = rotation;
-            //newAnchorGameObject.transform.localScale = localScale; // don't set to localScale because we need to be able to parent the holds arbitrarily
+            //newAnchorGameObject.transform.localScale = localScale; // don't set to localScale because we need to be able to parent the holds arbitrarily and this line could make them either very small or large
+            newAnchorGameObject.tag = tag;
 
             Debug.Log($"Forward Direction of Object: {newAnchorGameObject.transform.forward}");
             Debug.Log($"Forward Direction of Frozen Frame: {GameObject.Find("F1").transform.forward}");
