@@ -1,3 +1,4 @@
+using Microsoft.MixedReality.Toolkit.UI;
 using Microsoft.MixedReality.Toolkit.Utilities.Solvers;
 using MultiUserCapabilities;
 using Photon.Pun;
@@ -218,11 +219,7 @@ namespace Scripts
                 await GetRoute(route);
 
                 // empty menu and close it
-                foreach (Transform child in scrollRouteMenu.transform.Find("ScrollingObjectCollection/Container").transform)
-                {
-                    GameObject.Destroy(child.gameObject);
-                }
-                scrollRouteMenu.SetActive(false);
+                EmptyCloseScrollRouteMenu();
             }
         }
 
@@ -231,25 +228,32 @@ namespace Scripts
         /// Handle scoll route menu selection and merge it to the main set of holds
         /// </summary>
         /// <param name="go"></param>
-        public void ScrollRouteMergeMenuClick(GameObject go)
+        public async void ScrollRouteMergeMenuClick(GameObject go)
         {
             if (go != null)
             {
                 string route = $"{go.name}";
 
                 // merge route into broader
-                MergeRoute(route);
+                await MergeRoute(route);
 
                 // empty menu and close it
-                foreach (Transform child in scrollRouteMergeMenu.transform.Find("ScrollingObjectCollection/Container").transform)
-                {
-                    GameObject.Destroy(child.gameObject);
-                }
-                scrollRouteMergeMenu.SetActive(false);
+                EmptyCloseScrollRouteMenu();
             }
         }
 
-        private void MergeRoute(string routeName)
+        private void EmptyCloseScrollRouteMenu()
+        {
+            scrollRouteMenu.transform.Find("ScrollingObjectCollection").GetComponent<ScrollingObjectCollection>().OnClick.RemoveAllListeners();
+            foreach (Transform child in scrollRouteMenu.transform.Find("ScrollingObjectCollection/Container").transform)
+            {
+                GameObject.Destroy(child.gameObject);
+            }
+            scrollRouteMenu.SetActive(false);
+            showScrollRouteMenu = false;
+        }
+
+        private async Task MergeRoute(string routeName)
         {
             Debug.Log($"MergeRoute: routeName: {routeName}");
         }
@@ -369,20 +373,36 @@ namespace Scripts
 
         /// <summary>
         /// Retrieves the list of saved routes currently on the server (list of filenames)
+        /// endpoint supplied inspector to choose which event listener is wired up
+        /// Serves double duty between choosing routes to instantiate and choosing routes to merge
         /// TODO: maybe use serialization/deserialization and/or JSON?
         /// </summary>
-        public async void GetRoutes()
+        /// <param name="endpoint"></param>
+        public async void GetRoutes(string endpoint)
         {
             // close it if already open
             if (showScrollRouteMenu)
             {
-                showScrollRouteMenu = false;
+                EmptyCloseScrollRouteMenu();
                 return;
             }
 
             // display scroll route menu
             scrollRouteMenu.SetActive(true);
             showScrollRouteMenu = true;
+
+            // choose which listener will be wired up
+            if (endpoint == "routesToInstantiate")
+            {
+                scrollRouteMenu.transform.Find("ScrollingObjectCollection").GetComponent<ScrollingObjectCollection>().OnClick.AddListener(ScrollRouteMenuClick);
+
+            } else if (endpoint == "routesToMerge")
+            {
+                scrollRouteMenu.transform.Find("ScrollingObjectCollection").GetComponent<ScrollingObjectCollection>().OnClick.AddListener(ScrollRouteMergeMenuClick);
+            } else
+            {
+                Debug.Log($"GetRoutes: invalid endpoint for listener {endpoint}");
+            }
 
             List<string> routeList = await tcpClient.GetRouteList();
 
