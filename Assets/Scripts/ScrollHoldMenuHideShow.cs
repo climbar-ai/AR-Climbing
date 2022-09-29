@@ -4,9 +4,9 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class ScrollingHoldMenuHideShow : MonoBehaviour
+public class ScrollHoldMenuHideShow : MonoBehaviour
 {
-    public GameObject scrollingHoldMenu;
+    public GameObject scrollHoldMenu;
 
     private bool show;
 
@@ -19,12 +19,12 @@ public class ScrollingHoldMenuHideShow : MonoBehaviour
     {
         if (show)
         {
-            scrollingHoldMenu.SetActive(false);
+            scrollHoldMenu.SetActive(false);
             show = false;
         }
         else
         {
-            scrollingHoldMenu.SetActive(true);
+            scrollHoldMenu.SetActive(true);
             show = true;
         }
     }

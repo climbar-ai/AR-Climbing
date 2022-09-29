@@ -12,6 +12,12 @@ namespace Scripts
         [SerializeField] private HoldManipulator holdManipulator = default;
         [SerializeField] private GameObject routeParentPrefab = default; // prefab
 
+        // scroll menu populator for route choices
+        [SerializeField] private ScrollRouteMergeMenuPopulator scrollRouteMergeMenuScript = default;
+
+        // scroll menu for route choices
+        [SerializeField] private GameObject scrollRouteMergeMenu = default;
+
         public void InstantiateRoute(List<string> holds, List<Vector3> positions, List<Quaternion> rotations, string routeName)
         {
             // instantiate prefab to parent the holds
@@ -149,6 +155,52 @@ namespace Scripts
 
             position = hit.point;
             normal = hit.normal;
+        }
+
+        /// <summary>
+        /// Show container holding input field that triggers keyboard
+        /// </summary>
+        public void ToggleKeyboardInput()
+        {
+            if (showKeyboard)
+            {
+                keyboardInputContainer.SetActive(false);
+                showKeyboard = false;
+            }
+            else
+            {
+                keyboardInputContainer.SetActive(true);
+                showKeyboard = true;
+            }
+            keyboardInput.text = "";
+        }
+
+        // <ScrollRoutesMenuClick>
+        /// <summary>
+        /// Handle scoll route menu selection and merge it to the main set of holds
+        /// </summary>
+        /// <param name="go"></param>
+        public void ScrollRouteMergeMenuClick(GameObject go)
+        {
+            if (go != null)
+            {
+                string route = $"{go.name}";
+
+                // merge route into broader
+                MergeRoute(route);
+
+                // empty menu and close it
+                foreach (Transform child in scrollRouteMergeMenu.transform.Find("ScrollingObjectCollection/Container").transform)
+                {
+                    GameObject.Destroy(child.gameObject);
+                }
+                scrollRouteMergeMenu.SetActive(false);
+            }
+        }
+
+        private void MergeRoute(string routeName)
+        {
+            Debug.Log($"MergeRoute: routeName: {routeName}");
         }
     }
 }

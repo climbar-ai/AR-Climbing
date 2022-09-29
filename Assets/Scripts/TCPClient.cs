@@ -27,6 +27,7 @@ namespace Scripts
         [SerializeField] private InputField keyboardInput = default;
         [SerializeField] private GameObject keyboardInputContainer = default;
         private string filename = default;
+        private bool showKeyboard = false;
 
         // scroll menu populator for route choices
         [SerializeField] private ScrollRouteMenuPopulator scrollRouteMenuScript = default;
@@ -36,6 +37,7 @@ namespace Scripts
 
         // scroll menu for route choices
         [SerializeField] private GameObject scrollRouteMenu = default;
+        private bool showScrollRouteMenu = false;
 
 #if !UNITY_EDITOR
     private bool _useUWP = true;
@@ -281,8 +283,16 @@ namespace Scripts
         /// </summary>
         public async void GetRoutes()
         {
+            // close it if already open
+            if (showScrollRouteMenu)
+            {
+                showScrollRouteMenu = false;
+                return;
+            }
+
             // display scroll route menu
             scrollRouteMenu.SetActive(true);
+            showScrollRouteMenu = true;
 
             List<string> routeList = new List<string>();
 
@@ -332,7 +342,6 @@ namespace Scripts
             {
                 // remove the "(Clone)" part of the object name that Unity automatically injects when instantiating prefabs
                 string name = existingRoutes[i].name.Replace("(Clone)", string.Empty);
-                Debug.Log(name);
                 if (name == route)
                 {  
                     Debug.Log($"Route: {route} already in scene");
@@ -453,9 +462,17 @@ namespace Scripts
         /// <summary>
         /// Show container holding input field that triggers keyboard
         /// </summary>
-        public void ShowKeyboardInput()
+        public void ToggleKeyboardInput()
         {
-            keyboardInputContainer.SetActive(true);
+            if (showKeyboard)
+            {
+                keyboardInputContainer.SetActive(false);
+                showKeyboard = false;
+            } else
+            {
+                keyboardInputContainer.SetActive(true);
+                showKeyboard = true;
+            }
             keyboardInput.text = "";
         }
 
@@ -479,7 +496,6 @@ namespace Scripts
         {
             if (go != null)
             {
-                // PhotonNetwork.PrefabPool lets us refer to prefabs by name under Resources folder without having to manually add them to the ResourceCache: https://forum.unity.com/threads/solved-photon-instantiating-prefabs-without-putting-them-in-a-resources-folder.293853/
                 string route = $"{go.name}";
 
                 // retrieve route
