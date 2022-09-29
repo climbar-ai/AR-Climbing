@@ -3,20 +3,48 @@ using MultiUserCapabilities;
 using Photon.Pun;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
+using System.Threading.Tasks;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace Scripts
 {
     public class RouteManipulator : MonoBehaviour
     {
         [SerializeField] private HoldManipulator holdManipulator = default;
-        [SerializeField] private GameObject routeParentPrefab = default; // prefab
+
+        // prefab to use as parent for instatiated routes
+        [SerializeField] private GameObject routeParentPrefab = default;
 
         // scroll menu populator for route choices
         [SerializeField] private ScrollRouteMergeMenuPopulator scrollRouteMergeMenuScript = default;
 
+        // scroll menu populator for route merge choices
+        [SerializeField] private ScrollRouteMenuPopulator scrollRouteMenuScript = default;
+
         // scroll menu for route choices
         [SerializeField] private GameObject scrollRouteMergeMenu = default;
+        private bool showScrollRouteMergeMenu = false;
+
+        // scroll menu for route merge choices
+        [SerializeField] private GameObject scrollRouteMenu = default;
+        private bool showScrollRouteMenu = false;
+
+        // filename keyboard/input related fields
+        [SerializeField] private InputField keyboardInput = default;
+        [SerializeField] private GameObject keyboardInputContainer = default;
+        private string filename = default;
+        private bool showKeyboard = false;
+
+        // TCPClient
+        [SerializeField] private TCPClient tcpClient = default;
+
+        private void Start()
+        {
+            // hide filename prompt until we want it shown
+            keyboardInputContainer.SetActive(false);
+        }
 
         public void InstantiateRoute(List<string> holds, List<Vector3> positions, List<Quaternion> rotations, string routeName)
         {
@@ -177,6 +205,29 @@ namespace Scripts
 
         // <ScrollRoutesMenuClick>
         /// <summary>
+        /// Handle scoll route menu selection
+        /// </summary>
+        /// <param name="go"></param>
+        public async void ScrollRouteMenuClick(GameObject go)
+        {
+            if (go != null)
+            {
+                string route = $"{go.name}";
+
+                // retrieve route
+                await GetRoute(route);
+
+                // empty menu and close it
+                foreach (Transform child in scrollRouteMenu.transform.Find("ScrollingObjectCollection/Container").transform)
+                {
+                    GameObject.Destroy(child.gameObject);
+                }
+                scrollRouteMenu.SetActive(false);
+            }
+        }
+
+        // <ScrollRoutesMenuClick>
+        /// <summary>
         /// Handle scoll route menu selection and merge it to the main set of holds
         /// </summary>
         /// <param name="go"></param>
@@ -201,6 +252,143 @@ namespace Scripts
         private void MergeRoute(string routeName)
         {
             Debug.Log($"MergeRoute: routeName: {routeName}");
+        }
+
+        /// <summary>
+        /// Registered in Inspector.
+        /// NOTE: need async void here: https://stackoverflow.com/questions/28601678/calling-async-method-on-button-click
+        /// </summary>
+        public async void CreateRoute()
+        {
+            CreateRouteFile(filename: filename);
+
+            // send data
+            await tcpClient.SendFile(filename: filename);
+
+            // remove the file so we don't accrue files
+            DeleteRouteFile(filename: filename);
+        }
+
+        /// <summary>
+        /// Called by closing keyboard in Inspector to retrieve the user's text
+        /// </summary>
+        /// <param name="text"></param>
+        public void SaveRoute(string text)
+        {
+            filename = text + ".txt";
+            CreateRoute();
+            keyboardInputContainer.SetActive(false);
+        }
+
+        /// <summary>
+        /// Creates text file with specified filename that contains information for each hold in a scene (one hold per line)
+        /// </summary>
+        /// <param name="filename"></param>
+        private void CreateRouteFile(string filename = "")
+        {
+            string path = Path.Combine(Application.persistentDataPath, filename);
+            using (StreamWriter sw = File.CreateText(path))
+            {
+                GameObject[] holds = GameObject.FindGameObjectsWithTag("Hold");
+
+                for (int i = 0; i < holds.Length; i++)
+                {
+                    // compile semi-colon delimited string of form with position and rotation comma-delimited:
+                    // "holdname;transform.position;transform.rotation" 
+                    string info = "";
+
+                    // name (type of hold)
+                    // remove the "(Clone)" string from the name since this is added by unity at runtime
+                    string name = holds[i].name;
+                    name = name.Replace("(Clone)", string.Empty);
+                    info += name + ";";
+
+                    // position
+                    string position = holds[i].transform.position.ToString("F9"); // get as much precision as possible
+                    position = position.Trim('(').Trim(')');
+                    info += position + ";";
+
+                    // rotation
+                    string rotation = holds[i].transform.rotation.ToString("F9"); // get as much precision as possible
+                    rotation = rotation.Trim('(').Trim(')');
+                    info += rotation;
+
+                    sw.WriteLine(info);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Deletes file with specified filename
+        /// Assumes file exists at Application.persistentDataPath
+        /// </summary>
+        /// <param name="filename"></param>
+        private void DeleteRouteFile(string filename = "")
+        {
+            string path = Path.Combine(Application.persistentDataPath, filename);
+            File.Delete(path);
+        }
+
+        /// <summary>
+        /// Retrieves the saved route from the server
+        /// TODO: maybe use serialization/deserialization and/or JSON?
+        /// </summary>
+        private async Task GetRoute(string route)
+        {
+            // check first if the route is already being manipulated in the scene and abort if it is so that duplicates are avoided
+            GameObject[] existingRoutes = GameObject.FindGameObjectsWithTag("RouteParent");
+            Debug.Log(existingRoutes.Length);
+
+            // search for a route parent with the name of the route
+            for (int i = 0; i < existingRoutes.Length; i++)
+            {
+                // remove the "(Clone)" part of the object name that Unity automatically injects when instantiating prefabs
+                string name = existingRoutes[i].name.Replace("(Clone)", string.Empty);
+                if (name == route)
+                {
+                    Debug.Log($"Route: {route} already in scene");
+                    return;
+                }
+            }
+
+            // list of hold names and their respective transforms
+            List<string> holds = new List<string>();
+            List<Vector3> positions = new List<Vector3>();
+            List<Quaternion> rotations = new List<Quaternion>();
+
+            (holds, positions, rotations) = await tcpClient.GetRoute(route);
+
+            // print what we got
+            for (int i = 0; i < holds.Count; i++)
+            {
+                Debug.Log($"hold: {holds[i]}; {positions[i]}; {rotations[i]}");
+            }
+
+            InstantiateRoute(holds, positions, rotations, route);
+        }
+
+        /// <summary>
+        /// Retrieves the list of saved routes currently on the server (list of filenames)
+        /// TODO: maybe use serialization/deserialization and/or JSON?
+        /// </summary>
+        public async void GetRoutes()
+        {
+            // close it if already open
+            if (showScrollRouteMenu)
+            {
+                showScrollRouteMenu = false;
+                return;
+            }
+
+            // display scroll route menu
+            scrollRouteMenu.SetActive(true);
+            showScrollRouteMenu = true;
+
+            List<string> routeList = await tcpClient.GetRouteList();
+
+            // populate scroll route menu
+            scrollRouteMenuScript.NumItems = routeList.Count;
+            scrollRouteMenuScript.MakeScrollingList(routeList);
         }
     }
 }

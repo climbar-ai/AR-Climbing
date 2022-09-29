@@ -23,21 +23,8 @@ namespace Scripts
         [SerializeField] private string host = "10.203.94.234";
         [SerializeField] private string port = "8081";
 
-        // filename keyboard/input related fields
-        [SerializeField] private InputField keyboardInput = default;
-        [SerializeField] private GameObject keyboardInputContainer = default;
-        private string filename = default;
-        private bool showKeyboard = false;
-
-        // scroll menu populator for route choices
-        [SerializeField] private ScrollRouteMenuPopulator scrollRouteMenuScript = default;
-
         // route manipulator for instantiating retrieved hold routes
         [SerializeField] private RouteManipulator routeManipulator = default;
-
-        // scroll menu for route choices
-        [SerializeField] private GameObject scrollRouteMenu = default;
-        private bool showScrollRouteMenu = false;
 
 #if !UNITY_EDITOR
     private bool _useUWP = true;
@@ -54,12 +41,6 @@ namespace Scripts
         private StreamReader reader;
 
         private int BUFFER_SIZE = 1024;
-
-        private void Start()
-        {
-            // hide filename prompt until we want it shown
-            keyboardInputContainer.SetActive(false);
-        }
 
         public void Connect()
         {
@@ -263,92 +244,11 @@ namespace Scripts
 #endif
 
         /// <summary>
-        /// Registered in Inspector.
-        /// NOTE: need async void here: https://stackoverflow.com/questions/28601678/calling-async-method-on-button-click
-        /// </summary>
-        public async void SaveHolds()
-        {
-            CreateFile(filename: filename);
-
-            // send data
-            await SendFile(filename: filename);
-
-            // remove the file so we don't accrue files
-            DeleteFile(filename: filename);
-        }
-
-        /// <summary>
-        /// Retrieves the list of saved routes currently on the server (list of filenames)
+        /// Retrieves the list of saved route from the server
         /// TODO: maybe use serialization/deserialization and/or JSON?
         /// </summary>
-        public async void GetRoutes()
+        public async Task<(List<string> holds, List<Vector3> positions, List<Quaternion> rotations)> GetRoute(string route)
         {
-            // close it if already open
-            if (showScrollRouteMenu)
-            {
-                showScrollRouteMenu = false;
-                return;
-            }
-
-            // display scroll route menu
-            scrollRouteMenu.SetActive(true);
-            showScrollRouteMenu = true;
-
-            List<string> routeList = new List<string>();
-
-            // notify server of endpoint
-            writer.Write("listFiles");
-
-            // get list of filenames
-            while (true)
-            {
-                char[] response = new char[BUFFER_SIZE];
-                await reader.ReadAsync(response, 0, BUFFER_SIZE);
-                string responseStr = new string(response);
-                responseStr = responseStr.Trim(new Char[] { '\0' }); // trim any empty bytes in the buffer
-                if (responseStr.Length <= 0 || responseStr.Equals("done")) { break; }
-
-                // trim file extension, i.e. .txt
-                responseStr = Path.GetFileNameWithoutExtension(responseStr);
-                routeList.Add(responseStr);
-
-                // send ready signal to server to get next file (if there is one)
-                writer.Write("ready");
-            }
-
-            // print what we got
-            for (int i = 0; i < routeList.Count; i++)
-            {
-                Debug.Log($"retreived file: {routeList[i]}");
-            }
-
-            // populate scroll route menu
-            scrollRouteMenuScript.NumItems = routeList.Count;
-            scrollRouteMenuScript.MakeScrollingList(routeList);
-        }
-
-        /// <summary>
-        /// Retrieves the list of saved hold routeurations currently on the server (list of filenames)
-        /// TODO: maybe use serialization/deserialization and/or JSON?
-        /// </summary>
-        public async void GetRoute(string route)
-        {
-            // check first if the route is already being manipulated in the scene and abort if it is so that duplicates are avoided
-            GameObject[] existingRoutes = GameObject.FindGameObjectsWithTag("RouteParent");
-            Debug.Log(existingRoutes.Length);
-
-            // search for a route parent with the name of the route
-            for (int i = 0; i < existingRoutes.Length; i++)
-            {
-                // remove the "(Clone)" part of the object name that Unity automatically injects when instantiating prefabs
-                string name = existingRoutes[i].name.Replace("(Clone)", string.Empty);
-                if (name == route)
-                {  
-                    Debug.Log($"Route: {route} already in scene");
-                    return;
-                }
-            }
-
             // list of hold names and their respective transforms
             List<string> holds = new List<string>();
             List<Vector3> positions = new List<Vector3>();
@@ -362,7 +262,7 @@ namespace Scripts
             await reader.ReadAsync(response, 0, BUFFER_SIZE);
             string responseStr = new string(response);
             responseStr = responseStr.Trim(new Char[] { '\0' }); // trim any empty bytes in the buffer
-            if (responseStr.Length <= 0 || !responseStr.Equals("ready")) { return; }
+            if (responseStr.Length <= 0 || !responseStr.Equals("ready")) { return (holds, positions, rotations); }
 
             // notify server of route to retrieve
             string filename = route + ".txt";
@@ -391,9 +291,9 @@ namespace Scripts
 
                 // collect rotation
                 string[] rotationStr = holdInfo[2].Split(',');
-                Quaternion rotation = new Quaternion(float.Parse(rotationStr[0].Trim()), 
-                    float.Parse(rotationStr[1].Trim()), 
-                    float.Parse(rotationStr[2].Trim()), 
+                Quaternion rotation = new Quaternion(float.Parse(rotationStr[0].Trim()),
+                    float.Parse(rotationStr[1].Trim()),
+                    float.Parse(rotationStr[2].Trim()),
                     float.Parse(rotationStr[3].Trim()));
                 rotations.Add(rotation);
 
@@ -401,113 +301,40 @@ namespace Scripts
                 writer.Write("ready");
             }
 
+            return (holds, positions, rotations);
+        }
+
+        public async Task<List<string>> GetRouteList()
+        {
+            List<string> routeList = new List<string>();
+
+            // notify server of endpoint
+            writer.Write("listFiles");
+
+            // get list of filenames
+            while (true)
+            {
+                char[] response = new char[BUFFER_SIZE];
+                await reader.ReadAsync(response, 0, BUFFER_SIZE);
+                string responseStr = new string(response);
+                responseStr = responseStr.Trim(new Char[] { '\0' }); // trim any empty bytes in the buffer
+                if (responseStr.Length <= 0 || responseStr.Equals("done")) { break; }
+
+                // trim file extension, i.e. .txt
+                responseStr = Path.GetFileNameWithoutExtension(responseStr);
+                routeList.Add(responseStr);
+
+                // send ready signal to server to get next file (if there is one)
+                writer.Write("ready");
+            }
+
             // print what we got
-            for (int i = 0; i < holds.Count; i++)
+            for (int i = 0; i < routeList.Count; i++)
             {
-                Debug.Log($"hold: {holds[i]}; {positions[i]}; {rotations[i]}");
+                Debug.Log($"retreived route: {routeList[i]}");
             }
 
-            routeManipulator.InstantiateRoute(holds, positions, rotations, route);
-        }
-
-        /// <summary>
-        /// Creates text file with specified filename that contains information for each hold in a scene (one hold per line)
-        /// </summary>
-        /// <param name="filename"></param>
-        private void CreateFile(string filename = "")
-        {
-            string path = Path.Combine(Application.persistentDataPath, filename);
-            using (StreamWriter sw = File.CreateText(path))
-            {
-                GameObject[] holds = GameObject.FindGameObjectsWithTag("Hold");
-
-                for (int i = 0; i < holds.Length; i++)
-                {
-                    // compile semi-colon delimited string of form with position and rotation comma-delimited:
-                    // "holdname;transform.position;transform.rotation" 
-                    string info = "";
-
-                    // name (type of hold)
-                    // remove the "(Clone)" string from the name since this is added by unity at runtime
-                    string name = holds[i].name;
-                    name = name.Replace("(Clone)", string.Empty);
-                    info += name + ";";
-                    
-                    // position
-                    string position = holds[i].transform.position.ToString("F9"); // get as much precision as possible
-                    position = position.Trim('(').Trim(')');
-                    info += position + ";";
-
-                    // rotation
-                    string rotation = holds[i].transform.rotation.ToString("F9"); // get as much precision as possible
-                    rotation = rotation.Trim('(').Trim(')');
-                    info += rotation;
-
-                    sw.WriteLine(info);
-                }
-            }
-        }
-
-        /// <summary>
-        /// Deletes file with specified filename
-        /// Assumes file exists at Application.persistentDataPath
-        /// </summary>
-        /// <param name="filename"></param>
-        private void DeleteFile(string filename = "")
-        {
-            string path = Path.Combine(Application.persistentDataPath, filename);
-            File.Delete(path);
-        }
-
-        /// <summary>
-        /// Show container holding input field that triggers keyboard
-        /// </summary>
-        public void ToggleKeyboardInput()
-        {
-            if (showKeyboard)
-            {
-                keyboardInputContainer.SetActive(false);
-                showKeyboard = false;
-            } else
-            {
-                keyboardInputContainer.SetActive(true);
-                showKeyboard = true;
-            }
-            keyboardInput.text = "";
-        }
-
-        /// <summary>
-        /// Called by closing keyboard in Inspector to retrieve the user's text
-        /// </summary>
-        /// <param name="text"></param>
-        public void GetFilename(string text)
-        {
-            filename = text + ".txt";
-            SaveHolds();
-            keyboardInputContainer.SetActive(false);
-        }
-
-        // <ScrollRoutesMenuClick>
-        /// <summary>
-        /// Handle scoll route menu selection
-        /// </summary>
-        /// <param name="go"></param>
-        public void ScrollRouteMenuClick(GameObject go)
-        {
-            if (go != null)
-            {
-                string route = $"{go.name}";
-
-                // retrieve route
-                GetRoute(route);
-
-                // empty menu and close it
-                foreach (Transform child in scrollRouteMenu.transform.Find("ScrollingObjectCollection/Container").transform)
-                {
-                    GameObject.Destroy(child.gameObject);
-                }
-                scrollRouteMenu.SetActive(false);
-            }
+            return routeList;
         }
     }
 }
