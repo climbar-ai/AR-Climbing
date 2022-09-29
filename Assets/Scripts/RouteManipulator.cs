@@ -2,6 +2,7 @@ using Microsoft.MixedReality.Toolkit.UI;
 using Microsoft.MixedReality.Toolkit.Utilities.Solvers;
 using MultiUserCapabilities;
 using Photon.Pun;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -18,15 +19,8 @@ namespace Scripts
         // prefab to use as parent for instatiated routes
         [SerializeField] private GameObject routeParentPrefab = default;
 
-        // scroll menu populator for route choices
-        [SerializeField] private ScrollRouteMergeMenuPopulator scrollRouteMergeMenuScript = default;
-
         // scroll menu populator for route merge choices
         [SerializeField] private ScrollRouteMenuPopulator scrollRouteMenuScript = default;
-
-        // scroll menu for route choices
-        [SerializeField] private GameObject scrollRouteMergeMenu = default;
-        private bool showScrollRouteMergeMenu = false;
 
         // scroll menu for route merge choices
         [SerializeField] private GameObject scrollRouteMenu = default;
@@ -70,9 +64,9 @@ namespace Scripts
                     customTags);
             }
 
-            // reparent holds and draw connecting line
             // reparent holds from default HoldParent to new parent so as to make them easily movable altogether at once
             // NOTE: holds' parent is by default the HoldParent object
+            // TODO: draw connecting line from hold to parent
             GameObject[] holdInstances = GameObject.FindGameObjectsWithTag("Hold");
             for (int i = 0; i < holdInstances.Length; i++)
             {
@@ -93,20 +87,46 @@ namespace Scripts
             text.text = routeName;
         }
 
-        public void ReparentHolds(string parent1, string parent2, string tag)
+        /// <summary>
+        /// Reparent all holds childed under route parent to the global hold parent.  
+        /// Perform a final adjustment to snap the holds to the nearest spatial mesh surface.
+        /// Finally, destroy the route parent.
+        /// </summary>
+        /// <param name="routeParentName"></param>
+        /// <param name="tag"></param>
+        public void ReparentHolds(string routeParentName, string tag)
         {
-            //GameObject newParent = GameObject.Find("HoldParent2");
-            //GameObject[] holds = GameObject.FindGameObjectsWithTag("Hold");
-            GameObject newParent = GameObject.Find(parent1);
-            GameObject[] holds = GameObject.FindGameObjectsWithTag(tag);
-            for (int i = 0; i < holds.Length; i++)
+            // check the route parent and global hold parent are in the scene
+            GameObject routeParent = Array.Find(GameObject.FindGameObjectsWithTag("RouteParent"), x => x.name == routeParentName);
+            GameObject globalHoldParent = GameObject.Find("GlobalHoldParent");
+            if (routeParent == null || globalHoldParent == null) return;
+
+            // find all holds in the route of interest
+            List<GameObject> holds = new List<GameObject>();
+            foreach (Transform child in routeParent.transform)
+            {
+                if (child.tag == tag)
+                {
+                    holds.Add(child.gameObject);
+                }
+            }
+          
+            // reparent the holds to the global hold parent in the scene
+            for (int i = 0; i < holds.Count; i++)
             {
                 GameObject hold = holds[i];
-                hold.gameObject.transform.SetParent(newParent.transform, true); // set new parent but keep current position/rotation/scale
-                Debug.Log(hold.name);
+
+                // set new parent but keep current position/rotation/scale
+                hold.gameObject.transform.SetParent(globalHoldParent.transform, true); 
+
+                // remove the identifying tag for this route so that the hold won't become parented to in the future if the same route is ever reintroduced into the scene
+                hold.GetComponent<CustomTag>().RemoveTag(routeParentName); 
 
                 StartCoroutine(SnapHoldToSpatialMesh(1f, hold)); // reenable after a short delay
             }
+
+            // destroy the route parent
+            PhotonNetwork.Destroy(routeParent);
         }
 
         /// <summary>
@@ -253,9 +273,14 @@ namespace Scripts
             showScrollRouteMenu = false;
         }
 
+        /// <summary>
+        /// Merge the holds for the given route with those holds parented by the global hold parent in the scene.
+        /// </summary>
+        /// <param name="routeName"></param>
+        /// <returns></returns>
         private async Task MergeRoute(string routeName)
         {
-            Debug.Log($"MergeRoute: routeName: {routeName}");
+            ReparentHolds(routeName, "Hold");
         }
 
         /// <summary>

@@ -40,4 +40,9 @@ public class CustomTag : MonoBehaviour
     {
         get { return tags.Count; }
     }
+
+    public void RemoveTag(string tag)
+    {
+        tags.RemoveAll(t => t == tag);
+    }
 }

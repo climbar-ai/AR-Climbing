@@ -10,7 +10,7 @@ namespace MultiUserCapabilities
     {
         public void OnPhotonInstantiate(PhotonMessageInfo info)
         {
-            GameObject root = GameObject.Find("HoldParent");
+            GameObject root = GameObject.Find("GlobalHoldParent");
             this.transform.SetParent(root.transform, true);
         }
     }
