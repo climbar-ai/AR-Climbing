@@ -19,8 +19,6 @@ namespace Scripts
 {
     public class TCPClient : MonoBehaviour
     {
-        [SerializeField] private GameObject holdsParent;
-
         // server ip address and port
         [SerializeField] private string host = "10.203.94.234";
         [SerializeField] private string port = "8081";
@@ -30,11 +28,14 @@ namespace Scripts
         [SerializeField] private GameObject keyboardInputContainer = default;
         private string filename = default;
 
-        // scroll menu for config choices
-        [SerializeField] private ScrollHoldConfigMenuPopulator scrollHoldConfigMenuScript = default;
+        // scroll menu populator for route choices
+        [SerializeField] private ScrollRouteMenuPopulator scrollRouteMenuScript = default;
 
-        // hold config manipulator for instantiating retrieved hold configs
-        [SerializeField] private HoldConfigManipulator holdConfigManipulator = default;
+        // route manipulator for instantiating retrieved hold routes
+        [SerializeField] private RouteManipulator routeManipulator = default;
+
+        // scroll menu for route choices
+        [SerializeField] private GameObject scrollRouteMenu = default;
 
 #if !UNITY_EDITOR
     private bool _useUWP = true;
@@ -275,12 +276,15 @@ namespace Scripts
         }
 
         /// <summary>
-        /// Retrieves the list of saved hold configurations currently on the server (list of filenames)
+        /// Retrieves the list of saved routes currently on the server (list of filenames)
         /// TODO: maybe use serialization/deserialization and/or JSON?
         /// </summary>
-        public async void GetHoldConfigurations()
+        public async void GetRoutes()
         {
-            List<string> configList = new List<string>();
+            // display scroll route menu
+            scrollRouteMenu.SetActive(true);
+
+            List<string> routeList = new List<string>();
 
             // notify server of endpoint
             writer.Write("listFiles");
@@ -296,29 +300,46 @@ namespace Scripts
 
                 // trim file extension, i.e. .txt
                 responseStr = Path.GetFileNameWithoutExtension(responseStr);
-                configList.Add(responseStr);
+                routeList.Add(responseStr);
 
                 // send ready signal to server to get next file (if there is one)
                 writer.Write("ready");
             }
 
             // print what we got
-            for (int i = 0; i < configList.Count; i++)
+            for (int i = 0; i < routeList.Count; i++)
             {
-                Debug.Log($"retreived file: {configList[i]}");
+                Debug.Log($"retreived file: {routeList[i]}");
             }
 
-            // populate scroll hold config menu
-            scrollHoldConfigMenuScript.NumItems = configList.Count;
-            scrollHoldConfigMenuScript.MakeScrollingList(configList);
+            // populate scroll route menu
+            scrollRouteMenuScript.NumItems = routeList.Count;
+            scrollRouteMenuScript.MakeScrollingList(routeList);
         }
 
         /// <summary>
-        /// Retrieves the list of saved hold configurations currently on the server (list of filenames)
+        /// Retrieves the list of saved hold routeurations currently on the server (list of filenames)
         /// TODO: maybe use serialization/deserialization and/or JSON?
         /// </summary>
-        public async void GetHoldConfiguration(string config)
+        public async void GetRoute(string route)
         {
+            // check first if the route is already being manipulated in the scene and abort if it is so that duplicates are avoided
+            GameObject[] existingRoutes = GameObject.FindGameObjectsWithTag("RouteParent");
+            Debug.Log(existingRoutes.Length);
+
+            // search for a route parent with the name of the route
+            for (int i = 0; i < existingRoutes.Length; i++)
+            {
+                // remove the "(Clone)" part of the object name that Unity automatically injects when instantiating prefabs
+                string name = existingRoutes[i].name.Replace("(Clone)", string.Empty);
+                Debug.Log(name);
+                if (name == route)
+                {  
+                    Debug.Log($"Route: {route} already in scene");
+                    return;
+                }
+            }
+
             // list of hold names and their respective transforms
             List<string> holds = new List<string>();
             List<Vector3> positions = new List<Vector3>();
@@ -334,8 +355,8 @@ namespace Scripts
             responseStr = responseStr.Trim(new Char[] { '\0' }); // trim any empty bytes in the buffer
             if (responseStr.Length <= 0 || !responseStr.Equals("ready")) { return; }
 
-            // notify server of config to retrieve
-            string filename = config + ".txt";
+            // notify server of route to retrieve
+            string filename = route + ".txt";
             writer.Write(filename);
 
             // get file line-by-line
@@ -377,7 +398,7 @@ namespace Scripts
                 Debug.Log($"hold: {holds[i]}; {positions[i]}; {rotations[i]}");
             }
 
-            holdConfigManipulator.InstantiateHoldConfig(holds, positions, rotations);
+            routeManipulator.InstantiateRoute(holds, positions, rotations, route);
         }
 
         /// <summary>
@@ -449,21 +470,27 @@ namespace Scripts
             keyboardInputContainer.SetActive(false);
         }
 
-        // <ScrollHoldConfigsMenuClick>
+        // <ScrollRoutesMenuClick>
         /// <summary>
-        /// Handle scoll hold config menu selection
+        /// Handle scoll route menu selection
         /// </summary>
         /// <param name="go"></param>
-        public void ScrollHoldConfigsMenuClick(GameObject go)
+        public void ScrollRouteMenuClick(GameObject go)
         {
             if (go != null)
             {
                 // PhotonNetwork.PrefabPool lets us refer to prefabs by name under Resources folder without having to manually add them to the ResourceCache: https://forum.unity.com/threads/solved-photon-instantiating-prefabs-without-putting-them-in-a-resources-folder.293853/
-                string holdConfig = $"{go.name}";
-                Debug.Log($"holdConfig: {holdConfig}");
+                string route = $"{go.name}";
 
-                // retrieve hold configuration
-                GetHoldConfiguration(holdConfig);
+                // retrieve route
+                GetRoute(route);
+
+                // empty menu and close it
+                foreach (Transform child in scrollRouteMenu.transform.Find("ScrollingObjectCollection/Container").transform)
+                {
+                    GameObject.Destroy(child.gameObject);
+                }
+                scrollRouteMenu.SetActive(false);
             }
         }
     }

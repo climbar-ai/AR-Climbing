@@ -7,22 +7,55 @@ using UnityEngine;
 
 namespace Scripts
 {
-    public class HoldConfigManipulator : MonoBehaviour
+    public class RouteManipulator : MonoBehaviour
     {
-        [SerializeField] private HoldManipulator holdManipulator;
+        [SerializeField] private HoldManipulator holdManipulator = default;
+        [SerializeField] private GameObject routeParentPrefab = default; // prefab
 
-        public void InstantiateHoldConfig(List<string> holds, List<Vector3> positions, List<Quaternion> rotations)
+        public void InstantiateRoute(List<string> holds, List<Vector3> positions, List<Quaternion> rotations, string routeName)
         {
+            // instantiate prefab to parent the holds
+            Vector3 parentPosition = new Vector3(0f, 0f, 0.5f);
+            GameObject routeParent = PhotonNetwork.InstantiateRoomObject(routeParentPrefab.name, parentPosition, Quaternion.identity);
+            routeParent.name = routeName;
+
+            // update display name of hold config parent
+            DisplayRouteParent(routeParent, routeName);
+
+            // instantiate the holds in the config with a temp tag
             for (int i = 0; i < holds.Count; i++)
             {
+                List<string> customTags = new List<string> { routeName };
                 holdManipulator.photonView.RPC("BuildAnchor", 
                     RpcTarget.MasterClient, 
                     holds[i], 
                     positions[i], 
                     rotations[i], 
                     Vector3.one * 0.1f,
-                    tag="HoldTemp");
+                    customTags);
             }
+
+            // reparent holds and draw connecting line
+            // reparent holds from default HoldParent to new parent so as to make them easily movable altogether at once
+            // NOTE: holds' parent is by default the HoldParent object
+            GameObject[] holdInstances = GameObject.FindGameObjectsWithTag("Hold");
+            for (int i = 0; i < holdInstances.Length; i++)
+            {
+                if (holdInstances[i].GetComponent<CustomTag>().HasTag(routeName))
+                {
+                    holdInstances[i].transform.SetParent(routeParent.transform, true);
+                }
+            }
+        }
+
+        /// <summary>
+        ///  Set name to be displayed on hold config parent manipulator
+        /// </summary>
+        /// <param name="route"></param>
+        private void DisplayRouteParent(GameObject routeParent, string routeName)
+        {
+            TextMesh text = routeParent.transform.Find("FrameVisual/OriginText").GetComponent<TextMesh>();
+            text.text = routeName;
         }
 
         public void ReparentHolds(string parent1, string parent2, string tag)
@@ -30,7 +63,7 @@ namespace Scripts
             //GameObject newParent = GameObject.Find("HoldParent2");
             //GameObject[] holds = GameObject.FindGameObjectsWithTag("Hold");
             GameObject newParent = GameObject.Find(parent1);
-            GameObject[] holds = GameObject.FindGameObjectsWithTag(parent2);
+            GameObject[] holds = GameObject.FindGameObjectsWithTag(tag);
             for (int i = 0; i < holds.Length; i++)
             {
                 GameObject hold = holds[i];

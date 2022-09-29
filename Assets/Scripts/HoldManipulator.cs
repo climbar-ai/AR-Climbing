@@ -516,12 +516,13 @@ namespace Scripts
             Debug.Log($"Placing: {hold_version}");
 
             // InstantiateRoomObject only succeeds for master client
-            photonView.RPC("BuildAnchor", RpcTarget.MasterClient, hold_version, position, normalOrientation, Vector3.one * 0.1f, "Hold");
+            List<string> customTags = new List<string> { "Hold" };
+            photonView.RPC("BuildAnchor", RpcTarget.MasterClient, hold_version, position, normalOrientation, Vector3.one * 0.1f, customTags);
         }
         // </CreateAnchor>
 
         [PunRPC]
-        void BuildAnchor(string go, Vector3 position, Quaternion rotation, Vector3 localScale, string tag="Hold")
+        void BuildAnchor(string go, Vector3 position, Quaternion rotation, Vector3 localScale, List<string> customTags)
         {
             // open loader
             indicatorObject.SetActive(true);
@@ -537,7 +538,9 @@ namespace Scripts
             newAnchorGameObject.transform.position = position;
             newAnchorGameObject.transform.rotation = rotation;
             //newAnchorGameObject.transform.localScale = localScale; // don't set to localScale because we need to be able to parent the holds arbitrarily and this line could make them either very small or large
-            newAnchorGameObject.tag = tag;
+            
+            // set any custom tags (e.g. necessary for when instantiating hold configs)
+            newAnchorGameObject.GetComponent<CustomTag>().Tags = customTags;
 
             Debug.Log($"Forward Direction of Object: {newAnchorGameObject.transform.forward}");
             Debug.Log($"Forward Direction of Frozen Frame: {GameObject.Find("F1").transform.forward}");

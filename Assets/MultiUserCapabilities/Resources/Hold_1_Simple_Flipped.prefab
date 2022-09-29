@@ -28,6 +28,7 @@ GameObject:
   - component: {fileID: 3756904862857787309}
   - component: {fileID: 1309699813970567400}
   - component: {fileID: -6172375488443103202}
+  - component: {fileID: 9069717770346172498}
   m_Layer: 0
   m_Name: Hold_1_Simple_Flipped
   m_TagString: Hold
@@ -384,7 +385,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   isTappingToPlace: 0
-  surfaceNormalOffset: 0
 --- !u!114 &3891105068929426626
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -531,3 +531,15 @@ AudioSource:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
+--- !u!114 &9069717770346172498
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3459325222091875927}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f69acd83b37b89d43a614adcd225ec6f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 

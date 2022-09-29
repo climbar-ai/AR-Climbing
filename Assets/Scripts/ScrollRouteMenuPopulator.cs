@@ -20,7 +20,7 @@ namespace Scripts
     /// Simple demonstration of how to instantiate a <see cref="Microsoft.MixedReality.Toolkit.UI.ScrollingObjectCollection"/> as well as use lazy loading to mitigate the perf cost of a large list of items.
     /// </summary>
     [AddComponentMenu("Scripts/ScrollableListPopulator")]
-    public class ScrollHoldConfigMenuPopulator : MonoBehaviour
+    public class ScrollRouteMenuPopulator : MonoBehaviour
     {
         [SerializeField]
         [Tooltip("The ScrollingObjectCollection to populate, if left empty. the populator will create on your behalf.")]

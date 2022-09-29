@@ -7,7 +7,7 @@ TagManager:
   - Hold
   - Bullet
   - Hold Ghost
-  - HoldTemp
+  - RouteParent
   layers:
   - Default
   - TransparentFX
