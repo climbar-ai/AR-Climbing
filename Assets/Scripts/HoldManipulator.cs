@@ -516,13 +516,14 @@ namespace Scripts
             Debug.Log($"Placing: {hold_version}");
 
             // InstantiateRoomObject only succeeds for master client
-            List<string> customTags = new List<string> { "Hold" };
-            photonView.RPC("BuildAnchor", RpcTarget.MasterClient, hold_version, position, normalOrientation, Vector3.one * 0.1f, customTags);
+            List<string> customTags = new List<string> { };
+            string customTagsString = string.Join(",", customTags); // PUN2 doesn't support arrays/lists as parameters
+            photonView.RPC("BuildAnchor", RpcTarget.MasterClient, hold_version, position, normalOrientation, Vector3.one * 0.1f, customTagsString);
         }
         // </CreateAnchor>
 
         [PunRPC]
-        void BuildAnchor(string go, Vector3 position, Quaternion rotation, Vector3 localScale, List<string> customTags)
+        void BuildAnchor(string go, Vector3 position, Quaternion rotation, Vector3 localScale, string customTagsString)
         {
             // open loader
             indicatorObject.SetActive(true);
@@ -538,8 +539,9 @@ namespace Scripts
             newAnchorGameObject.transform.position = position;
             newAnchorGameObject.transform.rotation = rotation;
             //newAnchorGameObject.transform.localScale = localScale; // don't set to localScale because we need to be able to parent the holds arbitrarily and this line could make them either very small or large
-            
+
             // set any custom tags (e.g. necessary for when instantiating hold configs)
+            List<string> customTags = customTagsString.Split(',').ToList(); // PUN2 doesn't support arrays/lists as parameters
             newAnchorGameObject.GetComponent<CustomTag>().Tags = customTags;
 
             Debug.Log($"Forward Direction of Object: {newAnchorGameObject.transform.forward}");

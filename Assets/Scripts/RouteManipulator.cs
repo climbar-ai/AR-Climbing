@@ -56,18 +56,35 @@ namespace Scripts
             for (int i = 0; i < holds.Count; i++)
             {
                 List<string> customTags = new List<string> { routeName };
+                string customTagsString = string.Join(",", customTags); // PUN2 doesn't support arrays/lists as parameters
                 holdManipulator.photonView.RPC("BuildAnchor", 
                     RpcTarget.MasterClient, 
                     holds[i], 
                     positions[i], 
                     rotations[i], 
                     Vector3.one * 0.1f,
-                    customTags);
+                    customTagsString);
             }
 
             // reparent holds from default HoldParent to new parent so as to make them easily movable altogether at once
+            // Needs to be RPC here so that every client performs this reparenting, otherwise movements of child objects won't stay in-sync across clients
+            // when moving a route parent on one client
             // NOTE: holds' parent is by default the HoldParent object
             // TODO: draw connecting line from hold to parent
+            var photonView = this.GetComponent<PhotonView>();
+            Debug.Log(photonView);
+            photonView.RPC("PunRPC_ReparentHoldsToRouteParent", RpcTarget.All, routeName);
+        }
+
+        [PunRPC]
+        private void PunRPC_ReparentHoldsToRouteParent(string routeName)
+        {
+            Debug.Log("PunRPC_ReparentHoldsToRouteParent");
+            Debug.Log(routeName);
+            // reparent holds from default HoldParent to new parent so as to make them easily movable altogether at once
+            // NOTE: holds' parent is by default the HoldParent object
+            // TODO: draw connecting line from hold to parent
+            GameObject routeParent = Array.Find(GameObject.FindGameObjectsWithTag("RouteParent"), x => x.name == routeName);
             GameObject[] holdInstances = GameObject.FindGameObjectsWithTag("Hold");
             for (int i = 0; i < holdInstances.Length; i++)
             {
@@ -255,7 +272,7 @@ namespace Scripts
             {
                 string route = $"{go.name}";
 
-                // merge route into broader
+                // merge route into scene
                 await MergeRoute(route);
 
                 // empty menu and close it
