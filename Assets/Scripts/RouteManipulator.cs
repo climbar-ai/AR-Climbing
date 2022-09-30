@@ -47,10 +47,10 @@ namespace Scripts
             // instantiate prefab to parent the holds
             Vector3 parentPosition = new Vector3(0f, 0f, 0.5f);
             GameObject routeParent = PhotonNetwork.InstantiateRoomObject(routeParentPrefab.name, parentPosition, Quaternion.identity);
-            routeParent.name = routeName;
 
-            // update display name of hold config parent
-            DisplayRouteParent(routeParent, routeName);
+            // set the name on the route parent for all clients
+            // critical so that other clients can find it in their scene, i.e. in PunRPC_ReparentHoldsToRouteParent
+            routeParent.GetComponent<PhotonView>().RPC("PunRPC_SetName", RpcTarget.All, routeName);
 
             // instantiate the holds in the config with a temp tag
             for (int i = 0; i < holds.Count; i++)
@@ -71,9 +71,7 @@ namespace Scripts
             // when moving a route parent on one client
             // NOTE: holds' parent is by default the HoldParent object
             // TODO: draw connecting line from hold to parent
-            var photonView = this.GetComponent<PhotonView>();
-            Debug.Log(photonView);
-            photonView.RPC("PunRPC_ReparentHoldsToRouteParent", RpcTarget.All, routeName);
+            gameObject.GetComponent<PhotonView>().RPC("PunRPC_ReparentHoldsToRouteParent", RpcTarget.All, routeName);
         }
 
         [PunRPC]
@@ -86,23 +84,15 @@ namespace Scripts
             // TODO: draw connecting line from hold to parent
             GameObject routeParent = Array.Find(GameObject.FindGameObjectsWithTag("RouteParent"), x => x.name == routeName);
             GameObject[] holdInstances = GameObject.FindGameObjectsWithTag("Hold");
+            Debug.Log(holdInstances.Length);
             for (int i = 0; i < holdInstances.Length; i++)
             {
                 if (holdInstances[i].GetComponent<CustomTag>().HasTag(routeName))
                 {
+                    Debug.Log($"Has custom tag: {routeName}");
                     holdInstances[i].transform.SetParent(routeParent.transform, true);
                 }
             }
-        }
-
-        /// <summary>
-        ///  Set name to be displayed on hold config parent manipulator
-        /// </summary>
-        /// <param name="route"></param>
-        private void DisplayRouteParent(GameObject routeParent, string routeName)
-        {
-            TextMesh text = routeParent.transform.Find("FrameVisual/OriginText").GetComponent<TextMesh>();
-            text.text = routeName;
         }
 
         /// <summary>
@@ -112,7 +102,8 @@ namespace Scripts
         /// </summary>
         /// <param name="routeParentName"></param>
         /// <param name="tag"></param>
-        public void ReparentHolds(string routeParentName, string tag)
+        [PunRPC]
+        public async void DoMergeRoute(string routeParentName, string tag)
         {
             // check the route parent and global hold parent are in the scene
             GameObject routeParent = Array.Find(GameObject.FindGameObjectsWithTag("RouteParent"), x => x.name == routeParentName);
@@ -128,23 +119,38 @@ namespace Scripts
                     holds.Add(child.gameObject);
                 }
             }
-          
+
             // reparent the holds to the global hold parent in the scene
             for (int i = 0; i < holds.Count; i++)
             {
                 GameObject hold = holds[i];
 
                 // set new parent but keep current position/rotation/scale
-                hold.gameObject.transform.SetParent(globalHoldParent.transform, true); 
+                hold.transform.SetParent(globalHoldParent.transform, true);
 
                 // remove the identifying tag for this route so that the hold won't become parented to in the future if the same route is ever reintroduced into the scene
-                hold.GetComponent<CustomTag>().RemoveTag(routeParentName); 
+                hold.GetComponent<CustomTag>().RemoveTag(routeParentName);
 
-                StartCoroutine(SnapHoldToSpatialMesh(1f, hold)); // reenable after a short delay
+                // movement only necessary to be done on one client i.e. master client
+                if (PhotonNetwork.IsMasterClient)
+                {
+                    StartCoroutine(SnapHoldToSpatialMesh(1f, hold)); // reenable after a short delay
+                }
             }
 
-            // destroy the route parent
-            PhotonNetwork.Destroy(routeParent);
+            // destroy the route parent game object
+            // only perform on the master client as photon will propagate the changes to the other clients
+            if (PhotonNetwork.IsMasterClient)
+            {
+                // we need to make sure we have ownership of the route parent
+                routeParent.GetPhotonView().RequestOwnership();
+
+                // the RequestOwnership calls above are asynchronous and need time to complete before we call Destroy() below
+                await Task.Delay(1000);
+
+                // destroy the route parent
+                PhotonNetwork.Destroy(routeParent);
+            }
         }
 
         /// <summary>
@@ -273,7 +279,7 @@ namespace Scripts
                 string route = $"{go.name}";
 
                 // merge route into scene
-                await MergeRoute(route);
+                MergeRoute(route);
 
                 // empty menu and close it
                 EmptyCloseScrollRouteMenu();
@@ -296,9 +302,9 @@ namespace Scripts
         /// </summary>
         /// <param name="routeName"></param>
         /// <returns></returns>
-        private async Task MergeRoute(string routeName)
+        private async void MergeRoute(string routeName)
         {
-            ReparentHolds(routeName, "Hold");
+            gameObject.GetPhotonView().RPC("DoMergeRoute", RpcTarget.All, routeName, "Hold");
         }
 
         /// <summary>

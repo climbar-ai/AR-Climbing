@@ -540,9 +540,9 @@ namespace Scripts
             newAnchorGameObject.transform.rotation = rotation;
             //newAnchorGameObject.transform.localScale = localScale; // don't set to localScale because we need to be able to parent the holds arbitrarily and this line could make them either very small or large
 
-            // set any custom tags (e.g. necessary for when instantiating hold configs)
-            List<string> customTags = customTagsString.Split(',').ToList(); // PUN2 doesn't support arrays/lists as parameters
-            newAnchorGameObject.GetComponent<CustomTag>().Tags = customTags;
+            // set any custom tags on all clients (e.g. necessary for when instantiating hold configs)
+            // NOTE: without RPC, the custom tags would only be set for this client
+            newAnchorGameObject.GetComponent<PhotonView>().RPC("PunRPC_SetCustomTags", RpcTarget.All, customTagsString);
 
             Debug.Log($"Forward Direction of Object: {newAnchorGameObject.transform.forward}");
             Debug.Log($"Forward Direction of Frozen Frame: {GameObject.Find("F1").transform.forward}");
