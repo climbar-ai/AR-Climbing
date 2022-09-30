@@ -6,6 +6,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.UI;
@@ -403,9 +404,9 @@ namespace Scripts
         /// TODO: maybe use serialization/deserialization and/or JSON?
         /// </summary>
         /// <param name="endpoint"></param>
-        public async void GetRoutes(string endpoint)
+        public async void GetRoutesForInstantiation()
         {
-            // close it if already open
+            // close/clear menu if already open so we don't accidentally keep filling it up
             if (showScrollRouteMenu)
             {
                 EmptyCloseScrollRouteMenu();
@@ -416,20 +417,41 @@ namespace Scripts
             scrollRouteMenu.SetActive(true);
             showScrollRouteMenu = true;
 
-            // choose which listener will be wired up
-            if (endpoint == "routesToInstantiate")
-            {
-                scrollRouteMenu.transform.Find("ScrollingObjectCollection").GetComponent<ScrollingObjectCollection>().OnClick.AddListener(ScrollRouteMenuClick);
+            // wire up listener on menu
+            scrollRouteMenu.transform.Find("ScrollingObjectCollection").GetComponent<ScrollingObjectCollection>().OnClick.AddListener(ScrollRouteMenuClick);
 
-            } else if (endpoint == "routesToMerge")
+            // gather list of routes
+            List<string> routeList = await tcpClient.GetRouteList();
+
+            // populate scroll route menu
+            scrollRouteMenuScript.NumItems = routeList.Count;
+            scrollRouteMenuScript.MakeScrollingList(routeList);
+        }
+
+        public void GetRoutesForMerge()
+        {
+            Debug.Log("GetRoutesForMerge");
+            // close/clear menu if already open so we don't accidentally keep filling it up
+            if (showScrollRouteMenu)
             {
-                scrollRouteMenu.transform.Find("ScrollingObjectCollection").GetComponent<ScrollingObjectCollection>().OnClick.AddListener(ScrollRouteMergeMenuClick);
-            } else
-            {
-                Debug.Log($"GetRoutes: invalid endpoint for listener {endpoint}");
+                EmptyCloseScrollRouteMenu();
+                return;
             }
 
-            List<string> routeList = await tcpClient.GetRouteList();
+            // display scroll route menu
+            scrollRouteMenu.SetActive(true);
+            showScrollRouteMenu = true;
+
+            // wire listener on menu
+            scrollRouteMenu.transform.Find("ScrollingObjectCollection").GetComponent<ScrollingObjectCollection>().OnClick.AddListener(ScrollRouteMergeMenuClick);
+
+            // gather list of routes
+            GameObject[] routeParents = GameObject.FindGameObjectsWithTag("RouteParent");
+            List<string> routeList = new List<string>();
+            for (int i = 0; i < routeParents.Length; i++)
+            {
+                routeList.Add(routeParents[i].name);
+            }
 
             // populate scroll route menu
             scrollRouteMenuScript.NumItems = routeList.Count;
