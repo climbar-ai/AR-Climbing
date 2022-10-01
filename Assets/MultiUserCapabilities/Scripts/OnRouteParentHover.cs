@@ -31,8 +31,8 @@ namespace MultiUserCapabilities
         // Start is called before the first frame update
         void Start()
         {
-            //Fetch the mesh renderer component from the GameObject
-            m_Renderer = m_GameObject.GetComponent<MeshRenderer>();
+            //Fetch the mesh renderer component from the GameObject's axis child object
+            m_Renderer = m_GameObject.transform.Find("FrameVisual/Axis_LowPoly").GetComponent<MeshRenderer>();
 
             //Fetch the original color of the GameObject
             m_OriginalColor = m_Renderer.material.color;
