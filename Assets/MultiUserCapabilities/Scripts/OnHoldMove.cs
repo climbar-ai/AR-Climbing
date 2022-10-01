@@ -1,9 +1,6 @@
 using Photon.Pun;
 using UnityEngine;
 
-/// <summary>
-/// Script to set OnHoverOver/OnHoverExit highlight colors for a photon networked GameObject
-/// </summary>
 namespace MultiUserCapabilities
 {
     /// <summary>

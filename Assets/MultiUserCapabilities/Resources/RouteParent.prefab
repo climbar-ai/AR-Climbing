@@ -163,6 +163,7 @@ GameObject:
   - component: {fileID: -1479649943108595945}
   - component: {fileID: 4463758368938642799}
   - component: {fileID: -6305939756863946964}
+  - component: {fileID: 883907564882397368}
   m_Layer: 0
   m_Name: RouteParent
   m_TagString: RouteParent
@@ -517,6 +518,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e2bebbf9399bc0045b27a850c6ca4f69, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!114 &883907564882397368
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1139436296040389219}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 37addc2e668b6b140998fae972efc492, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_GameObject: {fileID: 1139436296040389219}
 --- !u!1001 &1139436295863056791
 PrefabInstance:
   m_ObjectHideFlags: 0

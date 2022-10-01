@@ -1,8 +1,5 @@
 using Microsoft.MixedReality.Toolkit.UI;
-using Microsoft.MixedReality.Toolkit.Utilities.Solvers;
-using MultiUserCapabilities;
 using Photon.Pun;
-using Photon.Realtime;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -160,6 +157,12 @@ namespace Scripts
                 // movement only necessary to be done on one client i.e. master client
                 if (PhotonNetwork.IsMasterClient)
                 {
+                    // we need owernship back for the holds before trying to move them
+                    foreach (GameObject child in holds)
+                    {
+                        child.GetPhotonView().RequestOwnership();
+                    }
+
                     StartCoroutine(SnapHoldToSpatialMesh(1f, hold)); // reenable after a short delay
                 }
             }
@@ -172,7 +175,7 @@ namespace Scripts
                 routeParent.GetPhotonView().RequestOwnership();
 
                 // the RequestOwnership calls above are asynchronous and need time to complete before we call Destroy() below
-                await Task.Delay(1000);
+                await Task.Delay(200);
 
                 // destroy the route parent
                 PhotonNetwork.Destroy(routeParent);
