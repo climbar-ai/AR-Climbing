@@ -23,9 +23,7 @@ namespace MultiUserCapabilities
                     Debug.Log($"Requesting owernship for: {child.name}, {photonView.ViewID}");
                     photonView.RequestOwnership();
                 }
-            }
-           
-            
+            }     
         }
 
         public void OnFocusExit(FocusEventData eventData)

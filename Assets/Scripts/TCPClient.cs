@@ -244,7 +244,7 @@ namespace Scripts
 #endif
 
         /// <summary>
-        /// Retrieves the list of saved route from the server
+        /// Retrieves the saved route from the server
         /// TODO: maybe use serialization/deserialization and/or JSON?
         /// </summary>
         public async Task<(List<string> holds, List<Vector3> positions, List<Quaternion> rotations)> GetRoute(string route)
@@ -304,6 +304,10 @@ namespace Scripts
             return (holds, positions, rotations);
         }
 
+        /// <summary>
+        /// Gets list of routes stored on server
+        /// </summary>
+        /// <returns></returns>
         public async Task<List<string>> GetRouteList()
         {
             List<string> routeList = new List<string>();
@@ -328,11 +332,11 @@ namespace Scripts
                 writer.Write("ready");
             }
 
-            // print what we got
-            for (int i = 0; i < routeList.Count; i++)
-            {
-                Debug.Log($"retreived route: {routeList[i]}");
-            }
+            //// print what we got
+            //for (int i = 0; i < routeList.Count; i++)
+            //{
+            //    Debug.Log($"retreived route: {routeList[i]}");
+            //}
 
             return routeList;
         }

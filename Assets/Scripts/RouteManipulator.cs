@@ -2,6 +2,7 @@ using Microsoft.MixedReality.Toolkit.UI;
 using Microsoft.MixedReality.Toolkit.Utilities.Solvers;
 using MultiUserCapabilities;
 using Photon.Pun;
+using Photon.Realtime;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -13,7 +14,7 @@ using UnityEngine.UI;
 
 namespace Scripts
 {
-    public class RouteManipulator : MonoBehaviour
+    public class RouteManipulator : MonoBehaviourPunCallbacks, IInRoomCallbacks
     {
         [SerializeField] private HoldManipulator holdManipulator = default;
 
@@ -36,10 +37,36 @@ namespace Scripts
         // TCPClient
         [SerializeField] private TCPClient tcpClient = default;
 
+        // room property key to access routes on server
+        public static readonly string ROUTES_ON_SERVER_CUSTOM_PROPERTY = "routesOnServer";
+
+        // enum for currently active scroll menu
+        public enum ScrollMenu
+        {
+            None,
+            Instantiate,
+            Merge
+        }
+
+        // currently active scroll menu
+        private ScrollMenu activeScrollMenu = ScrollMenu.None;
+
         private void Start()
         {
             // hide filename prompt until we want it shown
             keyboardInputContainer.SetActive(false);
+        }
+
+        public override void OnEnable()
+        {
+            base.OnEnable();
+            PhotonNetwork.AddCallbackTarget(this);
+        }
+
+        public override void OnDisable()
+        {
+            base.OnDisable();
+            PhotonNetwork.RemoveCallbackTarget(this);
         }
 
         public void InstantiateRoute(List<string> holds, List<Vector3> positions, List<Quaternion> rotations, string routeName)
@@ -50,7 +77,7 @@ namespace Scripts
 
             // set the name on the route parent for all clients
             // critical so that other clients can find it in their scene, i.e. in PunRPC_ReparentHoldsToRouteParent
-            routeParent.GetComponent<PhotonView>().RPC("PunRPC_SetName", RpcTarget.All, routeName);
+            routeParent.GetComponent<PhotonView>().RPC("PunRPC_SetName", RpcTarget.AllBuffered, routeName);
 
             // instantiate the holds in the config with a temp tag
             for (int i = 0; i < holds.Count; i++)
@@ -71,25 +98,23 @@ namespace Scripts
             // when moving a route parent on one client
             // NOTE: holds' parent is by default the HoldParent object
             // TODO: draw connecting line from hold to parent
-            gameObject.GetComponent<PhotonView>().RPC("PunRPC_ReparentHoldsToRouteParent", RpcTarget.All, routeName);
+            gameObject.GetComponent<PhotonView>().RPC("PunRPC_ReparentHoldsToRouteParent", RpcTarget.AllBuffered, routeName);
         }
 
         [PunRPC]
         private void PunRPC_ReparentHoldsToRouteParent(string routeName)
         {
-            Debug.Log("PunRPC_ReparentHoldsToRouteParent");
-            Debug.Log(routeName);
             // reparent holds from default HoldParent to new parent so as to make them easily movable altogether at once
             // NOTE: holds' parent is by default the HoldParent object
             // TODO: draw connecting line from hold to parent
             GameObject routeParent = Array.Find(GameObject.FindGameObjectsWithTag("RouteParent"), x => x.name == routeName);
             GameObject[] holdInstances = GameObject.FindGameObjectsWithTag("Hold");
-            Debug.Log(holdInstances.Length);
+           
             for (int i = 0; i < holdInstances.Length; i++)
             {
                 if (holdInstances[i].GetComponent<CustomTag>().HasTag(routeName))
                 {
-                    Debug.Log($"Has custom tag: {routeName}");
+                   
                     holdInstances[i].transform.SetParent(routeParent.transform, true);
                 }
             }
@@ -258,13 +283,40 @@ namespace Scripts
             if (go != null)
             {
                 string route = $"{go.name}";
-
+                
+                // don't process click if the route is already in scene as otherwise holds can get parented to the wrong route parent later on
+                if (IsRouteInScene(route)) { return; }
+               
                 // retrieve route
-                await GetRoute(route);
+                gameObject.GetPhotonView().RPC("GetRoute", RpcTarget.MasterClient, route);
 
                 // empty menu and close it
                 EmptyCloseScrollRouteMenu();
             }
+        }
+
+        /// <summary>
+        /// Simple function to return if route parent object specified by route is in scene
+        /// </summary>
+        /// <param name="route"></param>
+        /// <returns></returns>
+        private bool IsRouteInScene(string route)
+        {
+            // check first if the route is already being manipulated in the scene and abort if it is so that duplicates are avoided
+            GameObject[] existingRoutes = GameObject.FindGameObjectsWithTag("RouteParent");
+
+            // search for a route parent with the name of the route
+            for (int i = 0; i < existingRoutes.Length; i++)
+            {
+                // remove the "(Clone)" part of the object name that Unity automatically injects when instantiating prefabs
+                string name = existingRoutes[i].name.Replace("(Clone)", string.Empty);
+                if (name == route)
+                {
+                    Debug.Log($"Route: {route} already in scene");
+                    return true;
+                }
+            }
+            return false;
         }
 
         // <ScrollRoutesMenuClick>
@@ -282,10 +334,23 @@ namespace Scripts
                 MergeRoute(route);
 
                 // empty menu and close it
-                EmptyCloseScrollRouteMenu();
+                // TODO: figure out how to not have to close other clients' scroll merge menus but rather update them
+                gameObject.GetPhotonView().RPC("PunRPC_EmptyCloseScrollRouteMenu", RpcTarget.All);
             }
         }
 
+        /// <summary>
+        /// Close scroll menu for all clients
+        /// </summary>
+        [PunRPC]
+        private void PunRPC_EmptyCloseScrollRouteMenu()
+        {
+            EmptyCloseScrollRouteMenu();
+        }
+
+        /// <summary>
+        /// Empty and close the scroll route menu
+        /// </summary>
         private void EmptyCloseScrollRouteMenu()
         {
             scrollRouteMenu.transform.Find("ScrollingObjectCollection").GetComponent<ScrollingObjectCollection>().OnClick.RemoveAllListeners();
@@ -295,6 +360,17 @@ namespace Scripts
             }
             scrollRouteMenu.SetActive(false);
             showScrollRouteMenu = false;
+        }
+
+        /// <summary>
+        /// Empty and close the scroll route menu
+        /// </summary>
+        private void EmptyScrollRouteMenu()
+        {
+            foreach (Transform child in scrollRouteMenu.transform.Find("ScrollingObjectCollection/Container").transform)
+            {
+                GameObject.Destroy(child.gameObject);
+            }
         }
 
         /// <summary>
@@ -311,7 +387,8 @@ namespace Scripts
         /// Registered in Inspector.
         /// NOTE: need async void here: https://stackoverflow.com/questions/28601678/calling-async-method-on-button-click
         /// </summary>
-        public async void CreateRoute()
+        [PunRPC]
+        public async void PunRPC_CreateRoute()
         {
             CreateRouteFile(filename: filename);
 
@@ -328,8 +405,17 @@ namespace Scripts
         /// <param name="text"></param>
         public void SaveRoute(string text)
         {
+            if (text == "") 
+            {
+                Debug.Log("No filename given, aborting.");
+                return;
+            }
+
             filename = text + ".txt";
-            CreateRoute();
+
+            // route all TCP calls through master client since it's the one with a connection
+            gameObject.GetPhotonView().RPC("PunRPC_CreateRoute", RpcTarget.MasterClient);
+
             keyboardInputContainer.SetActive(false);
         }
 
@@ -386,36 +472,15 @@ namespace Scripts
         /// Retrieves the saved route from the server
         /// TODO: maybe use serialization/deserialization and/or JSON?
         /// </summary>
-        private async Task GetRoute(string route)
+        [PunRPC]
+        private async void GetRoute(string route)
         {
-            // check first if the route is already being manipulated in the scene and abort if it is so that duplicates are avoided
-            GameObject[] existingRoutes = GameObject.FindGameObjectsWithTag("RouteParent");
-            Debug.Log(existingRoutes.Length);
-
-            // search for a route parent with the name of the route
-            for (int i = 0; i < existingRoutes.Length; i++)
-            {
-                // remove the "(Clone)" part of the object name that Unity automatically injects when instantiating prefabs
-                string name = existingRoutes[i].name.Replace("(Clone)", string.Empty);
-                if (name == route)
-                {
-                    Debug.Log($"Route: {route} already in scene");
-                    return;
-                }
-            }
-
             // list of hold names and their respective transforms
             List<string> holds = new List<string>();
             List<Vector3> positions = new List<Vector3>();
             List<Quaternion> rotations = new List<Quaternion>();
 
             (holds, positions, rotations) = await tcpClient.GetRoute(route);
-
-            // print what we got
-            for (int i = 0; i < holds.Count; i++)
-            {
-                Debug.Log($"hold: {holds[i]}; {positions[i]}; {rotations[i]}");
-            }
 
             InstantiateRoute(holds, positions, rotations, route);
         }
@@ -433,8 +498,11 @@ namespace Scripts
             if (showScrollRouteMenu)
             {
                 EmptyCloseScrollRouteMenu();
+                activeScrollMenu = ScrollMenu.None;
                 return;
             }
+
+            activeScrollMenu = ScrollMenu.Instantiate;
 
             // display scroll route menu
             scrollRouteMenu.SetActive(true);
@@ -443,23 +511,122 @@ namespace Scripts
             // wire up listener on menu
             scrollRouteMenu.transform.Find("ScrollingObjectCollection").GetComponent<ScrollingObjectCollection>().OnClick.AddListener(ScrollRouteMenuClick);
 
-            // gather list of routes
-            List<string> routeList = await tcpClient.GetRouteList();
-
-            // populate scroll route menu
-            scrollRouteMenuScript.NumItems = routeList.Count;
-            scrollRouteMenuScript.MakeScrollingList(routeList);
+            // tell master client to get the list of available routes from server and then broadcast this list to other clients
+            gameObject.GetPhotonView().RPC("PunRPC_GetRouteList", RpcTarget.MasterClient);
         }
 
+        [PunRPC]
+        private async void PunRPC_GetRouteList()
+        {
+            // gather list of routes
+            List<string> routeList = await tcpClient.GetRouteList();
+            string routeListString = string.Join(",", routeList); // PUN2 doesn't support arrays/lists as parameters
+            gameObject.GetPhotonView().RPC("PunRPC_UpdateScrollRouteMenu", RpcTarget.All, routeListString, (int)ScrollMenu.Instantiate);
+//            // set list in room properties so other clients will update their menus
+//#if UNITY_2020
+//            PhotonNetwork.CurrentRoom.SetCustomProperties(
+//                new ExitGames.Client.Photon.Hashtable()
+//                {
+//                    { ROUTES_ON_SERVER_CUSTOM_PROPERTY, routeList.ToArray() }
+//                }
+//            );
+//#endif
+        }
+
+        /// <summary>
+        /// Eventually this method should simply update the menu if open for other clients as it does for the .  But for now, due to a bug where the other clients' menus
+        /// are emptied but not repopulated, we simply close/empty the menu for them.
+        /// </summary>
+        /// <param name="routeListString"></param>
+        [PunRPC]
+        private async void PunRPC_UpdateScrollRouteMenu(string routeListString, int scrollMenuType) 
+        {
+            // don't update the scroll menu unless we have the same one currently actively in use
+            if (scrollMenuType == (int)activeScrollMenu)
+            {
+                // this logic allows us to empty the menu as otherwise, the split would still return on element even for empty string
+                List<string> routeList = new List<string>();
+                int count = 0;
+                if (routeListString != "")
+                {
+                    routeList = routeListString.Split(',').ToList();
+                    count = routeList.Count;
+                } 
+
+                //empty menu
+                EmptyScrollRouteMenu();
+
+                // emptying the menu takes a bit of time
+                await Task.Delay(1000);
+
+                // populate menu
+                scrollRouteMenuScript.NumItems = count;
+                scrollRouteMenuScript.MakeScrollingList(routeList);
+
+                // necessary to call this so that scroll is enabled again: https://github.com/microsoft/MixedRealityToolkit-Unity/issues/10350
+                scrollRouteMenu.transform.Find("ScrollingObjectCollection").GetComponent<ScrollingObjectCollection>().UpdateContent();
+            }
+        }
+
+        //// Eventually this method should simply update the menu if open for other clients.  But for now, due to a bug where the other clients' menus
+        //// are emptied but not repopulated, we simply close/empty the menu for them.
+        
+        //        public override void OnRoomPropertiesUpdate(ExitGames.Client.Photon.Hashtable propertiesThatChanged)
+        //        {
+        //            base.OnRoomPropertiesUpdate(propertiesThatChanged);
+
+        //            object keyValue = null;
+
+        //#if UNITY_2020
+        //            if (propertiesThatChanged.TryGetValue(
+        //                ROUTES_ON_SERVER_CUSTOM_PROPERTY, out keyValue))
+        //            {
+        //                // If the anchorId property is present and the scroll menu is open then we will try to update the scroll menu
+        //                if (keyValue != null)
+        //                {
+        //                    Debug.Log($"RouteManipulator:OnRoomPropertiesUpdate -> {keyValue}");
+        //                    string[] routeArray = (string[])keyValue;
+        //                    List<string> routeList = routeArray.ToList();
+        //                    Debug.Log($"length: {routeList.Count}");
+        //                    for (int i = 0; i < routeList.Count; i++)
+        //                    {
+        //                        Debug.Log($"room route: {routeList[i]}");
+        //                    }
+        //                    Debug.Log(showScrollRouteMenu);
+
+        //                    if (showScrollRouteMenu && routeList.Count > 0)
+        //                    {
+        //                        Debug.Log("Emptying and Repopulating Menu");
+        //                        // empty menu
+        //                        EmptyScrollRouteMenu();
+
+        //                        // populate menu
+        //                        scrollRouteMenuScript.NumItems = routeList.Count;
+        //                        scrollRouteMenuScript.MakeScrollingList(routeList);
+        //                    }
+        //                } 
+        //            }
+        //            else
+        //            {
+        //                Debug.Log("RouteManipulator:OnRoomPropertiesUpdate: routes not present in room properties");
+        //            }
+        //#endif
+        //        }
+
+        /// <summary>
+        /// Get routes currently in scene as options to merge into the global hold parent in the scene
+        /// </summary>
         public void GetRoutesForMerge()
         {
-            Debug.Log("GetRoutesForMerge");
             // close/clear menu if already open so we don't accidentally keep filling it up
             if (showScrollRouteMenu)
             {
                 EmptyCloseScrollRouteMenu();
+                activeScrollMenu = ScrollMenu.None;
                 return;
             }
+
+            activeScrollMenu = ScrollMenu.Merge;
 
             // display scroll route menu
             scrollRouteMenu.SetActive(true);
@@ -476,9 +643,12 @@ namespace Scripts
                 routeList.Add(routeParents[i].name);
             }
 
-            // populate scroll route menu
-            scrollRouteMenuScript.NumItems = routeList.Count;
-            scrollRouteMenuScript.MakeScrollingList(routeList);
+            //// populate scroll route menu
+            //scrollRouteMenuScript.NumItems = routeList.Count;
+            //scrollRouteMenuScript.MakeScrollingList(routeList);
+
+            string routeListString = string.Join(",", routeList); // PUN2 doesn't support arrays/lists as parameters
+            gameObject.GetPhotonView().RPC("PunRPC_UpdateScrollRouteMenu", RpcTarget.All, routeListString, (int)ScrollMenu.Merge);
         }
     }
 }

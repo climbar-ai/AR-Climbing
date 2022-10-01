@@ -11,7 +11,8 @@ public class InstructionsHideShow : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        showInstructions = true;
+        instructions.SetActive(false);
+        showInstructions = false;
     }
 
     public void ToggleInstructions()

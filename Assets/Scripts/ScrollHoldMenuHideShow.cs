@@ -12,7 +12,8 @@ public class ScrollHoldMenuHideShow : MonoBehaviour
 
     void Start()
     {
-        show = true;
+        scrollHoldMenu.SetActive(false);
+        show = false;
     }
 
     public void hideShowMenu()

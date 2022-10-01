@@ -256,7 +256,7 @@ namespace MultiUserCapabilities
                 object keyValue = null;
 
 #if UNITY_2020
-                if (PhotonNetwork.CurrentRoom.CustomProperties.TryGetValue(
+                if (propertiesThatChanged.TryGetValue(
                     CLOUD_ANCHOR_ID_CUSTOM_PROPERTY, out keyValue))
                 {
                     // If the anchorId property is present then we will try and get the
@@ -266,10 +266,10 @@ namespace MultiUserCapabilities
                     this.roomStatusDisplay.GetComponent<TextMeshPro>().text = $"Room Status: {this.roomStatus}";
                     this.playerPV.RPC("PunRPC_SetUserIconColor", RpcTarget.All, this.roomStatus);
 
-                    Debug.Log($"OnRoomPropertiesUpdate -> {keyValue}");
+                    Debug.Log($"PhotonRoom:OnRoomPropertiesUpdate -> {keyValue}");
                 } else 
                 {
-                    Debug.Log("OnRoomPropertiesUpdate: AnchorId not present in room properties");
+                    Debug.Log("PhotonRoom:OnRoomPropertiesUpdate: AnchorId not present in room properties");
                 }
 #endif
             }

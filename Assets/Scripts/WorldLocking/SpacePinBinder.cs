@@ -249,8 +249,6 @@ namespace Scripts.WorldLocking
             }
             SetBinding(spacePin.SpacePinId, cloudAnchorId);
 
-            Debug.Log("Here");
-
             // Unfortunatley, we can't modify the Publish() signature of SpacePinBinder to return us the anchorId directly because we are implementing an interface
 #if UNITY_2020
             Debug.Log($"Setting anchorId for room: {cloudAnchorId}");

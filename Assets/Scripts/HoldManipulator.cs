@@ -501,10 +501,12 @@ namespace Scripts
             }
 
             Quaternion normalOrientation = Quaternion.LookRotation(-surfaceNormal, Vector3.up);
-            float normalDotProduct = Vector3.Dot(surfaceNormal, GameObject.Find("F1").transform.forward);
+
+            // NOTE: when anchor graph visualization is off, we can't reference F1 object but instead need to reference Pin01
+            float normalDotProduct = Vector3.Dot(surfaceNormal, GameObject.Find("SpatialAlignment/CommonOrigin/Pins/Pin01").transform.forward);//GameObject.Find("F1").transform.forward);
 
             Debug.Log($"Normal Orientation: {surfaceNormal}");
-            Debug.Log($"Dot Product with Normal: {Vector3.Dot(surfaceNormal, GameObject.Find("F1").transform.forward)}");            
+            Debug.Log($"Dot Product with Normal: {Vector3.Dot(surfaceNormal, GameObject.Find("SpatialAlignment/CommonOrigin/Pins/Pin01").transform.forward)}");//GameObject.Find("F1").transform.forward)}");            
 
             string hold_version = hold;
             if (normalDotProduct > 0)
@@ -545,8 +547,10 @@ namespace Scripts
             newAnchorGameObject.GetComponent<PhotonView>().RPC("PunRPC_SetCustomTags", RpcTarget.All, customTagsString);
 
             Debug.Log($"Forward Direction of Object: {newAnchorGameObject.transform.forward}");
-            Debug.Log($"Forward Direction of Frozen Frame: {GameObject.Find("F1").transform.forward}");
-            Debug.Log($"Dot Product with Object z: {Vector3.Dot(newAnchorGameObject.transform.forward, GameObject.Find("F1").transform.forward)}");
+
+            // NOTE: when anchor graph visualization is off, we can't reference F1 object but instead need to reference Pin01
+            Debug.Log($"Forward Direction of Frozen Frame: {GameObject.Find("SpatialAlignment/CommonOrigin/Pins/Pin01").transform.forward}");//{GameObject.Find("F1").transform.forward}");
+            Debug.Log($"Dot Product with Object z: {Vector3.Dot(newAnchorGameObject.transform.forward, GameObject.Find("SpatialAlignment/CommonOrigin/Pins/Pin01").transform.forward)}");// GameObject.Find("F1").transform.forward)}");
 
             // Disable maninpulation scripts if we are in 'Delete' mode
             if (editingMode == EditingMode.Delete)

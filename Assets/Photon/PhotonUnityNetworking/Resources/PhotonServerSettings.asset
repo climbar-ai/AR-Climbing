@@ -64,6 +64,11 @@ MonoBehaviour:
   - PunRPC_SetName
   - PunRPC_SetCustomTags
   - DoMergeRoute
+  - GetRoute
+  - PunRPC_GetRouteList
+  - PunRPC_UpdateScrollRouteMenu
+  - PunRPC_CreateRoute
+  - PunRPC_EmptyCloseScrollRouteMenu
   DisableAutoOpenWizard: 1
   ShowSettings: 1
   DevRegionSetOnce: 1

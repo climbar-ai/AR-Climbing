@@ -215,8 +215,6 @@ namespace Scripts
             // prefabs folder for this project)
             itemInstance.name = name;
             TextMeshPro tmPro = itemInstance.transform.Find("IconAndText").transform.Find("TextMeshPro").gameObject.GetComponent<TextMeshPro>();
-            Debug.Log(tmPro.text);
-            Debug.Log(name);
             tmPro.SetText(name);
         }
     }
