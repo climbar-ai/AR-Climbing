@@ -14,7 +14,7 @@ using UnityEngine.UI;
 
 namespace Scripts
 {
-    public class RouteManipulator : MonoBehaviourPunCallbacks, IInRoomCallbacks
+    public class RouteManipulator : MonoBehaviour//MonoBehaviourPunCallbacks, IInRoomCallbacks
     {
         [SerializeField] private HoldManipulator holdManipulator = default;
 
@@ -57,17 +57,18 @@ namespace Scripts
             keyboardInputContainer.SetActive(false);
         }
 
-        public override void OnEnable()
-        {
-            base.OnEnable();
-            PhotonNetwork.AddCallbackTarget(this);
-        }
+        /// SAVE for later reference in how to update scroll menu based on room properties
+        //public override void OnEnable()
+        //{
+        //    base.OnEnable();
+        //    PhotonNetwork.AddCallbackTarget(this);
+        //}
 
-        public override void OnDisable()
-        {
-            base.OnDisable();
-            PhotonNetwork.RemoveCallbackTarget(this);
-        }
+        //public override void OnDisable()
+        //{
+        //    base.OnDisable();
+        //    PhotonNetwork.RemoveCallbackTarget(this);
+        //}
 
         public void InstantiateRoute(List<string> holds, List<Vector3> positions, List<Quaternion> rotations, string routeName)
         {
@@ -334,7 +335,8 @@ namespace Scripts
                 MergeRoute(route);
 
                 // empty menu and close it
-                // TODO: figure out how to not have to close other clients' scroll merge menus but rather update them
+                // TODO: figure out how to not have to close other clients' scroll merge menus but rather update them -> may need to call GetRoutesForMerge()
+                // after a long delay since MergeRoute has delays built into it
                 gameObject.GetPhotonView().RPC("PunRPC_EmptyCloseScrollRouteMenu", RpcTarget.All);
             }
         }
@@ -553,7 +555,7 @@ namespace Scripts
                     count = routeList.Count;
                 } 
 
-                //empty menu
+                // empty menu
                 EmptyScrollRouteMenu();
 
                 // emptying the menu takes a bit of time
@@ -568,6 +570,7 @@ namespace Scripts
             }
         }
 
+        //// SAVE for reference in how to update scroll menu based on room properties
         //// Eventually this method should simply update the menu if open for other clients.  But for now, due to a bug where the other clients' menus
         //// are emptied but not repopulated, we simply close/empty the menu for them.
         
@@ -642,10 +645,6 @@ namespace Scripts
             {
                 routeList.Add(routeParents[i].name);
             }
-
-            //// populate scroll route menu
-            //scrollRouteMenuScript.NumItems = routeList.Count;
-            //scrollRouteMenuScript.MakeScrollingList(routeList);
 
             string routeListString = string.Join(",", routeList); // PUN2 doesn't support arrays/lists as parameters
             gameObject.GetPhotonView().RPC("PunRPC_UpdateScrollRouteMenu", RpcTarget.All, routeListString, (int)ScrollMenu.Merge);
