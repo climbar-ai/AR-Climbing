@@ -4,50 +4,43 @@ using Photon.Pun;
 using Photon.Realtime;
 using UnityEngine;
 
+/// <summary>
+/// Script to negotiate ownership of networked GameObject
+/// Derived from: https://mtaulty.com/2019/07/18/simple-shared-holograms-with-photon-networking-part-2/
+/// </summary>
 namespace MultiUserCapabilities
 {
-    [RequireComponent(typeof(PhotonView), typeof(GenericNetSync))]
-    public class OwnershipHandler : MonoBehaviourPun, IPunOwnershipCallbacks, IMixedRealityInputHandler
+    [RequireComponent(typeof(PhotonView))]
+    public class OwnershipHandler : MonoBehaviourPun,  
+        IMixedRealityFocusHandler,
+        IOnPhotonViewOwnerChange
     {
-        public void OnInputDown(InputEventData eventData)
+        public void OnEnable()
         {
+            var photonView = this.GetComponent<PhotonView>();
+            photonView.AddCallbackTarget(this);
+        }
+
+        public void OnDisable()
+        {
+            var photonView = this.GetComponent<PhotonView>();
+            photonView.RemoveCallbackTarget(this);
+        }
+
+        public void OnFocusEnter(FocusEventData eventData)
+        {
+            // ask the photonview for permission
+            var photonView = this.GetComponent<PhotonView>();
             photonView.RequestOwnership();
         }
 
-        public void OnInputUp(InputEventData eventData)
+        public void OnFocusExit(FocusEventData eventData)
         {
         }
 
-        public void OnOwnershipRequest(PhotonView targetView, Player requestingPlayer)
+        public void OnOwnerChange(Player newOwner, Player previousOwner)
         {
-            targetView.TransferOwnership(requestingPlayer);
-        }
-
-        public void OnOwnershipTransfered(PhotonView targetView, Player previousOwner)
-        {
-        }
-
-        public void OnOwnershipTransferFailed(PhotonView targetView, Player previousOwner)
-        {
-        }
-
-        private void TransferControl(Player idPlayer)
-        {
-            if (photonView.IsMine) photonView.TransferOwnership(idPlayer);
-        }
-
-        private void OnTriggerEnter(Collider other)
-        {
-            if (photonView != null) photonView.RequestOwnership();
-        }
-
-        private void OnTriggerExit(Collider other)
-        {
-        }
-
-        public void RequestOwnership()
-        {
-            photonView.RequestOwnership();
+            Debug.Log($"OnOwnershipChange: ownership successfully transfered from {previousOwner.NickName} to {newOwner.NickName}");
         }
     }
 }

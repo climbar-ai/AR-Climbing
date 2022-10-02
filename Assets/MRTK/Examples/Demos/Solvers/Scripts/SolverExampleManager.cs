@@ -104,12 +104,12 @@ namespace Microsoft.MixedReality.Toolkit.Examples.Demos
                 // Apply additional rotation to correct this so that forward will be through the palm and outward
                 handler.AdditionalRotation = (TrackedType == TrackedObjectType.HandJoint) ? HandJointRotationFix : Vector3.zero;
 #endif
-
-                handler.TrackedHandedness = Handedness.Both;
-                if (CustomTrackedObject != null)
-                {
-                    handler.TransformOverride = CustomTrackedObject.transform;
-                }
+                // wasn't compiling with this
+                //handler.TrackedHandedness = Handedness.Both;
+                //if (CustomTrackedObject != null)
+                //{
+                //    handler.TransformOverride = CustomTrackedObject.transform;
+                //}
             }
         }
 

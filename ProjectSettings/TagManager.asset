@@ -3,12 +3,16 @@
 --- !u!78 &1
 TagManager:
   serializedVersion: 2
-  tags: []
+  tags:
+  - Hold
+  - Bullet
+  - Hold Ghost
+  - RouteParent
   layers:
   - Default
   - TransparentFX
   - Ignore Raycast
-  - 
+  - Ignore Locally
   - Water
   - UI
   - 
