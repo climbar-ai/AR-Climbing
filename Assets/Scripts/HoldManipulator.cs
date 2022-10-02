@@ -54,9 +54,9 @@ namespace Scripts
         private EditingMode editingMode;
 
         /// <summary>
-        /// hold prefab
+        /// hold prefab chosen in scroll hold menu
         /// </summary>
-        private string hold;
+        private string menuHold;
 
         /// <summary>
         /// sphere prefab for long tap user feedback
@@ -110,7 +110,7 @@ namespace Scripts
             editingMode = EditingMode.Move;
             GameObject.Find("ToggleEditorMode").GetComponentInChildren<TextMeshPro>().text = "Mode: Move";
             indicatorObject.SetActive(false);
-            hold = "Hold_1_Simple";
+            menuHold = "Hold_1_Simple";
         }
         // </Start>
 
@@ -232,7 +232,7 @@ namespace Scripts
                 audioData.PlayOneShot(createAudio);
 
                 // No Anchor Nearby, start session and create an anchor
-                CreateAnchor(handPosition, surfaceNormal, photonView);
+                CreateAnchor(menuHold, handPosition, surfaceNormal, photonView);
             }
             else if (anchorNearby && editingMode == EditingMode.Move)
             {
@@ -266,7 +266,10 @@ namespace Scripts
 
                     // make invisible and show ghost hold instead
                     anchorGameObject.GetComponent<OnHoldMove>().OnMoveBegin();
-                    ghost = PhotonNetwork.Instantiate(hold + "_Ghost", handPosition, Quaternion.identity);
+                    string holdType = anchorGameObject.name.Replace("(Clone)", string.Empty);
+                    // in case we are manipulating the flipped version -> only have one ghost so we just want the original name
+                    holdType = holdType.Replace("_Flipped", string.Empty); 
+                    ghost = PhotonNetwork.Instantiate(holdType + "_Ghost", handPosition, Quaternion.identity);
                 }
             }
             else if (anchorNearby && editingMode == EditingMode.Delete)
@@ -383,12 +386,15 @@ namespace Scripts
         private async Task HoldOnPlacingStopped(GameObject go, Vector3 surfaceNormal, PhotonView photonView)
         {
             Vector3 position = go.transform.position;
+            string holdType = go.name.Replace("(Clone)", string.Empty);
+            // in case we are manipulating the flipped version -> only have one ghost so we just want the original name
+            holdType = holdType.Replace("_Flipped", string.Empty);
 
             // the game object may have been moved to a new surface necessitating a change of its local coordinate frame (i.e. its z-axis now has a negative dot-product with the
             // Frozen coordinate frame meaning that on manipulation, its rotation will be counter to whats expected)
             // So we destroy it and recreate it (since the logic for checking this dot-product will be contained within CreateAnchor anyway)
             DeleteGameObject(go);
-            CreateAnchor(position, surfaceNormal, photonView);
+            CreateAnchor(holdType, position, surfaceNormal, photonView);
         }
         // </HoldOnPlacingStopped>
 
@@ -490,7 +496,7 @@ namespace Scripts
         /// </summary>
         /// <param name="position">Position where Azure Spatial Anchor will be created</param>
         /// <returns>Async Task</returns>
-        private void CreateAnchor(Vector3 position, Vector3 surfaceNormal, PhotonView photonView)
+        private void CreateAnchor(string holdType,  Vector3 position, Vector3 surfaceNormal, PhotonView photonView)
         {
             Debug.Log($"CreateAnchor");
 
@@ -508,10 +514,10 @@ namespace Scripts
             Debug.Log($"Normal Orientation: {surfaceNormal}");
             Debug.Log($"Dot Product with Normal: {Vector3.Dot(surfaceNormal, GameObject.Find("SpatialAlignment/CommonOrigin/Pins/Pin01").transform.forward)}");//GameObject.Find("F1").transform.forward)}");            
 
-            string hold_version = hold;
+            string hold_version = holdType;
             if (normalDotProduct > 0)
             {
-                hold_version = hold + "_Flipped";
+                hold_version = holdType + "_Flipped";
                 normalOrientation = Quaternion.LookRotation(surfaceNormal, Vector3.up);
             }
 
@@ -688,7 +694,7 @@ namespace Scripts
             if (go != null)
             {
                 // PhotonNetwork.PrefabPool lets us refer to prefabs by name under Resources folder without having to manually add them to the ResourceCache: https://forum.unity.com/threads/solved-photon-instantiating-prefabs-without-putting-them-in-a-resources-folder.293853/
-                hold = $"{go.name}";
+                menuHold = $"{go.name}";
             }
         }
 

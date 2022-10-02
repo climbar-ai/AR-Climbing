@@ -236,6 +236,14 @@ namespace MultiUserCapabilities
             var cursor = PhotonNetwork.Instantiate(sharedCursorFocus.name, Vector3.zero, Quaternion.Euler(0f, 180f, 0f)); // instantiate for all to see
         }
 
+        void IInRoomCallbacks.OnMasterClientSwitched(Player newMasterClient)
+        {
+            // connect to the TCP server if the old master client left and this is the new master client
+            if (PhotonNetwork.IsMasterClient)
+            {
+                TCPClient.GetComponent<TCPClient>().Connect();
+            }
+        }
         public override void OnCreatedRoom()
         {
             base.OnCreatedRoom();

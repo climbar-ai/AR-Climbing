@@ -28,7 +28,6 @@ namespace Scripts
         // filename keyboard/input related fields
         [SerializeField] private InputField keyboardInput = default;
         [SerializeField] private GameObject keyboardInputContainer = default;
-        private string filename = default;
         private bool showKeyboard = false;
 
         // TCPClient
@@ -133,6 +132,16 @@ namespace Scripts
             GameObject globalHoldParent = GameObject.Find("GlobalHoldParent");
             if (routeParent == null || globalHoldParent == null) return;
 
+            // destroy the route parent game object
+            // only perform on the master client as photon will propagate the changes to the other clients
+            if (PhotonNetwork.IsMasterClient)
+            {
+                // We need to make sure we have ownership of the route parent
+                // Perform this ownership change early in the function and before the ownership requests are called for all of the holds crowd the
+                // network so that we have time for it go through by the time we try to destroy it at the end of the function
+                routeParent.GetPhotonView().RequestOwnership();
+            }
+
             // find all holds in the route of interest
             List<GameObject> holds = new List<GameObject>();
             foreach (Transform child in routeParent.transform)
@@ -172,10 +181,11 @@ namespace Scripts
             if (PhotonNetwork.IsMasterClient)
             {
                 // we need to make sure we have ownership of the route parent
-                routeParent.GetPhotonView().RequestOwnership();
+                //routeParent.GetPhotonView().RequestOwnership();
 
                 // the RequestOwnership calls above are asynchronous and need time to complete before we call Destroy() below
-                await Task.Delay(200);
+                // NOTE: longer delay needed for more holds to reparent
+                await Task.Delay(2000);
 
                 // destroy the route parent
                 PhotonNetwork.Destroy(routeParent);
@@ -393,7 +403,7 @@ namespace Scripts
         /// NOTE: need async void here: https://stackoverflow.com/questions/28601678/calling-async-method-on-button-click
         /// </summary>
         [PunRPC]
-        public async void PunRPC_CreateRoute()
+        public async void PunRPC_CreateRoute(string filename)
         {
             CreateRouteFile(filename: filename);
 
@@ -416,10 +426,10 @@ namespace Scripts
                 return;
             }
 
-            filename = text + ".txt";
+            string filename = text + ".txt";
 
             // route all TCP calls through master client since it's the one with a connection
-            gameObject.GetPhotonView().RPC("PunRPC_CreateRoute", RpcTarget.MasterClient);
+            gameObject.GetPhotonView().RPC("PunRPC_CreateRoute", RpcTarget.MasterClient, filename);
 
             keyboardInputContainer.SetActive(false);
         }

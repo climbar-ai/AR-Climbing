@@ -13,7 +13,7 @@ PlayerSettings:
   useOnDemandResources: 0
   accelerometerFrequency: 60
   companyName: ARCADE Lab
-  productName: AR Climbing v2
+  productName: ClimbAR
   defaultCursor: {fileID: 0}
   cursorHotspot: {x: 0, y: 0}
   m_SplashScreenBackgroundColor: {r: 0.13725491, g: 0.12156863, b: 0.1254902, a: 1}
@@ -39,8 +39,10 @@ PlayerSettings:
     y: 0
     width: 1
     height: 1
-  m_SplashScreenLogos: []
-  m_VirtualRealitySplashScreen: {fileID: 0}
+  m_SplashScreenLogos:
+  - logo: {fileID: 21300000, guid: badbf65326ee9064ab9c67a5263573d0, type: 3}
+    duration: 10
+  m_VirtualRealitySplashScreen: {fileID: 2800000, guid: badbf65326ee9064ab9c67a5263573d0, type: 3}
   m_HolographicTrackingLossScreen: {fileID: 0}
   defaultScreenWidth: 1024
   defaultScreenHeight: 768
@@ -136,6 +138,27 @@ PlayerSettings:
     Others: 1
   bundleVersion: 1.0.0.0
   preloadedAssets:
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
   - {fileID: 0}
   - {fileID: 0}
   - {fileID: 0}
@@ -1258,16 +1281,16 @@ PlayerSettings:
     WSA: 6
   m_RenderingPath: 1
   m_MobileRenderingPath: 1
-  metroPackageName: ARClimbingV2
+  metroPackageName: ClimbAR
   metroPackageVersion: 1.0.0.0
   metroCertificatePath: Assets\WSATestCertificate.pfx
   metroCertificatePassword: 
   metroCertificateSubject: DefaultCompany
   metroCertificateIssuer: DefaultCompany
   metroCertificateNotAfter: 00281646ea92d901
-  metroApplicationDescription: Climbing in AR
+  metroApplicationDescription: Climbing in AR (climbar.ai)
   wsaImages: {}
-  metroTileShortName: AR Climbing
+  metroTileShortName: ClimbAR
   metroTileShowName: 0
   metroMediumTileShowName: 0
   metroLargeTileShowName: 0

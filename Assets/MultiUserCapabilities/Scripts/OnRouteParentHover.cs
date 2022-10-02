@@ -135,7 +135,7 @@ namespace MultiUserCapabilities
             Debug.Log($"OnOwnershipChange: ownership successfully transfered from {previousOwner.NickName} to {newOwner.NickName}");
             if (isHover)
             {
-                await Task.Delay(100); // even though ownership change is signaled, there is still a slight delay until photonView.IsMine becomes true (necessary for PunRPC)
+                await Task.Delay(500); // even though ownership change is signaled, there is still a slight delay until photonView.IsMine becomes true (necessary for PunRPC)
                 PhotonView photonView = PhotonView.Get(this);
                 photonView.RPC("PunRPC_OnHoverOver", RpcTarget.All);
 
