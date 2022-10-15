@@ -103,12 +103,18 @@ namespace Scripts
         [SerializeField]
         private AudioClip moveEndAudio;
 
+        [SerializeField]
+        private GameObject toggleEditorMode = default;
+
+        [SerializeField]
+        private GameObject globalHoldParent = default;
+
         // <Start>
         // Start is called before the first frame update
         void Start()
         {
             editingMode = EditingMode.Move;
-            GameObject.Find("ToggleEditorMode").GetComponentInChildren<TextMeshPro>().text = "Mode: Move";
+            toggleEditorMode.GetComponentInChildren<TextMeshPro>().text = "Mode: Move";
             indicatorObject.SetActive(false);
             menuHold = "Hold_1_Simple";
         }
@@ -589,9 +595,22 @@ namespace Scripts
         /// <summary>
         /// Toggles editing mode between Move and Delete
         /// </summary>
-        public void ToggleEditingMode()
+        public async void ToggleEditingMode()
         {
-            _foundOrCreatedAnchorGameObjects = GameObject.FindGameObjectsWithTag("Hold");
+          await DoToggleEditingMode();
+        }
+        // </ToggleEditingMode>
+
+        private Task DoToggleEditingMode()
+        {
+            _foundOrCreatedAnchorGameObjects = new GameObject[0];//FindGameObjectsWithTag("Hold");
+            foreach (Transform child in globalHoldParent.transform)
+            {
+                if (child.tag == "Hold")
+                {
+                    _foundOrCreatedAnchorGameObjects.Append(child.gameObject);
+                }
+            }
             if (editingMode == EditingMode.Move)
             {
                 editingMode = EditingMode.Delete;
@@ -611,7 +630,7 @@ namespace Scripts
                     }
                 }
 
-                GameObject.Find("ToggleEditorMode").GetComponentInChildren<TextMeshPro>().text = "Mode: Delete";
+                toggleEditorMode.GetComponentInChildren<TextMeshPro>().text = "Mode: Delete";
             }
             else if (editingMode == EditingMode.Delete)
             {
@@ -622,14 +641,14 @@ namespace Scripts
                 {
                     // enable manipulation scripts
                     Debug.Log($"Enabling Manipulation");
-                    anchorGameObject.GetComponent<NearInteractionGrabbable>().enabled = true;
-                    anchorGameObject.GetComponent<ObjectManipulator>().enabled = true;
+                    //anchorGameObject.GetComponent<NearInteractionGrabbable>().enabled = true;
+                    //anchorGameObject.GetComponent<ObjectManipulator>().enabled = true;
                 }
 
-                GameObject.Find("ToggleEditorMode").GetComponentInChildren<TextMeshPro>().text = "Mode: Move";
+                toggleEditorMode.GetComponentInChildren<TextMeshPro>().text = "Mode: Move";
             }
+            return Task.CompletedTask;
         }
-        // </ToggleEditingMode>
 
         //// <changeColorDelayed>
         ///// <summary>
