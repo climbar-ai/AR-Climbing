@@ -25,26 +25,11 @@ namespace Scripts
         private float[] _tappingTimer = { 0, 0 };
 
         /// <summary>
-        /// Main interface to anything Spatial Anchors related
-        /// </summary>
-        //private SpatialAnchorManager _spatialAnchorManager = null;
-
-        /// <summary>
-        /// Used to keep track of all GameObjects that represent a found or created anchor
-        /// </summary>
-        private GameObject[] _foundOrCreatedAnchorGameObjects;
-
-        ///// <summary>
-        ///// Used to keep track of all the created Anchor IDs
-        ///// </summary>
-        //private List<String> _createdAnchorIDs = new List<String>();
-
-        /// <summary>
         /// Editing modes
         /// </summary>
         private enum EditingMode
         {
-            Move,
+            Place,
             Delete
         }
 
@@ -109,12 +94,15 @@ namespace Scripts
         [SerializeField]
         private GameObject globalHoldParent = default;
 
+        [SerializeField]
+        private GameObject commonOriginPin = default;
+
         // <Start>
         // Start is called before the first frame update
         void Start()
         {
-            editingMode = EditingMode.Move;
-            toggleEditorMode.GetComponentInChildren<TextMeshPro>().text = "Mode: Move";
+            editingMode = EditingMode.Place;
+            toggleEditorMode.GetComponentInChildren<TextMeshPro>().text = "Mode: Place";
             indicatorObject.SetActive(false);
             menuHold = "Hold_1_Simple";
         }
@@ -147,7 +135,7 @@ namespace Scripts
                                         if (p is IMixedRealityNearPointer && editingMode != EditingMode.Delete) // we want to be able to use direct touch to delete game objects
                                         {
                                             // Ignore near pointers, we only want the rays
-                                            Debug.Log("Near Pointer");
+                                            //Debug.Log("Near Pointer");
                                             continue;
                                         }
                                         if (p.Result != null)
@@ -160,7 +148,7 @@ namespace Scripts
                                             LayerMask mask = LayerMask.GetMask("Spatial Awareness");
                                             if (Physics.Raycast(startPoint, endPoint - startPoint, out var hit, Mathf.Infinity, mask)) // check if successful before calling ShortTap
                                             {
-                                                Debug.Log($"Hit layer: {hit.collider.gameObject.layer}");
+                                                //Debug.Log($"Hit layer: {hit.collider.gameObject.layer}");
                                                 PhotonView photonView = PhotonView.Get(this);
                                                 ShortTap(hit.point, hit.normal, photonView);
                                             }
@@ -232,15 +220,16 @@ namespace Scripts
         private async void ShortTap(Vector3 handPosition, Vector3 surfaceNormal, PhotonView photonView)
         {
             bool anchorNearby = IsAnchorNearby(handPosition, out GameObject anchorGameObject);
+            //Debug.Log($"anchorNearby: {anchorNearby}");
 
-            if (!anchorNearby && editingMode == EditingMode.Move)
+            if (!anchorNearby && editingMode == EditingMode.Place)
             {
                 audioData.PlayOneShot(createAudio);
 
                 // No Anchor Nearby, start session and create an anchor
-                CreateAnchor(menuHold, handPosition, surfaceNormal, photonView);
+                await CreateAnchor(menuHold, handPosition, surfaceNormal, photonView);
             }
-            else if (anchorNearby && editingMode == EditingMode.Move)
+            else if (anchorNearby && editingMode == EditingMode.Place)
             {
                 //// Toggle TapToPlace on so we can start or end moving the object
                 ////anchorGameObject.GetComponent<TapToPlace>().enabled = !anchorGameObject.GetComponent<TapToPlace>().enabled;
@@ -283,7 +272,7 @@ namespace Scripts
                 audioData.PlayOneShot(deleteOneAudio);
 
                 // Delete nearby Anchor
-                DeleteGameObject(anchorGameObject);
+                await DeleteGameObject(anchorGameObject);
             }
         }
         // </ShortTap>
@@ -298,7 +287,7 @@ namespace Scripts
             {
                 audioData.PlayOneShot(deleteAllAudio);
                 PhotonView pv = this.gameObject.GetPhotonView();
-                pv.RPC("PunRPC_RemoveAllAnchorGameObjects", RpcTarget.MasterClient);
+                pv.RPC("PunRPC_RemoveAllAnchorGameObjects", RpcTarget.All);
             }
         }
         // </LongTap>
@@ -311,21 +300,31 @@ namespace Scripts
         private async void PunRPC_RemoveAllAnchorGameObjects()
         {
             indicatorObject.gameObject.SetActive(true);
-            _foundOrCreatedAnchorGameObjects = GameObject.FindGameObjectsWithTag("Hold");
-            foreach (var anchorGameObject in _foundOrCreatedAnchorGameObjects)
-            {
-                PhotonView pv = anchorGameObject.GetComponent<PhotonView>();
-                pv.RequestOwnership(); // we need ownership of the object to destroy it
-            }
 
-            // the RequestOwnership calls above are asynchronous and need time to complete before we call Destroy() below
-            await Task.Delay(1000);
-            
-            foreach (var anchorGameObject in _foundOrCreatedAnchorGameObjects)
+            // only need to call destroy from one client due synchronization provided by Photon so we decide to call it on the master
+            if (PhotonNetwork.IsMasterClient)
             {
-                PhotonView pv = anchorGameObject.GetComponent<PhotonView>();
-                PhotonNetwork.Destroy(anchorGameObject);
+                List<GameObject> children = globalHoldParent.GetComponent<HoldParent>().childHolds;
+          
+                foreach (var anchorGameObject in children)//_foundOrCreatedAnchorGameObjects)
+                {
+                    PhotonView pv = anchorGameObject.GetComponent<PhotonView>();
+                    pv.RequestOwnership(); // we need ownership of the object to destroy it
+                }
+
+                // the RequestOwnership calls above are asynchronous and need time to complete before we call Destroy() below
+                await Task.Delay(1000);
+
+                foreach (var anchorGameObject in children)//_foundOrCreatedAnchorGameObjects)
+                {
+                    PhotonView pv = anchorGameObject.GetComponent<PhotonView>();
+                    PhotonNetwork.Destroy(anchorGameObject);
+                }
             }
+            
+            // clear tracking list on parent
+            globalHoldParent.GetComponent<HoldParent>().childHolds.Clear();
+
             indicatorObject.gameObject.SetActive(false);
         }
         // </RemoveAllAnchorGameObjects>
@@ -340,16 +339,17 @@ namespace Scripts
         private bool IsAnchorNearby(Vector3 position, out GameObject anchorGameObject)
         {
             anchorGameObject = null;
-            _foundOrCreatedAnchorGameObjects = GameObject.FindGameObjectsWithTag("Hold");
-            Debug.Log($"IsAnchorNearby -> number of objects in scene: {_foundOrCreatedAnchorGameObjects.Length}");
 
-            if (_foundOrCreatedAnchorGameObjects.Length <= 0)
+            List<GameObject> children = globalHoldParent.GetComponent<HoldParent>().childHolds;
+            Debug.Log($"IsAnchorNearby -> number of objects in scene: {children.Count}");
+
+            if (children.Count <= 0)
             {
                 return false;
             }
 
             //Iterate over existing anchor gameobjects to find the nearest
-            var (distance, closestObject) = _foundOrCreatedAnchorGameObjects.Aggregate(
+            var (distance, closestObject) = children.Aggregate(
                 new Tuple<float, GameObject>(Mathf.Infinity, null),
                 (minPair, gameobject) =>
                 {
@@ -371,16 +371,16 @@ namespace Scripts
         }
         // </IsAnchorNearby>
 
-        // <HoldOnPlacingStarted>
-        /// <summary>
-        /// Called on start of movement of object
-        /// </summary>
-        /// <param name="go"></param>
-        private void HoldOnPlacingStarted(GameObject go)
-        {
-            Debug.Log("HoldOnPlacingStarted");
-        }
-        // </HoldOnPlacingStarted>
+        //// <HoldOnPlacingStarted>
+        ///// <summary>
+        ///// Called on start of movement of object
+        ///// </summary>
+        ///// <param name="go"></param>
+        //private void HoldOnPlacingStarted(GameObject go)
+        //{
+        //    Debug.Log("HoldOnPlacingStarted");
+        //}
+        //// </HoldOnPlacingStarted>
 
         // <HoldOnPlacingStopped>
         /// <summary>
@@ -399,38 +399,38 @@ namespace Scripts
             // the game object may have been moved to a new surface necessitating a change of its local coordinate frame (i.e. its z-axis now has a negative dot-product with the
             // Frozen coordinate frame meaning that on manipulation, its rotation will be counter to whats expected)
             // So we destroy it and recreate it (since the logic for checking this dot-product will be contained within CreateAnchor anyway)
-            DeleteGameObject(go);
-            CreateAnchor(holdType, position, surfaceNormal, photonView);
+            await DeleteGameObject(go);
+            await CreateAnchor(holdType, position, surfaceNormal, photonView);
         }
         // </HoldOnPlacingStopped>
 
-        // <HoldOnHoverStartedHandler>
-        /// <summary>
-        /// OnHoverStarted handler for hold GameObject.
-        /// Changes the color.
-        /// </summary>
-        /// <param name="eventdata"></param>
-        /// <param name="hold"></param>
-        private void HoldOnHoverStartedHandler(ManipulationEventData eventdata, GameObject hold)
-        {
-            MeshRenderer m_Renderer = hold.GetComponent<MeshRenderer>();
-            m_Renderer.material.color = Color.red;
-        }
-        // </HoldOnHoverStartedHandler>
+        //// <HoldOnHoverStartedHandler>
+        ///// <summary>
+        ///// OnHoverStarted handler for hold GameObject.
+        ///// Changes the color.
+        ///// </summary>
+        ///// <param name="eventdata"></param>
+        ///// <param name="hold"></param>
+        //private void HoldOnHoverStartedHandler(ManipulationEventData eventdata, GameObject hold)
+        //{
+        //    MeshRenderer m_Renderer = hold.GetComponent<MeshRenderer>();
+        //    m_Renderer.material.color = Color.red;
+        //}
+        //// </HoldOnHoverStartedHandler>
 
-        // <HoldOnHoverExitedHandler>
-        /// <summary>
-        /// OnHoverExited handler for hold GameObjects.
-        /// Changes the color.
-        /// </summary>
-        /// <param name="eventdata"></param>
-        /// <param name="hold"></param>
-        private void HoldOnHoverExitedHandler(ManipulationEventData eventdata, GameObject hold)
-        {
-            MeshRenderer m_Renderer = hold.GetComponent<MeshRenderer>();
-            m_Renderer.material.color = Color.green;
-        }
-        // </HoldOnHoverExitedHandler>
+        //// <HoldOnHoverExitedHandler>
+        ///// <summary>
+        ///// OnHoverExited handler for hold GameObjects.
+        ///// Changes the color.
+        ///// </summary>
+        ///// <param name="eventdata"></param>
+        ///// <param name="hold"></param>
+        //private void HoldOnHoverExitedHandler(ManipulationEventData eventdata, GameObject hold)
+        //{
+        //    MeshRenderer m_Renderer = hold.GetComponent<MeshRenderer>();
+        //    m_Renderer.material.color = Color.green;
+        //}
+        //// </HoldOnHoverExitedHandler>
 
         //// <HoldOnManipulationStartedHandler>
         ///// <summary>
@@ -502,23 +502,23 @@ namespace Scripts
         /// </summary>
         /// <param name="position">Position where Azure Spatial Anchor will be created</param>
         /// <returns>Async Task</returns>
-        private void CreateAnchor(string holdType,  Vector3 position, Vector3 surfaceNormal, PhotonView photonView)
+        private Task CreateAnchor(string holdType,  Vector3 position, Vector3 surfaceNormal, PhotonView photonView)
         {
-            Debug.Log($"CreateAnchor");
+            //Debug.Log($"CreateAnchor");
 
             //Create Anchor GameObject. We will use ASA to save the position and the rotation of this GameObject.
-            if (!InputDevices.GetDeviceAtXRNode(XRNode.Head).TryGetFeatureValue(CommonUsages.devicePosition, out Vector3 headPosition))
-            {
-                headPosition = Vector3.zero;
-            }
+            //if (!InputDevices.GetDeviceAtXRNode(XRNode.Head).TryGetFeatureValue(CommonUsages.devicePosition, out Vector3 headPosition))
+            //{
+            //    headPosition = Vector3.zero;
+            //}
 
             Quaternion normalOrientation = Quaternion.LookRotation(-surfaceNormal, Vector3.up);
 
             // NOTE: when anchor graph visualization is off, we can't reference F1 object but instead need to reference Pin01
-            float normalDotProduct = Vector3.Dot(surfaceNormal, GameObject.Find("SpatialAlignment/CommonOrigin/Pins/Pin01").transform.forward);//GameObject.Find("F1").transform.forward);
+            float normalDotProduct = Vector3.Dot(surfaceNormal, commonOriginPin.transform.forward);//GameObject.Find("SpatialAlignment/CommonOrigin/Pins/Pin01").transform.forward);//GameObject.Find("F1").transform.forward);
 
-            Debug.Log($"Normal Orientation: {surfaceNormal}");
-            Debug.Log($"Dot Product with Normal: {Vector3.Dot(surfaceNormal, GameObject.Find("SpatialAlignment/CommonOrigin/Pins/Pin01").transform.forward)}");//GameObject.Find("F1").transform.forward)}");            
+            //Debug.Log($"Normal Orientation: {surfaceNormal}");
+            //Debug.Log($"Dot Product with Normal: {Vector3.Dot(surfaceNormal, commonOriginPin.transform.forward)}");//GameObject.Find("SpatialAlignment/CommonOrigin/Pins/Pin01").transform.forward)}");//GameObject.Find("F1").transform.forward)}");            
 
             string hold_version = holdType;
             if (normalDotProduct > 0)
@@ -527,12 +527,14 @@ namespace Scripts
                 normalOrientation = Quaternion.LookRotation(surfaceNormal, Vector3.up);
             }
 
-            Debug.Log($"Placing: {hold_version}");
+            //Debug.Log($"Placing: {hold_version}");
 
             // InstantiateRoomObject only succeeds for master client
             List<string> customTags = new List<string> { };
             string customTagsString = string.Join(",", customTags); // PUN2 doesn't support arrays/lists as parameters
             photonView.RPC("BuildAnchor", RpcTarget.MasterClient, hold_version, position, normalOrientation, Vector3.one * 0.1f, customTagsString);
+            
+            return Task.CompletedTask;
         }
         // </CreateAnchor>
 
@@ -540,14 +542,15 @@ namespace Scripts
         void BuildAnchor(string go, Vector3 position, Quaternion rotation, Vector3 localScale, string customTagsString)
         {
             // open loader
-            indicatorObject.SetActive(true);
+            // NOTE: showing/hiding the loader here appears to add significant lag and UI stutter
+            //indicatorObject.SetActive(true);
 
             //// Temporarily disable MRTK input because this function is async and could be called in quick succession with race issues.  Last answer here: https://stackoverflow.com/questions/56757620/how-to-temporarly-disable-mixedrealitytoolkit-inputsystem
             //StartCoroutine(DisableCoroutine());
 
             GameObject newAnchorGameObject = PhotonNetwork.InstantiateRoomObject(go, position, rotation);
 
-            Debug.Log(newAnchorGameObject);
+            //Debug.Log(newAnchorGameObject);
 
             newAnchorGameObject.GetComponent<MeshRenderer>().material.shader = Shader.Find("Legacy Shaders/Diffuse");
             newAnchorGameObject.transform.position = position;
@@ -558,11 +561,11 @@ namespace Scripts
             // NOTE: without RPC, the custom tags would only be set for this client
             newAnchorGameObject.GetComponent<PhotonView>().RPC("PunRPC_SetCustomTags", RpcTarget.All, customTagsString);
 
-            Debug.Log($"Forward Direction of Object: {newAnchorGameObject.transform.forward}");
+            //Debug.Log($"Forward Direction of Object: {newAnchorGameObject.transform.forward}");
 
             // NOTE: when anchor graph visualization is off, we can't reference F1 object but instead need to reference Pin01
-            Debug.Log($"Forward Direction of Frozen Frame: {GameObject.Find("SpatialAlignment/CommonOrigin/Pins/Pin01").transform.forward}");//{GameObject.Find("F1").transform.forward}");
-            Debug.Log($"Dot Product with Object z: {Vector3.Dot(newAnchorGameObject.transform.forward, GameObject.Find("SpatialAlignment/CommonOrigin/Pins/Pin01").transform.forward)}");// GameObject.Find("F1").transform.forward)}");
+            //Debug.Log($"Forward Direction of Frozen Frame: {commonOriginPin.transform.forward}");// GameObject.Find("SpatialAlignment/CommonOrigin/Pins/Pin01").transform.forward}");//{GameObject.Find("F1").transform.forward}");
+            //Debug.Log($"Dot Product with Object z: {Vector3.Dot(newAnchorGameObject.transform.forward, commonOriginPin.transform.forward)}");//GameObject.Find("SpatialAlignment/CommonOrigin/Pins/Pin01").transform.forward)}");// GameObject.Find("F1").transform.forward)}");
 
             // Disable maninpulation scripts if we are in 'Delete' mode
             if (editingMode == EditingMode.Delete)
@@ -572,28 +575,31 @@ namespace Scripts
             }
 
             // close loader
-            indicatorObject.SetActive(false);
+            //indicatorObject.SetActive(false);
         }
 
         // <DeleteGameObject>
-        /// <summary>
-        /// Deleting Cloud Anchor attached to the given GameObject and deleting the GameObject
-        /// </summary>
-        /// <param name="anchorGameObject">Anchor GameObject that is to be deleted</param>
-        private void DeleteGameObject(GameObject anchorGameObject)
+            /// <summary>
+            /// Deleting Cloud Anchor attached to the given GameObject and deleting the GameObject
+            /// </summary>
+            /// <param name="anchorGameObject">Anchor GameObject that is to be deleted</param>
+        private Task DeleteGameObject(GameObject anchorGameObject)
         {
             if (anchorGameObject != null)
             {
+                // photon destroy the hold
                 PhotonNetwork.Destroy(anchorGameObject);
 
-                Debug.Log($"ASA - Cloud anchor deleted!");
+                //Debug.Log($"ASA - Cloud anchor deleted!");
             }
+
+            return Task.CompletedTask;
         }
         // </DeleteGameObject>
 
         // <ToggleEditingMode>
         /// <summary>
-        /// Toggles editing mode between Move and Delete
+        /// Toggles editing mode between Place and Delete
         /// </summary>
         public async void ToggleEditingMode()
         {
@@ -603,49 +609,37 @@ namespace Scripts
 
         private Task DoToggleEditingMode()
         {
-            _foundOrCreatedAnchorGameObjects = new GameObject[0];//FindGameObjectsWithTag("Hold");
-            foreach (Transform child in globalHoldParent.transform)
-            {
-                if (child.tag == "Hold")
-                {
-                    _foundOrCreatedAnchorGameObjects.Append(child.gameObject);
-                }
-            }
-            if (editingMode == EditingMode.Move)
+            List<GameObject> children = globalHoldParent.GetComponent<HoldParent>().childHolds;
+            //Debug.Log($"num children: {children.Count}");
+            if (editingMode == EditingMode.Place)
             {
                 editingMode = EditingMode.Delete;
 
-                // make holds unmovable
-                foreach (var anchorGameObject in _foundOrCreatedAnchorGameObjects)
+                // make holds unmovable                
+                foreach (GameObject child in children)
                 {
-                    Debug.Log($"Disabling Manipulation");
-                    // disable manipulation scripts if attached
-                    if (anchorGameObject.GetComponent<NearInteractionGrabbable>() != null)
-                    {
-                        anchorGameObject.GetComponent<NearInteractionGrabbable>().enabled = false;
-                    }
-                    if (anchorGameObject.GetComponent<ObjectManipulator>() != null)
-                    {
-                        anchorGameObject.GetComponent<ObjectManipulator>().enabled = false;
-                    }
+                    //Debug.Log($"Disabling Manipulation");
+                    child.GetComponent<NearInteractionGrabbable>().enabled = false;
+                    child.GetComponent<ObjectManipulator>().enabled = false;
                 }
 
                 toggleEditorMode.GetComponentInChildren<TextMeshPro>().text = "Mode: Delete";
             }
             else if (editingMode == EditingMode.Delete)
             {
-                editingMode = EditingMode.Move;
+                editingMode = EditingMode.Place;
 
                 // make holds movable
-                foreach (var anchorGameObject in _foundOrCreatedAnchorGameObjects)
+                //foreach (var anchorGameObject in _foundOrCreatedAnchorGameObjects)
+                foreach (GameObject child in children)
                 {
                     // enable manipulation scripts
-                    Debug.Log($"Enabling Manipulation");
-                    //anchorGameObject.GetComponent<NearInteractionGrabbable>().enabled = true;
-                    //anchorGameObject.GetComponent<ObjectManipulator>().enabled = true;
+                    //Debug.Log($"Enabling Manipulation");
+                    child.GetComponent<NearInteractionGrabbable>().enabled = true;
+                    child.GetComponent<ObjectManipulator>().enabled = true;
                 }
 
-                toggleEditorMode.GetComponentInChildren<TextMeshPro>().text = "Mode: Move";
+                toggleEditorMode.GetComponentInChildren<TextMeshPro>().text = "Mode: Place";
             }
             return Task.CompletedTask;
         }

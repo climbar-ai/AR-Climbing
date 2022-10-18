@@ -10,14 +10,23 @@ namespace MultiUserCapabilities
 {
     public class HoldInit : MonoBehaviour, IPunInstantiateMagicCallback
     {
+        // global hold parent that parents all holds
+        [SerializeField] private GameObject globalHoldParent = default;
+
         /// <summary>
         /// Parent each created hold to the root game object so we can easily track their relative positions with respect to each other across each device running the application
         /// </summary>
         /// <param name="info"></param>
         public void OnPhotonInstantiate(PhotonMessageInfo info)
         {
-            GameObject root = GameObject.Find("GlobalHoldParent");
-            this.transform.SetParent(root.transform, true);
+            globalHoldParent = GameObject.Find("GlobalHoldParent");
+            this.transform.SetParent(globalHoldParent.transform, true);
+
+            // track this game object via a list on its parent
+            if (this.gameObject.tag == "Hold") // ghost holds will also be parented to this object but we only want to track the holds in this list
+            {
+                this.gameObject.transform.parent.GetComponent<HoldParent>().childHolds.Add(this.gameObject);
+            }
         }
 
         /// <summary>
@@ -31,6 +40,26 @@ namespace MultiUserCapabilities
             // NOTE: without RPC, the custom tags would only be set for this client
             List<string> customTags = customTagsString.Split(',').ToList(); // PUN2 doesn't support arrays/lists as parameters
             gameObject.GetComponent<CustomTag>().Tags = customTags;
+        }
+
+        /// <summary>
+        /// Do cleanup when destroyed.
+        /// Currently, remove hold from its parent tracking list.
+        /// </summary>
+        private void OnDestroy()
+        {
+            // remove the hold from its parent's tracking list
+            List<GameObject> children = globalHoldParent.GetComponent<HoldParent>().childHolds;
+            foreach (GameObject child in globalHoldParent.GetComponent<HoldParent>().childHolds)
+            {
+                if (GameObject.ReferenceEquals(child, this.gameObject))
+                {
+                    globalHoldParent.GetComponent<HoldParent>().childHolds.Remove(child);
+                    break; // there will only be one match
+                }
+            }
+
+            globalHoldParent.GetComponent<HoldParent>().childHolds = children;
         }
     }
 }

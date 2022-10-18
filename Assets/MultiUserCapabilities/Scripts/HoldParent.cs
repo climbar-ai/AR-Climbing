@@ -8,6 +8,9 @@ public class HoldParent : MonoBehaviour
     [SerializeField] private AudioClip onManipulationStartedAudio;
     [SerializeField] private AudioClip onManipulationEndedAudio;
 
+    // keep track of its child holds for fastest lookup later (e.g. in holdManipulator.cs)
+    public List<GameObject> childHolds = new List<GameObject>();
+
     public void PlayOnManipulationStartedAudio()
     {
         m_AudioSource.PlayOneShot(onManipulationStartedAudio);
