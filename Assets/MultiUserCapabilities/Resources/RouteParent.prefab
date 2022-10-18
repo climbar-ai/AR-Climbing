@@ -14,7 +14,6 @@ GameObject:
   - component: {fileID: 9188511323496964899}
   - component: {fileID: 3791609856349904342}
   - component: {fileID: 644981864439098448}
-  - component: {fileID: 7214968728148730667}
   - component: {fileID: 8739004428247796205}
   - component: {fileID: 988854195145340161}
   - component: {fileID: 8988114308326872524}
@@ -22,6 +21,7 @@ GameObject:
   - component: {fileID: 1713090287889250827}
   - component: {fileID: 6444971647395690196}
   - component: {fileID: 6480281700987806667}
+  - component: {fileID: 5143206900173429830}
   m_Layer: 0
   m_Name: RouteParent
   m_TagString: RouteParent
@@ -155,7 +155,7 @@ MonoBehaviour:
   onManipulationStarted:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 7214968728148730667}
+      - m_Target: {fileID: 0}
         m_TargetAssemblyTypeName: HoldParent, Assembly-CSharp
         m_MethodName: PlayOnManipulationStartedAudio
         m_Mode: 1
@@ -170,7 +170,7 @@ MonoBehaviour:
   onManipulationEnded:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 7214968728148730667}
+      - m_Target: {fileID: 0}
         m_TargetAssemblyTypeName: HoldParent, Assembly-CSharp
         m_MethodName: PlayOnManipulationEndedAudio
         m_Mode: 1
@@ -188,21 +188,6 @@ MonoBehaviour:
   onHoverExited:
     m_PersistentCalls:
       m_Calls: []
---- !u!114 &7214968728148730667
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 768673690267877085}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 271850e794afc1f4a8cdd73f40864d7f, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  m_AudioSource: {fileID: 8739004428247796205}
-  onManipulationStartedAudio: {fileID: 8300000, guid: a16c53885bdbc54469088880ea44a9fd, type: 3}
-  onManipulationEndedAudio: {fileID: 8300000, guid: bcae4cbce6135d84b9b04ee9e5b909f4, type: 3}
 --- !u!82 &8739004428247796205
 AudioSource:
   m_ObjectHideFlags: 0
@@ -389,6 +374,22 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_GameObject: {fileID: 768673690267877085}
+--- !u!114 &5143206900173429830
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 768673690267877085}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f39ff37cca0824046bc3724b5570ab84, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  globalRouteParent: {fileID: 0}
+  m_AudioSource: {fileID: 8739004428247796205}
+  onManipulationStartedAudio: {fileID: 8300000, guid: a16c53885bdbc54469088880ea44a9fd, type: 3}
+  onManipulationEndedAudio: {fileID: 8300000, guid: bcae4cbce6135d84b9b04ee9e5b909f4, type: 3}
 --- !u!1 &2118646817275674699
 GameObject:
   m_ObjectHideFlags: 0

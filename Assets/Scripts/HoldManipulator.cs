@@ -91,6 +91,7 @@ namespace Scripts
         [SerializeField]
         private GameObject toggleEditorMode = default;
 
+        // parent to all holds except for those under specific routes
         [SerializeField]
         private GameObject globalHoldParent = default;
 
@@ -304,7 +305,7 @@ namespace Scripts
             // only need to call destroy from one client due synchronization provided by Photon so we decide to call it on the master
             if (PhotonNetwork.IsMasterClient)
             {
-                List<GameObject> children = globalHoldParent.GetComponent<HoldParent>().childHolds;
+                List<GameObject> children = globalHoldParent.GetComponent<GlobalHoldParent>().childHolds;
           
                 foreach (var anchorGameObject in children)//_foundOrCreatedAnchorGameObjects)
                 {
@@ -323,7 +324,7 @@ namespace Scripts
             }
             
             // clear tracking list on parent
-            globalHoldParent.GetComponent<HoldParent>().childHolds.Clear();
+            globalHoldParent.GetComponent<GlobalHoldParent>().childHolds.Clear();
 
             indicatorObject.gameObject.SetActive(false);
         }
@@ -340,7 +341,7 @@ namespace Scripts
         {
             anchorGameObject = null;
 
-            List<GameObject> children = globalHoldParent.GetComponent<HoldParent>().childHolds;
+            List<GameObject> children = globalHoldParent.GetComponent<GlobalHoldParent>().childHolds;
             Debug.Log($"IsAnchorNearby -> number of objects in scene: {children.Count}");
 
             if (children.Count <= 0)
@@ -609,7 +610,7 @@ namespace Scripts
 
         private Task DoToggleEditingMode()
         {
-            List<GameObject> children = globalHoldParent.GetComponent<HoldParent>().childHolds;
+            List<GameObject> children = globalHoldParent.GetComponent<GlobalHoldParent>().childHolds;
             //Debug.Log($"num children: {children.Count}");
             if (editingMode == EditingMode.Place)
             {

@@ -13,6 +13,12 @@ namespace Scripts
 {
     public class RouteManipulator : MonoBehaviour//MonoBehaviourPunCallbacks, IInRoomCallbacks
     {
+        // parent to all specific routes (i.e. not merged with scene)
+        [SerializeField] private GameObject globalRouteParent = default;
+
+        // parent to all holds except for those under specific routes
+        [SerializeField] private GameObject globalHoldParent = default;
+
         [SerializeField] private HoldManipulator holdManipulator = default;
 
         // prefab to use as parent for instatiated routes
@@ -104,10 +110,13 @@ namespace Scripts
             // reparent holds from default HoldParent to new parent so as to make them easily movable altogether at once
             // NOTE: holds' parent is by default the HoldParent object
             // TODO: draw connecting line from hold to parent
-            GameObject routeParent = Array.Find(GameObject.FindGameObjectsWithTag("RouteParent"), x => x.name == routeName);
-            GameObject[] holdInstances = GameObject.FindGameObjectsWithTag("Hold");
-           
-            for (int i = 0; i < holdInstances.Length; i++)
+            //GameObject routeParent = Array.Find(GameObject.FindGameObjectsWithTag("RouteParent"), x => x.name == routeName);
+            GameObject routeParent = globalRouteParent.GetComponent<GlobalRouteParent>().childRoutes.Find(x => x.name == routeName);
+            //GameObject[] holdInstances = GameObject.FindGameObjectsWithTag("Hold");
+            List<GameObject> holdInstances = globalHoldParent.GetComponent<GlobalHoldParent>().childHolds;
+
+            //for (int i = 0; i < holdInstances.Length; i++)
+            for (int i = 0; i < holdInstances.Count; i++)
             {
                 if (holdInstances[i].GetComponent<CustomTag>().HasTag(routeName))
                 {
@@ -128,8 +137,9 @@ namespace Scripts
         public async void DoMergeRoute(string routeParentName, string tag)
         {
             // check the route parent and global hold parent are in the scene
-            GameObject routeParent = Array.Find(GameObject.FindGameObjectsWithTag("RouteParent"), x => x.name == routeParentName);
-            GameObject globalHoldParent = GameObject.Find("GlobalHoldParent");
+            //GameObject routeParent = Array.Find(GameObject.FindGameObjectsWithTag("RouteParent"), x => x.name == routeParentName);
+            GameObject routeParent = globalRouteParent.GetComponent<GlobalRouteParent>().childRoutes.Find(x => x.name == routeParentName);
+            //GameObject globalHoldParent = GameObject.Find("GlobalHoldParent");
             if (routeParent == null || globalHoldParent == null) return;
 
             // destroy the route parent game object
@@ -317,10 +327,12 @@ namespace Scripts
         private bool IsRouteInScene(string route)
         {
             // check first if the route is already being manipulated in the scene and abort if it is so that duplicates are avoided
-            GameObject[] existingRoutes = GameObject.FindGameObjectsWithTag("RouteParent");
+            //GameObject[] existingRoutes = GameObject.FindGameObjectsWithTag("RouteParent");
+            List<GameObject> existingRoutes = globalRouteParent.GetComponent<GlobalRouteParent>().childRoutes;
 
             // search for a route parent with the name of the route
-            for (int i = 0; i < existingRoutes.Length; i++)
+            //for (int i = 0; i < existingRoutes.Length; i++)
+            for (int i = 0; i < existingRoutes.Count; i++)
             {
                 // remove the "(Clone)" part of the object name that Unity automatically injects when instantiating prefabs
                 string name = existingRoutes[i].name.Replace("(Clone)", string.Empty);
@@ -443,9 +455,11 @@ namespace Scripts
             string path = Path.Combine(Application.persistentDataPath, filename);
             using (StreamWriter sw = File.CreateText(path))
             {
-                GameObject[] holds = GameObject.FindGameObjectsWithTag("Hold");
+                //GameObject[] holds = GameObject.FindGameObjectsWithTag("Hold");
+                List<GameObject> holds = globalHoldParent.GetComponent<GlobalHoldParent>().childHolds;
 
-                for (int i = 0; i < holds.Length; i++)
+                //for (int i = 0; i < holds.Length; i++)
+                for (int i = 0; i < holds.Count; i++)
                 {
                     // compile semi-colon delimited string of form with position and rotation comma-delimited:
                     // "holdname;transform.position;transform.rotation" 
@@ -652,9 +666,11 @@ namespace Scripts
             scrollRouteMenu.transform.Find("ScrollingObjectCollection").GetComponent<ScrollingObjectCollection>().OnClick.AddListener(ScrollRouteMergeMenuClick);
 
             // gather list of routes
-            GameObject[] routeParents = GameObject.FindGameObjectsWithTag("RouteParent");
+            //GameObject[] routeParents = GameObject.FindGameObjectsWithTag("RouteParent");
+            List<GameObject> routeParents = globalRouteParent.GetComponent<GlobalRouteParent>().childRoutes;
             List<string> routeList = new List<string>();
-            for (int i = 0; i < routeParents.Length; i++)
+            //for (int i = 0; i < routeParents.Length; i++)
+            for (int i = 0; i < routeParents.Count; i++)
             {
                 routeList.Add(routeParents[i].name);
             }

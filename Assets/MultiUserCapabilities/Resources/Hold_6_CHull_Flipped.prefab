@@ -140,7 +140,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   autoConstraintSelection: 1
-  selectedConstraints: []
+  selectedConstraints:
+  - {fileID: -7087298151885554634, guid: c7403a1df0db79141b9614868d180dc7, type: 3}
+  - {fileID: 7403300017795259568, guid: c7403a1df0db79141b9614868d180dc7, type: 3}
 --- !u!114 &5480565759509983080
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -170,7 +172,7 @@ MonoBehaviour:
   rotateLerpTime: 0.001
   scaleLerpTime: 0.001
   enableConstraints: 1
-  constraintsManager: {fileID: 6804333430780893315, guid: c7403a1df0db79141b9614868d180dc7, type: 3}
+  constraintsManager: {fileID: 3296073981131541256}
   elasticsManager: {fileID: 0}
   onManipulationStarted:
     m_PersistentCalls:

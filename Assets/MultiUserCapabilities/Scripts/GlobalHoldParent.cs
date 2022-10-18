@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class HoldParent : MonoBehaviour
+public class GlobalHoldParent : MonoBehaviour
 {
     [SerializeField] private AudioSource m_AudioSource;
     [SerializeField] private AudioClip onManipulationStartedAudio;

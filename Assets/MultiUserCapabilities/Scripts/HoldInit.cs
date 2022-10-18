@@ -11,7 +11,7 @@ namespace MultiUserCapabilities
     public class HoldInit : MonoBehaviour, IPunInstantiateMagicCallback
     {
         // global hold parent that parents all holds
-        [SerializeField] private GameObject globalHoldParent = default;
+        public GameObject globalHoldParent = default;
 
         /// <summary>
         /// Parent each created hold to the root game object so we can easily track their relative positions with respect to each other across each device running the application
@@ -25,7 +25,7 @@ namespace MultiUserCapabilities
             // track this game object via a list on its parent
             if (this.gameObject.tag == "Hold") // ghost holds will also be parented to this object but we only want to track the holds in this list
             {
-                this.gameObject.transform.parent.GetComponent<HoldParent>().childHolds.Add(this.gameObject);
+                this.gameObject.transform.parent.GetComponent<GlobalHoldParent>().childHolds.Add(this.gameObject);
             }
         }
 
@@ -49,17 +49,17 @@ namespace MultiUserCapabilities
         private void OnDestroy()
         {
             // remove the hold from its parent's tracking list
-            List<GameObject> children = globalHoldParent.GetComponent<HoldParent>().childHolds;
-            foreach (GameObject child in globalHoldParent.GetComponent<HoldParent>().childHolds)
+            List<GameObject> children = globalHoldParent.GetComponent<GlobalHoldParent>().childHolds;
+            foreach (GameObject child in globalHoldParent.GetComponent<GlobalHoldParent>().childHolds)
             {
                 if (GameObject.ReferenceEquals(child, this.gameObject))
                 {
-                    globalHoldParent.GetComponent<HoldParent>().childHolds.Remove(child);
+                    globalHoldParent.GetComponent<GlobalHoldParent>().childHolds.Remove(child);
                     break; // there will only be one match
                 }
             }
 
-            globalHoldParent.GetComponent<HoldParent>().childHolds = children;
+            globalHoldParent.GetComponent<GlobalHoldParent>().childHolds = children;
         }
     }
 }
