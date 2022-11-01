@@ -27,16 +27,17 @@ namespace Scripts
         /// <summary>
         /// Editing modes
         /// </summary>
-        private enum EditingMode
+        public enum EditingMode
         {
             Place,
-            Delete
+            Delete,
+            PlaceRoute
         }
 
         /// <summary>
         /// Used to track hold editing mode, either delete or move
         /// </summary>
-        private EditingMode editingMode;
+        public EditingMode editingMode;
 
         /// <summary>
         /// hold prefab chosen in scroll hold menu
@@ -97,6 +98,9 @@ namespace Scripts
 
         [SerializeField]
         private GameObject commonOriginPin = default;
+
+        [SerializeField]
+        public RouteManipulator routeManipulator = default;
 
         // <Start>
         // Start is called before the first frame update
@@ -274,6 +278,15 @@ namespace Scripts
 
                 // Delete nearby Anchor
                 await DeleteGameObject(anchorGameObject);
+            }
+            else if (editingMode == EditingMode.PlaceRoute)
+            {
+                Debug.Log("PlaceRoute");
+                Quaternion normalOrientation = Quaternion.LookRotation(surfaceNormal, Vector3.up);
+                routeManipulator.currentRouteParentPosition = handPosition;
+                routeManipulator.currentRouteParentOrientation = normalOrientation;
+                await routeManipulator.GetRoutesForInstantiation();
+                editingMode = EditingMode.Place;
             }
         }
         // </ShortTap>

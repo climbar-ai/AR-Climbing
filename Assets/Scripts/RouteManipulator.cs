@@ -53,6 +53,10 @@ namespace Scripts
         // currently active scroll menu
         private ScrollMenu activeScrollMenu = ScrollMenu.None;
 
+        // position/rotation of currently selected location on spatial mesh for the current route parent
+        public Vector3 currentRouteParentPosition = default;
+        public Quaternion currentRouteParentOrientation = default;
+
         private void Start()
         {
             // hide filename prompt until we want it shown
@@ -75,8 +79,9 @@ namespace Scripts
         public void InstantiateRoute(List<string> holds, List<Vector3> positions, List<Quaternion> rotations, string routeName)
         {
             // instantiate prefab to parent the holds
-            Vector3 parentPosition = new Vector3(0f, 0f, 0.5f);
-            GameObject routeParent = PhotonNetwork.InstantiateRoomObject(routeParentPrefab.name, parentPosition, Quaternion.identity);
+            //Vector3 parentPosition = new Vector3(0f, 0f, 0.5f);
+            //GameObject routeParent = PhotonNetwork.InstantiateRoomObject(routeParentPrefab.name, parentPosition, Quaternion.identity);
+            GameObject routeParent = PhotonNetwork.InstantiateRoomObject(routeParentPrefab.name, currentRouteParentPosition, currentRouteParentOrientation);
 
             // set the name on the route parent for all clients
             // critical so that other clients can find it in their scene, i.e. in PunRPC_ReparentHoldsToRouteParent
@@ -455,10 +460,30 @@ namespace Scripts
             string path = Path.Combine(Application.persistentDataPath, filename);
             using (StreamWriter sw = File.CreateText(path))
             {
+                // gather mean position for center of mass anchor point
+                float x = 0f;
+                float y = 0f;
+                float z = 0f;
+                Vector3 avgPos = default;
+
                 //GameObject[] holds = GameObject.FindGameObjectsWithTag("Hold");
                 List<GameObject> holds = globalHoldParent.GetComponent<GlobalHoldParent>().childHolds;
 
+                // find center of mass
                 //for (int i = 0; i < holds.Length; i++)
+                for (int i = 0; i < holds.Count; i++)
+                {
+                    Vector3 pos = holds[i].transform.position;
+
+                    // collect mean position info
+                    x += pos.x;
+                    y += pos.y;
+                    z += pos.z;
+                }
+
+                avgPos = new Vector3(x / holds.Count, y / holds.Count, z / holds.Count);
+
+                // store info per hold
                 for (int i = 0; i < holds.Count; i++)
                 {
                     // compile semi-colon delimited string of form with position and rotation comma-delimited:
@@ -472,7 +497,8 @@ namespace Scripts
                     info += name + ";";
 
                     // position
-                    string position = holds[i].transform.position.ToString("F9"); // get as much precision as possible
+                    // store positions relative to center of mass
+                    string position = (holds[i].transform.position - avgPos).ToString("F9"); // get as much precision as possible
                     position = position.Trim('(').Trim(')');
                     info += position + ";";
 
@@ -514,6 +540,11 @@ namespace Scripts
             InstantiateRoute(holds, positions, rotations, route);
         }
 
+        public async void GetRouteParentPosition()
+        {
+            holdManipulator.editingMode = HoldManipulator.EditingMode.PlaceRoute;
+        }
+
         /// <summary>
         /// Retrieves the list of saved routes currently on the server (list of filenames)
         /// endpoint supplied inspector to choose which event listener is wired up
@@ -521,14 +552,16 @@ namespace Scripts
         /// TODO: maybe use serialization/deserialization and/or JSON?
         /// </summary>
         /// <param name="endpoint"></param>
-        public async void GetRoutesForInstantiation()
+        //public async void GetRoutesForInstantiation()
+        public Task GetRoutesForInstantiation()
         {
             // close/clear menu if already open so we don't accidentally keep filling it up
             if (showScrollRouteMenu)
             {
                 EmptyCloseScrollRouteMenu();
                 activeScrollMenu = ScrollMenu.None;
-                return;
+                //return;
+                return Task.CompletedTask;
             }
 
             activeScrollMenu = ScrollMenu.Instantiate;
@@ -542,6 +575,8 @@ namespace Scripts
 
             // tell master client to get the list of available routes from server and then broadcast this list to other clients
             gameObject.GetPhotonView().RPC("PunRPC_GetRouteList", RpcTarget.MasterClient);
+
+            return Task.CompletedTask;
         }
 
         [PunRPC]
