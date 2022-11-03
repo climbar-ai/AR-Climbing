@@ -31,11 +31,12 @@ namespace Scripts
         {
             Place,
             Delete,
-            PlaceRoute
+            //PlaceRoute
+            Off
         }
 
         /// <summary>
-        /// Used to track hold editing mode, either delete or move
+        /// Used to track hold editing mode
         /// </summary>
         public EditingMode editingMode;
 
@@ -102,6 +103,8 @@ namespace Scripts
         [SerializeField]
         public RouteManipulator routeManipulator = default;
 
+        //public bool isRouteParentTTPOn = default;
+
         // <Start>
         // Start is called before the first frame update
         void Start()
@@ -117,98 +120,111 @@ namespace Scripts
         // Update is called once per frame
         void Update()
         {
-
-            //Check for any air taps from either hand
-            for (int i = 0; i < 2; i++)
+            if (editingMode != EditingMode.Off)
             {
-                InputDevice device = InputDevices.GetDeviceAtXRNode((i == 0) ? XRNode.RightHand : XRNode.LeftHand);
-                if (device.TryGetFeatureValue(CommonUsages.primaryButton, out bool isTapping))
+                //Check for any air taps from either hand
+                for (int i = 0; i < 2; i++)
                 {
-                    if (!isTapping)
+                    InputDevice device = InputDevices.GetDeviceAtXRNode((i == 0) ? XRNode.RightHand : XRNode.LeftHand);
+                    if (device.TryGetFeatureValue(CommonUsages.primaryButton, out bool isTapping))
                     {
-                        //Stopped Tapping or wasn't tapping
-                        if (0f < _tappingTimer[i] && _tappingTimer[i] < 1f)
+                        if (!isTapping)
                         {
-                            //User has been tapping for less than 1 sec. Get hand-ray's end position and call ShortTap
-                            foreach (var source in CoreServices.InputSystem.DetectedInputSources)
+                            //Stopped Tapping or wasn't tapping
+                            if (0f < _tappingTimer[i] && _tappingTimer[i] < 1f)
                             {
-                                // Ignore anything that is not a hand because we want articulated hands
-                                if (source.SourceType == Microsoft.MixedReality.Toolkit.Input.InputSourceType.Hand)
+                                //User has been tapping for less than 1 sec. Get hand-ray's end position and call ShortTap
+                                foreach (var source in CoreServices.InputSystem.DetectedInputSources)
                                 {
-                                    foreach (var p in source.Pointers)
+                                    // Ignore anything that is not a hand because we want articulated hands
+                                    if (source.SourceType == Microsoft.MixedReality.Toolkit.Input.InputSourceType.Hand)
                                     {
-                                        if (p is IMixedRealityNearPointer && editingMode != EditingMode.Delete) // we want to be able to use direct touch to delete game objects
+                                        foreach (var p in source.Pointers)
                                         {
-                                            // Ignore near pointers, we only want the rays
-                                            //Debug.Log("Near Pointer");
-                                            continue;
-                                        }
-                                        if (p.Result != null)
-                                        {
-                                            var startPoint = p.Position;
-                                            var endPoint = p.Result.Details.Point;
-                                            var hitObject = p.Result.Details.Object;
-
-                                            // we need the surface normal of the spatial mesh we want to place the hold on
-                                            LayerMask mask = LayerMask.GetMask("Spatial Awareness");
-                                            if (Physics.Raycast(startPoint, endPoint - startPoint, out var hit, Mathf.Infinity, mask)) // check if successful before calling ShortTap
+                                            if (p is IMixedRealityNearPointer && editingMode != EditingMode.Delete) // we want to be able to use direct touch to delete game objects
                                             {
-                                                //Debug.Log($"Hit layer: {hit.collider.gameObject.layer}");
-                                                PhotonView photonView = PhotonView.Get(this);
-                                                ShortTap(hit.point, hit.normal, photonView);
+                                                // Ignore near pointers, we only want the rays
+                                                //Debug.Log("Near Pointer");
+                                                continue;
+                                            }
+                                            if (p.Result != null)
+                                            {
+                                                var startPoint = p.Position;
+                                                var endPoint = p.Result.Details.Point;
+                                                var hitObject = p.Result.Details.Object;
+
+                                                //Debug.Log($"{isRouteParentTTPOn}");
+                                                Debug.Log($"{hitObject.gameObject.tag}");
+
+                                                // we need the surface normal of the spatial mesh we want to place the hold on
+                                                // we allow hits on route parents so that we can do nothing when selecting them in short taps
+                                                LayerMask mask = LayerMask.GetMask("Spatial Awareness", "RouteParent");
+                                                if (Physics.Raycast(startPoint, endPoint - startPoint, out var hit, Mathf.Infinity, mask)) // check if successful before calling ShortTap
+                                                {
+                                                    Debug.Log($"Hit layer: {hit.collider.gameObject.layer}");
+                                                    Debug.Log($"{hit.collider.gameObject.tag}");
+                                                    PhotonView photonView = PhotonView.Get(this);
+
+                                                    // we need to recognize when we hit a route parent so that we can ignore the processing of short tap
+                                                    // since ShortTap will otherwise find the nearest hold and mistakenly process it
+                                                    if (hit.collider.gameObject.tag != "RouteParent")
+                                                    {
+                                                        ShortTap(hit.point, hit.normal, photonView);
+                                                    }
+                                                }
                                             }
                                         }
                                     }
                                 }
                             }
+                            _tappingTimer[i] = 0;
                         }
-                        _tappingTimer[i] = 0;
-                    }
-                    else
-                    {
-                        _tappingTimer[i] += Time.deltaTime;
-                        if (_tappingTimer[i] >= 2f)
+                        else
                         {
-                            if (editingMode == EditingMode.Delete)
+                            _tappingTimer[i] += Time.deltaTime;
+                            if (_tappingTimer[i] >= 2f)
                             {
-                                //User has been air tapping for at least 2sec. Get hand position and call LongTap
-                                if (device.TryGetFeatureValue(CommonUsages.devicePosition, out Vector3 handPosition))
+                                if (editingMode == EditingMode.Delete)
                                 {
-                                    // feedback for user on long airtap by briefly displaying a dot at the cursor
-                                    foreach (var source in CoreServices.InputSystem.DetectedInputSources)
+                                    //User has been air tapping for at least 2sec. Get hand position and call LongTap
+                                    if (device.TryGetFeatureValue(CommonUsages.devicePosition, out Vector3 handPosition))
                                     {
-                                        // Ignore anything that is not a hand because we want articulated hands
-                                        if (source.SourceType == Microsoft.MixedReality.Toolkit.Input.InputSourceType.Hand)
+                                        // feedback for user on long airtap by briefly displaying a dot at the cursor
+                                        foreach (var source in CoreServices.InputSystem.DetectedInputSources)
                                         {
-                                            foreach (var p in source.Pointers)
+                                            // Ignore anything that is not a hand because we want articulated hands
+                                            if (source.SourceType == Microsoft.MixedReality.Toolkit.Input.InputSourceType.Hand)
                                             {
-                                                if (p is IMixedRealityNearPointer)
+                                                foreach (var p in source.Pointers)
                                                 {
-                                                    // Ignore near pointers, we only want the rays
-                                                    continue;
-                                                }
-                                                if (p.Result != null)
-                                                {
-                                                    var startPoint = p.Position;
-                                                    var endPoint = p.Result.Details.Point;
-                                                    var hitObject = p.Result.Details.Object;
+                                                    if (p is IMixedRealityNearPointer)
+                                                    {
+                                                        // Ignore near pointers, we only want the rays
+                                                        continue;
+                                                    }
+                                                    if (p.Result != null)
+                                                    {
+                                                        var startPoint = p.Position;
+                                                        var endPoint = p.Result.Details.Point;
+                                                        var hitObject = p.Result.Details.Object;
 
-                                                    //Quaternion orientationTowardsHead = Quaternion.LookRotation(handPosition - headPosition, Vector3.up);
-                                                    GameObject gameObject = PhotonNetwork.Instantiate(longTapSphere.name, endPoint, Quaternion.identity);
-                                                    gameObject.transform.position = endPoint;
-                                                    gameObject.transform.rotation = Quaternion.identity;
-                                                    gameObject.transform.localScale = Vector3.one * 0.05f;
+                                                        //Quaternion orientationTowardsHead = Quaternion.LookRotation(handPosition - headPosition, Vector3.up);
+                                                        GameObject gameObject = PhotonNetwork.Instantiate(longTapSphere.name, endPoint, Quaternion.identity);
+                                                        gameObject.transform.position = endPoint;
+                                                        gameObject.transform.rotation = Quaternion.identity;
+                                                        gameObject.transform.localScale = Vector3.one * 0.05f;
 
-                                                    StartCoroutine(DestroyObjectDelayed(gameObject, .2f));
+                                                        StartCoroutine(DestroyObjectDelayed(gameObject, .2f));
+                                                    }
                                                 }
                                             }
                                         }
                                     }
-                                }
 
-                                LongTap();
+                                    LongTap();
+                                }
+                                _tappingTimer[i] = -float.MaxValue; // reset the timer, to avoid retriggering if user is still holding tap
                             }
-                            _tappingTimer[i] = -float.MaxValue; // reset the timer, to avoid retriggering if user is still holding tap
                         }
                     }
                 }
@@ -279,15 +295,15 @@ namespace Scripts
                 // Delete nearby Anchor
                 await DeleteGameObject(anchorGameObject);
             }
-            else if (editingMode == EditingMode.PlaceRoute)
-            {
-                Debug.Log("PlaceRoute");
-                Quaternion normalOrientation = Quaternion.LookRotation(surfaceNormal, Vector3.up);
-                routeManipulator.currentRouteParentPosition = handPosition;
-                routeManipulator.currentRouteParentOrientation = normalOrientation;
-                await routeManipulator.GetRoutesForInstantiation();
-                editingMode = EditingMode.Place;
-            }
+            //else if (editingMode == EditingMode.PlaceRoute)
+            //{
+            //    Debug.Log("PlaceRoute");
+            //    Quaternion normalOrientation = Quaternion.LookRotation(-surfaceNormal, Vector3.up);
+            //    routeManipulator.currentRouteParentPosition = handPosition;
+            //    routeManipulator.currentRouteParentOrientation = normalOrientation;
+            //    await routeManipulator.GetRoutesForInstantiation();
+            //    editingMode = EditingMode.Place;
+            //}
         }
         // </ShortTap>
 

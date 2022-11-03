@@ -1,4 +1,8 @@
+using Microsoft.MixedReality.Toolkit;
+using Microsoft.MixedReality.Toolkit.Input;
 using Microsoft.MixedReality.Toolkit.UI;
+using Microsoft.MixedReality.Toolkit.Utilities.Solvers;
+using MultiUserCapabilities;
 using Photon.Pun;
 using System;
 using System.Collections;
@@ -8,6 +12,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.XR;
 
 namespace Scripts
 {
@@ -57,11 +62,216 @@ namespace Scripts
         public Vector3 currentRouteParentPosition = default;
         public Quaternion currentRouteParentOrientation = default;
 
+        /// <summary>
+        /// Used to distinguish short taps and long taps
+        /// </summary>
+        private float[] _tappingTimer = { 0, 0 };
+
+        /// <summary>
+        /// Editing modes
+        /// </summary>
+        public enum EditingMode
+        {
+            Create,
+            Place,
+            Delete
+        }
+
+        /// <summary>
+        /// Used to track route parent editing mode
+        /// </summary>
+        public EditingMode editingMode;
+
         private void Start()
         {
             // hide filename prompt until we want it shown
             keyboardInputContainer.SetActive(false);
         }
+
+        void Update()
+        {
+
+            //Check for any air taps from either hand
+            for (int i = 0; i < 2; i++)
+            {
+                InputDevice device = InputDevices.GetDeviceAtXRNode((i == 0) ? XRNode.RightHand : XRNode.LeftHand);
+                if (device.TryGetFeatureValue(CommonUsages.primaryButton, out bool isTapping))
+                {
+                    if (!isTapping)
+                    {
+                        //Stopped Tapping or wasn't tapping
+                        if (0f < _tappingTimer[i] && _tappingTimer[i] < 1f)
+                        {
+                            Debug.Log("here");
+                            //User has been tapping for less than 1 sec. Get hand-ray's end position and call ShortTap
+                            foreach (var source in CoreServices.InputSystem.DetectedInputSources)
+                            {
+                                // Ignore anything that is not a hand because we want articulated hands
+                                if (source.SourceType == Microsoft.MixedReality.Toolkit.Input.InputSourceType.Hand)
+                                {
+                                    foreach (var p in source.Pointers)
+                                    {
+                                        if (p is IMixedRealityNearPointer && editingMode != EditingMode.Delete) // we want to be able to use direct touch to delete game objects
+                                        {
+                                            // Ignore near pointers, we only want the rays
+                                            //Debug.Log("Near Pointer");
+                                            continue;
+                                        }
+                                        if (p.Result != null)
+                                        {
+                                            var startPoint = p.Position;
+                                            var endPoint = p.Result.Details.Point;
+                                            var hitObject = p.Result.Details.Object;
+
+                                            Debug.Log("Raycast");
+
+                                            // we need the surface normal of the spatial mesh we want to place the hold on
+                                            // we allow hits on route parents so that we can do nothing when selecting them in short taps
+                                            LayerMask mask = LayerMask.GetMask("Spatial Awareness", "RouteParent");
+                                            if (Physics.Raycast(startPoint, endPoint - startPoint, out var hit, Mathf.Infinity, mask)) // check if successful before calling ShortTap
+                                            {
+                                                Debug.Log($"Hit layer: {hit.collider.gameObject.layer}");
+                                                Debug.Log($"{hit.collider.gameObject.tag}");
+                                                PhotonView photonView = PhotonView.Get(this);
+
+                                                // we need to recognize when we hit a route parent so that we can ignore the processing of short tap
+                                                // since ShortTap will otherwise find the nearest hold and mistakenly process it
+                                                //if (hit.collider.gameObject.tag != "RouteParent")
+                                                //{
+                                                ShortTap(hit.point, hit.normal, photonView);
+                                                //}
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        _tappingTimer[i] = 0;
+                    } 
+                    else
+                    {
+                        _tappingTimer[i] += Time.deltaTime;
+                    }
+                }
+            }
+        }
+        // </Update>
+
+        // <ShortTap>
+        /// <summary>
+        /// Called when a user is air tapping for a short time.
+        /// We pass the PhotonView in since this is an async function and loses context
+        /// </summary>
+        /// <param name="handPosition">Location where tap was registered</param>
+        private async void ShortTap(Vector3 handPosition, Vector3 surfaceNormal, PhotonView photonView)
+        {
+            bool routeParentNearby = IsRouteParentNearby(handPosition, out GameObject routeParent);
+            Debug.Log($"routeParentNearby: {routeParentNearby}");
+
+            if (!routeParentNearby && editingMode == EditingMode.Create)
+            {
+                //audioData.PlayOneShot(createAudio);
+
+                //// No Anchor Nearby, start session and create an anchor
+                //await CreateAnchor(menuHold, handPosition, surfaceNormal, photonView);
+
+                Debug.Log("CreateRoute");
+                Quaternion normalOrientation = Quaternion.LookRotation(-surfaceNormal, Vector3.up);
+                currentRouteParentPosition = handPosition;
+                currentRouteParentOrientation = normalOrientation;
+                await GetRoutesForInstantiation();
+                editingMode = EditingMode.Place;
+                holdManipulator.editingMode = HoldManipulator.EditingMode.Place;
+            }
+            else if (routeParentNearby && editingMode == EditingMode.Place)
+            {
+                //// Toggle TapToPlace on so we can start or end moving the object
+                ////anchorGameObject.GetComponent<TapToPlace>().enabled = !anchorGameObject.GetComponent<TapToPlace>().enabled;
+                ////TapToPlace ttp = anchorGameObject.GetComponent<TapToPlace>();
+
+                // toggle surface magnetism component so we can start or end moving the object
+                bool isTappingToPlace = routeParent.GetComponent<HoldData>().isTappingToPlace;
+                routeParent.GetComponent<HoldData>().isTappingToPlace = !routeParent.GetComponent<HoldData>().isTappingToPlace;
+                SurfaceMagnetism sm = routeParent.EnsureComponent<SurfaceMagnetism>();
+
+                if (isTappingToPlace)
+                {
+                    //audioData.PlayOneShot(moveEndAudio);
+
+                    //ttp.StopPlacement();
+                    sm.enabled = false;
+
+                    //// make visible and remove ghost hold
+                    //PhotonNetwork.Destroy(ghost);
+                    //anchorGameObject.GetComponent<OnHoldMove>().OnMoveEnd();
+                    //await HoldOnPlacingStopped(anchorGameObject, surfaceNormal, photonView);
+                }
+                else
+                {
+                    //audioData.PlayOneShot(moveStartAudio);
+
+                    //ttp.StartPlacement();
+                    sm.enabled = true;
+
+                    //// make invisible and show ghost hold instead
+                    //anchorGameObject.GetComponent<OnHoldMove>().OnMoveBegin();
+                    //string holdType = anchorGameObject.name.Replace("(Clone)", string.Empty);
+                    //// in case we are manipulating the flipped version -> only have one ghost so we just want the original name
+                    //holdType = holdType.Replace("_Flipped", string.Empty);
+                    //ghost = PhotonNetwork.Instantiate(holdType + "_Ghost", handPosition, Quaternion.identity);
+                }
+            }
+            //else if (anchorNearby && editingMode == EditingMode.Delete)
+            //{
+            //    audioData.PlayOneShot(deleteOneAudio);
+
+            //    // Delete nearby Anchor
+            //    await DeleteGameObject(anchorGameObject);
+            //}
+        }
+        // </ShortTap>
+
+        // <IsAnchorNearby>
+        /// <summary>
+        /// Returns true if an Anchor GameObject is within 15cm of the received reference position
+        /// </summary>
+        /// <param name="position">Reference position</param>
+        /// <param name="anchorGameObject">Anchor GameObject within 15cm of received position. Not necessarily the nearest to this position. If no AnchorObject is within 15cm, this value will be null</param>
+        /// <returns>True if a Anchor GameObject is within 15cm</returns>
+        private bool IsRouteParentNearby(Vector3 position, out GameObject routeParent)
+        {
+            routeParent = null;
+
+            List<GameObject> children = globalRouteParent.GetComponent<GlobalRouteParent>().childRoutes;
+            Debug.Log($"IsRouteParentNearby -> number of objects in scene: {children.Count}");
+
+            if (children.Count <= 0)
+            {
+                return false;
+            }
+
+            //Iterate over existing anchor gameobjects to find the nearest
+            var (distance, closestObject) = children.Aggregate(
+                new Tuple<float, GameObject>(Mathf.Infinity, null),
+                (minPair, gameobject) =>
+                {
+                    Vector3 gameObjectPosition = gameobject.transform.position;
+                    float distance = (position - gameObjectPosition).magnitude;
+                    return distance < minPair.Item1 ? new Tuple<float, GameObject>(distance, gameobject) : minPair;
+                });
+
+            if (distance <= 0.15f)
+            {
+                //Found an anchor within 15cm
+                routeParent = closestObject;
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+        // </IsAnchorNearby>
 
         /// SAVE for later reference in how to update scroll menu based on room properties
         //public override void OnEnable()
@@ -82,6 +292,9 @@ namespace Scripts
             //Vector3 parentPosition = new Vector3(0f, 0f, 0.5f);
             //GameObject routeParent = PhotonNetwork.InstantiateRoomObject(routeParentPrefab.name, parentPosition, Quaternion.identity);
             GameObject routeParent = PhotonNetwork.InstantiateRoomObject(routeParentPrefab.name, currentRouteParentPosition, currentRouteParentOrientation);
+
+            //routeParent.GetComponent<TapToPlace>().OnPlacingStarted.AddListener(OnPlacingStartedRouteParent);
+            //routeParent.GetComponent<TapToPlace>().OnPlacingStarted.AddListener(OnPlacingStoppedRouteParent);
 
             // set the name on the route parent for all clients
             // critical so that other clients can find it in their scene, i.e. in PunRPC_ReparentHoldsToRouteParent
@@ -542,7 +755,9 @@ namespace Scripts
 
         public async void GetRouteParentPosition()
         {
-            holdManipulator.editingMode = HoldManipulator.EditingMode.PlaceRoute;
+            editingMode = EditingMode.Create;
+            // holdManipulator.editingMode = HoldManipulator.EditingMode.PlaceRoute;
+            holdManipulator.editingMode = HoldManipulator.EditingMode.Off;
         }
 
         /// <summary>
@@ -713,5 +928,21 @@ namespace Scripts
             string routeListString = string.Join(",", routeList); // PUN2 doesn't support arrays/lists as parameters
             gameObject.GetPhotonView().RPC("PunRPC_UpdateScrollRouteMenu", RpcTarget.All, routeListString, (int)ScrollMenu.Merge);
         }
+
+        //public void OnPlacingStartedRouteParent()
+        //{
+        //    Debug.Log($"before: {gameObject.transform.rotation}");
+        //    holdManipulator.isRouteParentTTPOn = true;
+        //    Debug.Log($"{holdManipulator.isRouteParentTTPOn}");
+            
+        //    //gameObject.transform.rotation = currentRouteParentOrientation;
+        //}
+
+        //public void OnPlacingStoppedRouteParent()
+        //{
+        //    holdManipulator.isRouteParentTTPOn = false;
+        //    //Debug.Log($"after: {gameObject.transform.rotation}");
+        //    //gameObject.transform.rotation = currentRouteParentOrientation;
+        //}
     }
 }
