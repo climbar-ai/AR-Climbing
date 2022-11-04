@@ -69,6 +69,7 @@ MonoBehaviour:
   - PunRPC_UpdateScrollRouteMenu
   - PunRPC_CreateRoute
   - PunRPC_EmptyCloseScrollRouteMenu
+  - PunRPC_SetRouteParentPosition
   DisableAutoOpenWizard: 1
   ShowSettings: 1
   DevRegionSetOnce: 1

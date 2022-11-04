@@ -24,7 +24,7 @@ GameObject:
   - component: {fileID: 5667848068149120747}
   - component: {fileID: 6036384593852938887}
   - component: {fileID: 6590881426402689263}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Hold_6_CHull_Ghost
   m_TagString: Hold Ghost
   m_Icon: {fileID: 0}
@@ -355,6 +355,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9ba37cf916b1f9c40ae263ab9daaf3a1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  globalHoldParent: {fileID: 0}
 --- !u!114 &6590881426402689263
 MonoBehaviour:
   m_ObjectHideFlags: 0

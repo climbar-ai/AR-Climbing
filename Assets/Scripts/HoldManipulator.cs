@@ -27,16 +27,18 @@ namespace Scripts
         /// <summary>
         /// Editing modes
         /// </summary>
-        private enum EditingMode
+        public enum EditingMode
         {
             Place,
-            Delete
+            Delete,
+            //PlaceRoute
+            Off
         }
 
         /// <summary>
-        /// Used to track hold editing mode, either delete or move
+        /// Used to track hold editing mode
         /// </summary>
-        private EditingMode editingMode;
+        public EditingMode editingMode;
 
         /// <summary>
         /// hold prefab chosen in scroll hold menu
@@ -98,6 +100,12 @@ namespace Scripts
         [SerializeField]
         private GameObject commonOriginPin = default;
 
+        [SerializeField]
+        public RouteManipulator routeManipulator = default;
+
+        // search radius for route parents
+        [SerializeField] private float holdSearchRadius = 0.0f;
+
         // <Start>
         // Start is called before the first frame update
         void Start()
@@ -113,98 +121,119 @@ namespace Scripts
         // Update is called once per frame
         void Update()
         {
-
-            //Check for any air taps from either hand
-            for (int i = 0; i < 2; i++)
+            if (editingMode != EditingMode.Off)
             {
-                InputDevice device = InputDevices.GetDeviceAtXRNode((i == 0) ? XRNode.RightHand : XRNode.LeftHand);
-                if (device.TryGetFeatureValue(CommonUsages.primaryButton, out bool isTapping))
+                //Check for any air taps from either hand
+                for (int i = 0; i < 2; i++)
                 {
-                    if (!isTapping)
+                    InputDevice device = InputDevices.GetDeviceAtXRNode((i == 0) ? XRNode.RightHand : XRNode.LeftHand);
+                    if (device.TryGetFeatureValue(CommonUsages.primaryButton, out bool isTapping))
                     {
-                        //Stopped Tapping or wasn't tapping
-                        if (0f < _tappingTimer[i] && _tappingTimer[i] < 1f)
+                        if (!isTapping)
                         {
-                            //User has been tapping for less than 1 sec. Get hand-ray's end position and call ShortTap
-                            foreach (var source in CoreServices.InputSystem.DetectedInputSources)
+                            //Stopped Tapping or wasn't tapping
+                            if (0f < _tappingTimer[i] && _tappingTimer[i] < 1f)
                             {
-                                // Ignore anything that is not a hand because we want articulated hands
-                                if (source.SourceType == Microsoft.MixedReality.Toolkit.Input.InputSourceType.Hand)
+                                //User has been tapping for less than 1 sec. Get hand-ray's end position and call ShortTap
+                                foreach (var source in CoreServices.InputSystem.DetectedInputSources)
                                 {
-                                    foreach (var p in source.Pointers)
+                                    // Ignore anything that is not a hand because we want articulated hands
+                                    if (source.SourceType == Microsoft.MixedReality.Toolkit.Input.InputSourceType.Hand)
                                     {
-                                        if (p is IMixedRealityNearPointer && editingMode != EditingMode.Delete) // we want to be able to use direct touch to delete game objects
+                                        foreach (var p in source.Pointers)
                                         {
-                                            // Ignore near pointers, we only want the rays
-                                            //Debug.Log("Near Pointer");
-                                            continue;
-                                        }
-                                        if (p.Result != null)
-                                        {
-                                            var startPoint = p.Position;
-                                            var endPoint = p.Result.Details.Point;
-                                            var hitObject = p.Result.Details.Object;
-
-                                            // we need the surface normal of the spatial mesh we want to place the hold on
-                                            LayerMask mask = LayerMask.GetMask("Spatial Awareness");
-                                            if (Physics.Raycast(startPoint, endPoint - startPoint, out var hit, Mathf.Infinity, mask)) // check if successful before calling ShortTap
+                                            if (p is IMixedRealityNearPointer && editingMode != EditingMode.Delete) // we want to be able to use direct touch to delete game objects
                                             {
-                                                //Debug.Log($"Hit layer: {hit.collider.gameObject.layer}");
-                                                PhotonView photonView = PhotonView.Get(this);
-                                                ShortTap(hit.point, hit.normal, photonView);
+                                                // Ignore near pointers, we only want the rays
+                                                //Debug.Log("Near Pointer");
+                                                continue;
+                                            }
+                                            if (p.Result != null)
+                                            {
+                                                var startPoint = p.Position;
+                                                var endPoint = p.Result.Details.Point;
+                                                var hitObject = p.Result.Details.Object;
+
+                                                //Debug.Log($"{isRouteParentTTPOn}");
+                                                //Debug.Log($"{hitObject.gameObject.tag}");
+
+                                                // we need the surface normal of the spatial mesh we want to place the hold on
+                                                // we allow hits on route parents so that we can do nothing when selecting them in short taps
+                                                LayerMask mask = LayerMask.GetMask("Spatial Awareness", "RouteParent", "Hold");
+                                                if (Physics.Raycast(startPoint, endPoint - startPoint, out var hit, Mathf.Infinity, mask)) // check if successful before calling ShortTap
+                                                {
+                                                    //Debug.Log($"Hit layer: {hit.collider.gameObject.layer}");
+                                                    //Debug.Log($"{hit.collider.gameObject.tag}");
+                                                    PhotonView photonView = PhotonView.Get(this);
+
+                                                    // we need to recognize when we hit a route parent so that we can ignore the processing of short tap
+                                                    // since ShortTap will otherwise find the nearest hold and mistakenly process it
+                                                    // this is especially important if the search radius is nonzero
+                                                    if (hit.collider.gameObject.tag != "RouteParent")
+                                                    {
+                                                        // avoid having to search later if we already know we collided with a route parent game object
+                                                        // also necessary in case search radius is set to zero due to unlikelihood of registering hit precisely at object's origin
+                                                        GameObject hitGO = null;
+                                                        string tag = hit.collider.gameObject.tag;
+                                                        if (tag == "Hold")
+                                                        {
+                                                            hitGO = hit.collider.gameObject;
+                                                        }
+
+                                                        ShortTap(hit.point, hit.normal, photonView, hitGO);
+                                                    }
+                                                }
                                             }
                                         }
                                     }
                                 }
                             }
+                            _tappingTimer[i] = 0;
                         }
-                        _tappingTimer[i] = 0;
-                    }
-                    else
-                    {
-                        _tappingTimer[i] += Time.deltaTime;
-                        if (_tappingTimer[i] >= 2f)
+                        else
                         {
-                            if (editingMode == EditingMode.Delete)
+                            _tappingTimer[i] += Time.deltaTime;
+                            if (_tappingTimer[i] >= 2f)
                             {
-                                //User has been air tapping for at least 2sec. Get hand position and call LongTap
-                                if (device.TryGetFeatureValue(CommonUsages.devicePosition, out Vector3 handPosition))
+                                if (editingMode == EditingMode.Delete)
                                 {
-                                    // feedback for user on long airtap by briefly displaying a dot at the cursor
-                                    foreach (var source in CoreServices.InputSystem.DetectedInputSources)
+                                    //User has been air tapping for at least 2sec. Get hand position and call LongTap
+                                    if (device.TryGetFeatureValue(CommonUsages.devicePosition, out Vector3 handPosition))
                                     {
-                                        // Ignore anything that is not a hand because we want articulated hands
-                                        if (source.SourceType == Microsoft.MixedReality.Toolkit.Input.InputSourceType.Hand)
+                                        // feedback for user on long airtap by briefly displaying a dot at the cursor
+                                        foreach (var source in CoreServices.InputSystem.DetectedInputSources)
                                         {
-                                            foreach (var p in source.Pointers)
+                                            // Ignore anything that is not a hand because we want articulated hands
+                                            if (source.SourceType == Microsoft.MixedReality.Toolkit.Input.InputSourceType.Hand)
                                             {
-                                                if (p is IMixedRealityNearPointer)
+                                                foreach (var p in source.Pointers)
                                                 {
-                                                    // Ignore near pointers, we only want the rays
-                                                    continue;
-                                                }
-                                                if (p.Result != null)
-                                                {
-                                                    var startPoint = p.Position;
-                                                    var endPoint = p.Result.Details.Point;
-                                                    var hitObject = p.Result.Details.Object;
+                                                    if (p is IMixedRealityNearPointer)
+                                                    {
+                                                        // Ignore near pointers, we only want the rays
+                                                        continue;
+                                                    }
+                                                    if (p.Result != null)
+                                                    {
+                                                        var startPoint = p.Position;
+                                                        var endPoint = p.Result.Details.Point;
+                                                        var hitObject = p.Result.Details.Object;
 
-                                                    //Quaternion orientationTowardsHead = Quaternion.LookRotation(handPosition - headPosition, Vector3.up);
-                                                    GameObject gameObject = PhotonNetwork.Instantiate(longTapSphere.name, endPoint, Quaternion.identity);
-                                                    gameObject.transform.position = endPoint;
-                                                    gameObject.transform.rotation = Quaternion.identity;
-                                                    gameObject.transform.localScale = Vector3.one * 0.05f;
+                                                        //Quaternion orientationTowardsHead = Quaternion.LookRotation(handPosition - headPosition, Vector3.up);
+                                                        GameObject gameObject = PhotonNetwork.Instantiate(longTapSphere.name, endPoint, Quaternion.identity);
+                                                        gameObject.transform.localScale = Vector3.one * 0.05f;
 
-                                                    StartCoroutine(DestroyObjectDelayed(gameObject, .2f));
+                                                        StartCoroutine(DestroyObjectDelayed(gameObject, .2f));
+                                                    }
                                                 }
                                             }
                                         }
                                     }
-                                }
 
-                                LongTap();
+                                    LongTap();
+                                }
+                                _tappingTimer[i] = -float.MaxValue; // reset the timer, to avoid retriggering if user is still holding tap
                             }
-                            _tappingTimer[i] = -float.MaxValue; // reset the timer, to avoid retriggering if user is still holding tap
                         }
                     }
                 }
@@ -218,62 +247,67 @@ namespace Scripts
         /// We pass the PhotonView in since this is an async function and loses context
         /// </summary>
         /// <param name="handPosition">Location where tap was registered</param>
-        private async void ShortTap(Vector3 handPosition, Vector3 surfaceNormal, PhotonView photonView)
+        private async void ShortTap(Vector3 handPosition, Vector3 surfaceNormal, PhotonView photonView, GameObject hitGO)
         {
-            bool anchorNearby = IsAnchorNearby(handPosition, out GameObject anchorGameObject);
-            //Debug.Log($"anchorNearby: {anchorNearby}");
+            // if we are passed in a valid route parent game object then we don't have to search
+            bool holdNearby = false;
+            GameObject hold = null;
+            if (hitGO != null)
+            {
+                holdNearby = true;
+                hold = hitGO;
+            }
+            else // do search if we aren't passed a valid route parent game object
+            {
+                holdNearby = IsAnchorNearby(handPosition, out hold);
+            }
 
-            if (!anchorNearby && editingMode == EditingMode.Place)
+            if (!hold && editingMode == EditingMode.Place)
             {
                 audioData.PlayOneShot(createAudio);
 
                 // No Anchor Nearby, start session and create an anchor
                 await CreateAnchor(menuHold, handPosition, surfaceNormal, photonView);
             }
-            else if (anchorNearby && editingMode == EditingMode.Place)
+            else if (hold && editingMode == EditingMode.Place)
             {
-                //// Toggle TapToPlace on so we can start or end moving the object
-                ////anchorGameObject.GetComponent<TapToPlace>().enabled = !anchorGameObject.GetComponent<TapToPlace>().enabled;
-                ////TapToPlace ttp = anchorGameObject.GetComponent<TapToPlace>();
-
                 // toggle surface magnetism component so we can start or end moving the object
-                bool isTappingToPlace = anchorGameObject.GetComponent<HoldData>().isTappingToPlace;
-                anchorGameObject.GetComponent<HoldData>().isTappingToPlace = !anchorGameObject.GetComponent<HoldData>().isTappingToPlace;
-                SurfaceMagnetism sm = anchorGameObject.EnsureComponent<SurfaceMagnetism>();
-               
+                bool isTappingToPlace = hold.GetComponent<HoldData>().isTappingToPlace;
+                hold.GetComponent<HoldData>().isTappingToPlace = !hold.GetComponent<HoldData>().isTappingToPlace;
+                SurfaceMagnetism sm = hold.EnsureComponent<SurfaceMagnetism>();
+
                 if (isTappingToPlace)
                 {
                     audioData.PlayOneShot(moveEndAudio);
 
-                    //ttp.StopPlacement();
                     sm.enabled = false;
 
                     // make visible and remove ghost hold
                     PhotonNetwork.Destroy(ghost);
-                    anchorGameObject.GetComponent<OnHoldMove>().OnMoveEnd();
-                    await HoldOnPlacingStopped(anchorGameObject, surfaceNormal, photonView);
+                    hold.GetComponent<OnHoldMove>().OnMoveEnd();
+                    await HoldOnPlacingStopped(hold, surfaceNormal, photonView);
                 }
                 else
                 {
                     audioData.PlayOneShot(moveStartAudio);
 
-                    //ttp.StartPlacement();
                     sm.enabled = true;
 
                     // make invisible and show ghost hold instead
-                    anchorGameObject.GetComponent<OnHoldMove>().OnMoveBegin();
-                    string holdType = anchorGameObject.name.Replace("(Clone)", string.Empty);
+                    hold.GetComponent<OnHoldMove>().OnMoveBegin();
+                    string holdType = hold.name.Replace("(Clone)", string.Empty);
+
                     // in case we are manipulating the flipped version -> only have one ghost so we just want the original name
-                    holdType = holdType.Replace("_Flipped", string.Empty); 
+                    holdType = holdType.Replace("_Flipped", string.Empty);
                     ghost = PhotonNetwork.Instantiate(holdType + "_Ghost", handPosition, Quaternion.identity);
                 }
             }
-            else if (anchorNearby && editingMode == EditingMode.Delete)
+            else if (holdNearby && editingMode == EditingMode.Delete)
             {
                 audioData.PlayOneShot(deleteOneAudio);
 
                 // Delete nearby Anchor
-                await DeleteGameObject(anchorGameObject);
+                await DeleteGameObject(hold);
             }
         }
         // </ShortTap>
@@ -335,14 +369,14 @@ namespace Scripts
         /// Returns true if an Anchor GameObject is within 15cm of the received reference position
         /// </summary>
         /// <param name="position">Reference position</param>
-        /// <param name="anchorGameObject">Anchor GameObject within 15cm of received position. Not necessarily the nearest to this position. If no AnchorObject is within 15cm, this value will be null</param>
-        /// <returns>True if a Anchor GameObject is within 15cm</returns>
+        /// <param name="anchorGameObject">Hold GameObject within search radius of received position. Not necessarily the nearest to this position. If no AnchorObject is within 15cm, this value will be null</param>
+        /// <returns>True if a Hold GameObject is within search radius</returns>
         private bool IsAnchorNearby(Vector3 position, out GameObject anchorGameObject)
         {
             anchorGameObject = null;
 
             List<GameObject> children = globalHoldParent.GetComponent<GlobalHoldParent>().childHolds;
-            Debug.Log($"IsAnchorNearby -> number of objects in scene: {children.Count}");
+            //Debug.Log($"IsAnchorNearby -> number of objects in scene: {children.Count}");
 
             if (children.Count <= 0)
             {
@@ -359,9 +393,9 @@ namespace Scripts
                     return distance < minPair.Item1 ? new Tuple<float, GameObject>(distance, gameobject) : minPair;
                 });
 
-            if (distance <= 0.15f)
+            if (distance <= holdSearchRadius)
             {
-                //Found an anchor within 15cm
+                //Found an anchor within search radius
                 anchorGameObject = closestObject;
                 return true;
             }

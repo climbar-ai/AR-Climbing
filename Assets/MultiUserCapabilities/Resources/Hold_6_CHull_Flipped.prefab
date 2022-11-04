@@ -29,7 +29,7 @@ GameObject:
   - component: {fileID: 780650013696493532}
   - component: {fileID: 4124082948346496745}
   - component: {fileID: 8785667380307487593}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: Hold_6_CHull_Flipped
   m_TagString: Hold
   m_Icon: {fileID: 0}

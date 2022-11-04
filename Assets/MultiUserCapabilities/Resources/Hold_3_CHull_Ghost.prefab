@@ -24,7 +24,7 @@ GameObject:
   - component: {fileID: 8163483715566151123}
   - component: {fileID: 7882710264533645984}
   - component: {fileID: 404462402404020788}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Hold_3_CHull_Ghost
   m_TagString: Hold Ghost
   m_Icon: {fileID: 0}
@@ -165,7 +165,7 @@ MonoBehaviour:
   rotateLerpTime: 0.001
   scaleLerpTime: 0.001
   enableConstraints: 1
-  constraintsManager: {fileID: 6303998518502419647}
+  constraintsManager: {fileID: 3498559356030524154, guid: 11362ecf09bcf6944afecb61307df4dd, type: 3}
   elasticsManager: {fileID: 0}
   onManipulationStarted:
     m_PersistentCalls:
@@ -355,6 +355,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9ba37cf916b1f9c40ae263ab9daaf3a1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  globalHoldParent: {fileID: 0}
 --- !u!114 &404462402404020788
 MonoBehaviour:
   m_ObjectHideFlags: 0

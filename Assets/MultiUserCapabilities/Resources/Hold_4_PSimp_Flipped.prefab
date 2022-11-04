@@ -29,7 +29,7 @@ GameObject:
   - component: {fileID: 772130154911577201}
   - component: {fileID: 2418335946020182587}
   - component: {fileID: 5859705767013585342}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: Hold_4_PSimp_Flipped
   m_TagString: Hold
   m_Icon: {fileID: 0}
