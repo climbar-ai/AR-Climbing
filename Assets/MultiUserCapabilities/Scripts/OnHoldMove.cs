@@ -40,12 +40,16 @@ namespace MultiUserCapabilities
         void PunRPC_OnMoveBegin()
         {
             this.m_Renderer.enabled = false;
+
+            // move to this layer so that raycast hits spatial mesh when determining its final position
+            this.gameObject.layer = LayerMask.NameToLayer("Ignore Raycast"); 
         }
 
         [PunRPC]
         void PunRPC_OnMoveEnd()
         {
             this.m_Renderer.enabled = true;
+            this.gameObject.layer = LayerMask.NameToLayer("Hold");
         }
     }
 }
