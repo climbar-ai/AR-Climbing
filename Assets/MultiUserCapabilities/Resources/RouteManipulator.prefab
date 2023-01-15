@@ -1,0 +1,82 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &1014610570320782525
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1014610570320782527}
+  - component: {fileID: 1014610570320782526}
+  - component: {fileID: 1014610570320782520}
+  m_Layer: 0
+  m_Name: RouteManipulator
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1014610570320782527
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1014610570320782525}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0.30669448, y: -0.41733754, z: 2.0057094}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_RootOrder: 0
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1014610570320782526
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1014610570320782525}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ab3eccdae8fe53849a59ebc19bd3969b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  globalRouteParent: {fileID: 0}
+  globalHoldParent: {fileID: 0}
+  holdManipulator: {fileID: 0}
+  routeParentPrefab: {fileID: 768673690267877085, guid: c448116b6a9dbf7409247808e5a9880f, type: 3}
+  scrollRouteMenuScript: {fileID: 0}
+  scrollRouteMenu: {fileID: 0}
+  keyboardInput: {fileID: 0}
+  keyboardInputContainer: {fileID: 0}
+  tcpClient: {fileID: 0}
+  currentRouteParentPosition: {x: 0, y: 0, z: 0}
+  currentRouteParentOrientation: {x: 0, y: 0, z: 0, w: 0}
+  editingMode: 1
+  routeParentSearchRadius: 0
+  tapSphere: {fileID: 4530105255939549228, guid: 9cebd9c1a9fce964a911926aadb0982f, type: 3}
+--- !u!114 &1014610570320782520
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1014610570320782525}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aa584fbee541324448dd18d8409c7a41, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ObservedComponentsFoldoutOpen: 1
+  Group: 0
+  prefixField: -1
+  Synchronization: 3
+  OwnershipTransfer: 0
+  observableSearch: 2
+  ObservedComponents: []
+  sceneViewId: 0
+  InstantiationId: 0
+  isRuntimeInstantiated: 0
