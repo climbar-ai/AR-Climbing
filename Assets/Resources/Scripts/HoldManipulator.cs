@@ -739,6 +739,7 @@ namespace Scripts
         public void ScrollHoldMenuClick(GameObject go)
         {
             Debug.Log(go);
+            Debug.Log(go.GetComponent<PhotonView>());
             if (go != null)
             {
                 // PhotonNetwork.PrefabPool lets us refer to prefabs by name under Resources folder without having to manually add them to the ResourceCache: https://forum.unity.com/threads/solved-photon-instantiating-prefabs-without-putting-them-in-a-resources-folder.293853/

@@ -2588,6 +2588,13 @@ namespace Photon.Pun
 
             go = prefabPool.Instantiate(parameters.prefabName, parameters.position, parameters.rotation);
 
+            //Component[] components = go.GetComponents(typeof(Component));
+            //Debug.Log(components.Length);
+            //foreach (Component component in components)
+            //{
+            //    Debug.Log(component.ToString());
+            //}
+
 
             if (go == null)
             {

@@ -161,7 +161,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f98e7663599230e419addf153615c144, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  movingButtonVisuals: {fileID: 2889564013356869673}
+  movingButtonVisuals: {fileID: 3661488600955643071}
   distanceSpaceMode: 1
   startPushDistance: -0.008
   maxPushDistance: 0.006
@@ -258,10 +258,10 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
-  movingButtonIconText: {fileID: 6625719727719857492}
-  compressableButtonVisuals: {fileID: 149962826177548964}
+  movingButtonIconText: {fileID: 7557242880819548363}
+  compressableButtonVisuals: {fileID: 8762328470136534849}
   minCompressPercentage: 0.25
-  highlightPlate: {fileID: 3180523052234174174}
+  highlightPlate: {fileID: 2566454099635938136}
   highlightPlateAnimationTime: 0.25
 --- !u!114 &6141335907579895621
 MonoBehaviour:
@@ -300,10 +300,10 @@ MonoBehaviour:
   VoiceCommand: 
   voiceRequiresFocus: 1
   profiles:
-  - Target: {fileID: 2889564014428589268}
+  - Target: {fileID: 1781441444882621031}
     Themes:
     - {fileID: 11400000, guid: 8f8cfb3041153fa45bccb6d664a563ec, type: 2}
-  - Target: {fileID: 2889564014346465272}
+  - Target: {fileID: 8956878970857377234}
     Themes:
     - {fileID: 11400000, guid: 087b16002c2b0b445baa3ed3beae44a9, type: 2}
   OnClick:
@@ -325,8 +325,9 @@ MonoBehaviour:
   - Event:
       m_PersistentCalls:
         m_Calls:
-        - m_Target: {fileID: 3041198136122407622}
-          m_TargetAssemblyTypeName: 
+        - m_Target: {fileID: 6056644611007965538}
+          m_TargetAssemblyTypeName: Microsoft.MixedReality.Toolkit.UI.PressableButtonHoloLens2,
+            Microsoft.MixedReality.Toolkit.SDK
           m_MethodName: AnimateInHighlightPlate
           m_Mode: 1
           m_Arguments:
@@ -369,8 +370,9 @@ MonoBehaviour:
       EventValue:
         m_PersistentCalls:
           m_Calls:
-          - m_Target: {fileID: 3041198136122407622}
-            m_TargetAssemblyTypeName: 
+          - m_Target: {fileID: 6056644611007965538}
+            m_TargetAssemblyTypeName: Microsoft.MixedReality.Toolkit.UI.PressableButtonHoloLens2,
+              Microsoft.MixedReality.Toolkit.SDK
             m_MethodName: AnimateOutHighlightPlate
             m_Mode: 1
             m_Arguments:
@@ -385,8 +387,8 @@ MonoBehaviour:
   - Event:
       m_PersistentCalls:
         m_Calls:
-        - m_Target: {fileID: 2889564013791527765}
-          m_TargetAssemblyTypeName: 
+        - m_Target: {fileID: 1808708943177858018}
+          m_TargetAssemblyTypeName: UnityEngine.AudioSource, UnityEngine
           m_MethodName: PlayOneShot
           m_Mode: 2
           m_Arguments:
@@ -429,8 +431,8 @@ MonoBehaviour:
       EventValue:
         m_PersistentCalls:
           m_Calls:
-          - m_Target: {fileID: 2889564013791527765}
-            m_TargetAssemblyTypeName: 
+          - m_Target: {fileID: 1808708943177858018}
+            m_TargetAssemblyTypeName: UnityEngine.AudioSource, UnityEngine
             m_MethodName: PlayOneShot
             m_Mode: 2
             m_Arguments:
@@ -588,8 +590,8 @@ MonoBehaviour:
   debounceThreshold: 0.01
   localForward: {x: -0, y: -0, z: -1}
   localUp: {x: 0, y: 1, z: 0}
-  localCenter: {x: 0, y: 0, z: 0}
-  bounds: {x: 0, y: 0}
+  localCenter: {x: 0, y: 0, z: -0.008}
+  bounds: {x: 0.09607224, y: 0.032}
   touchableCollider: {fileID: 5113638417567518191}
 --- !u!114 &9206120592355389142
 MonoBehaviour:
@@ -716,7 +718,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f98e7663599230e419addf153615c144, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  movingButtonVisuals: {fileID: 2889564013356869673}
+  movingButtonVisuals: {fileID: 1757549810273086682}
   distanceSpaceMode: 1
   startPushDistance: -0.008
   maxPushDistance: 0.006
@@ -813,10 +815,10 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
-  movingButtonIconText: {fileID: 6625719727719857492}
-  compressableButtonVisuals: {fileID: 149962826177548964}
+  movingButtonIconText: {fileID: 5237754435419982103}
+  compressableButtonVisuals: {fileID: 2134719250114028427}
   minCompressPercentage: 0.25
-  highlightPlate: {fileID: 3180523052234174174}
+  highlightPlate: {fileID: 2737561485282245452}
   highlightPlateAnimationTime: 0.25
 --- !u!114 &5925549997954578399
 MonoBehaviour:
@@ -855,10 +857,10 @@ MonoBehaviour:
   VoiceCommand: 
   voiceRequiresFocus: 1
   profiles:
-  - Target: {fileID: 2889564014428589268}
+  - Target: {fileID: 4947546513039324210}
     Themes:
     - {fileID: 11400000, guid: 8f8cfb3041153fa45bccb6d664a563ec, type: 2}
-  - Target: {fileID: 2889564014346465272}
+  - Target: {fileID: 7583041111033336366}
     Themes:
     - {fileID: 11400000, guid: 087b16002c2b0b445baa3ed3beae44a9, type: 2}
   OnClick:
@@ -880,8 +882,9 @@ MonoBehaviour:
   - Event:
       m_PersistentCalls:
         m_Calls:
-        - m_Target: {fileID: 3041198136122407622}
-          m_TargetAssemblyTypeName: 
+        - m_Target: {fileID: 993782274124196100}
+          m_TargetAssemblyTypeName: Microsoft.MixedReality.Toolkit.UI.PressableButtonHoloLens2,
+            Microsoft.MixedReality.Toolkit.SDK
           m_MethodName: AnimateInHighlightPlate
           m_Mode: 1
           m_Arguments:
@@ -924,8 +927,9 @@ MonoBehaviour:
       EventValue:
         m_PersistentCalls:
           m_Calls:
-          - m_Target: {fileID: 3041198136122407622}
-            m_TargetAssemblyTypeName: 
+          - m_Target: {fileID: 993782274124196100}
+            m_TargetAssemblyTypeName: Microsoft.MixedReality.Toolkit.UI.PressableButtonHoloLens2,
+              Microsoft.MixedReality.Toolkit.SDK
             m_MethodName: AnimateOutHighlightPlate
             m_Mode: 1
             m_Arguments:
@@ -940,8 +944,8 @@ MonoBehaviour:
   - Event:
       m_PersistentCalls:
         m_Calls:
-        - m_Target: {fileID: 2889564013791527765}
-          m_TargetAssemblyTypeName: 
+        - m_Target: {fileID: 6879722027861025348}
+          m_TargetAssemblyTypeName: UnityEngine.AudioSource, UnityEngine
           m_MethodName: PlayOneShot
           m_Mode: 2
           m_Arguments:
@@ -984,8 +988,8 @@ MonoBehaviour:
       EventValue:
         m_PersistentCalls:
           m_Calls:
-          - m_Target: {fileID: 2889564013791527765}
-            m_TargetAssemblyTypeName: 
+          - m_Target: {fileID: 6879722027861025348}
+            m_TargetAssemblyTypeName: UnityEngine.AudioSource, UnityEngine
             m_MethodName: PlayOneShot
             m_Mode: 2
             m_Arguments:
@@ -1143,8 +1147,8 @@ MonoBehaviour:
   debounceThreshold: 0.01
   localForward: {x: -0, y: -0, z: -1}
   localUp: {x: 0, y: 1, z: 0}
-  localCenter: {x: 0, y: 0, z: 0}
-  bounds: {x: 0, y: 0}
+  localCenter: {x: 0, y: 0, z: -0.008}
+  bounds: {x: 0.09607224, y: 0.032}
   touchableCollider: {fileID: 8585427316743404720}
 --- !u!114 &5978509672098489031
 MonoBehaviour:
@@ -1460,7 +1464,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f98e7663599230e419addf153615c144, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  movingButtonVisuals: {fileID: 2889564013356869673}
+  movingButtonVisuals: {fileID: 2974499503250855133}
   distanceSpaceMode: 1
   startPushDistance: -0.008
   maxPushDistance: 0.006
@@ -1557,10 +1561,10 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
-  movingButtonIconText: {fileID: 6625719727719857492}
-  compressableButtonVisuals: {fileID: 149962826177548964}
+  movingButtonIconText: {fileID: 7240011654552578397}
+  compressableButtonVisuals: {fileID: 865127775519756609}
   minCompressPercentage: 0.25
-  highlightPlate: {fileID: 3180523052234174174}
+  highlightPlate: {fileID: 8530918768909851528}
   highlightPlateAnimationTime: 0.25
 --- !u!114 &8282051406585587492
 MonoBehaviour:
@@ -1599,10 +1603,10 @@ MonoBehaviour:
   VoiceCommand: 
   voiceRequiresFocus: 1
   profiles:
-  - Target: {fileID: 2889564014428589268}
+  - Target: {fileID: 5004117472226985061}
     Themes:
     - {fileID: 11400000, guid: 8f8cfb3041153fa45bccb6d664a563ec, type: 2}
-  - Target: {fileID: 2889564014346465272}
+  - Target: {fileID: 6488431331556010498}
     Themes:
     - {fileID: 11400000, guid: 087b16002c2b0b445baa3ed3beae44a9, type: 2}
   OnClick:
@@ -1624,8 +1628,9 @@ MonoBehaviour:
   - Event:
       m_PersistentCalls:
         m_Calls:
-        - m_Target: {fileID: 3041198136122407622}
-          m_TargetAssemblyTypeName: 
+        - m_Target: {fileID: 2177842389690855354}
+          m_TargetAssemblyTypeName: Microsoft.MixedReality.Toolkit.UI.PressableButtonHoloLens2,
+            Microsoft.MixedReality.Toolkit.SDK
           m_MethodName: AnimateInHighlightPlate
           m_Mode: 1
           m_Arguments:
@@ -1668,8 +1673,9 @@ MonoBehaviour:
       EventValue:
         m_PersistentCalls:
           m_Calls:
-          - m_Target: {fileID: 3041198136122407622}
-            m_TargetAssemblyTypeName: 
+          - m_Target: {fileID: 2177842389690855354}
+            m_TargetAssemblyTypeName: Microsoft.MixedReality.Toolkit.UI.PressableButtonHoloLens2,
+              Microsoft.MixedReality.Toolkit.SDK
             m_MethodName: AnimateOutHighlightPlate
             m_Mode: 1
             m_Arguments:
@@ -1684,8 +1690,8 @@ MonoBehaviour:
   - Event:
       m_PersistentCalls:
         m_Calls:
-        - m_Target: {fileID: 2889564013791527765}
-          m_TargetAssemblyTypeName: 
+        - m_Target: {fileID: 4512606212647950401}
+          m_TargetAssemblyTypeName: UnityEngine.AudioSource, UnityEngine
           m_MethodName: PlayOneShot
           m_Mode: 2
           m_Arguments:
@@ -1728,8 +1734,8 @@ MonoBehaviour:
       EventValue:
         m_PersistentCalls:
           m_Calls:
-          - m_Target: {fileID: 2889564013791527765}
-            m_TargetAssemblyTypeName: 
+          - m_Target: {fileID: 4512606212647950401}
+            m_TargetAssemblyTypeName: UnityEngine.AudioSource, UnityEngine
             m_MethodName: PlayOneShot
             m_Mode: 2
             m_Arguments:
@@ -1887,8 +1893,8 @@ MonoBehaviour:
   debounceThreshold: 0.01
   localForward: {x: -0, y: -0, z: -1}
   localUp: {x: 0, y: 1, z: 0}
-  localCenter: {x: 0, y: 0, z: 0}
-  bounds: {x: 0, y: 0}
+  localCenter: {x: 0, y: 0, z: -0.008}
+  bounds: {x: 0.09607224, y: 0.032}
   touchableCollider: {fileID: 1911427596959137496}
 --- !u!114 &7239808260490666911
 MonoBehaviour:
@@ -1983,7 +1989,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f98e7663599230e419addf153615c144, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  movingButtonVisuals: {fileID: 2889564013356869673}
+  movingButtonVisuals: {fileID: 6260865243791698499}
   distanceSpaceMode: 1
   startPushDistance: -0.008
   maxPushDistance: 0.006
@@ -2080,10 +2086,10 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
-  movingButtonIconText: {fileID: 6625719727719857492}
-  compressableButtonVisuals: {fileID: 149962826177548964}
+  movingButtonIconText: {fileID: 5968467743251369709}
+  compressableButtonVisuals: {fileID: 7737690994823097067}
   minCompressPercentage: 0.25
-  highlightPlate: {fileID: 3180523052234174174}
+  highlightPlate: {fileID: 6313731361238634222}
   highlightPlateAnimationTime: 0.25
 --- !u!114 &5641335416180741551
 MonoBehaviour:
@@ -2122,10 +2128,10 @@ MonoBehaviour:
   VoiceCommand: 
   voiceRequiresFocus: 1
   profiles:
-  - Target: {fileID: 2889564014428589268}
+  - Target: {fileID: 3944806572359785635}
     Themes:
     - {fileID: 11400000, guid: 8f8cfb3041153fa45bccb6d664a563ec, type: 2}
-  - Target: {fileID: 2889564014346465272}
+  - Target: {fileID: 887551551831325053}
     Themes:
     - {fileID: 11400000, guid: 087b16002c2b0b445baa3ed3beae44a9, type: 2}
   OnClick:
@@ -2147,8 +2153,9 @@ MonoBehaviour:
   - Event:
       m_PersistentCalls:
         m_Calls:
-        - m_Target: {fileID: 3041198136122407622}
-          m_TargetAssemblyTypeName: 
+        - m_Target: {fileID: 2425052872784209920}
+          m_TargetAssemblyTypeName: Microsoft.MixedReality.Toolkit.UI.PressableButtonHoloLens2,
+            Microsoft.MixedReality.Toolkit.SDK
           m_MethodName: AnimateInHighlightPlate
           m_Mode: 1
           m_Arguments:
@@ -2191,8 +2198,9 @@ MonoBehaviour:
       EventValue:
         m_PersistentCalls:
           m_Calls:
-          - m_Target: {fileID: 3041198136122407622}
-            m_TargetAssemblyTypeName: 
+          - m_Target: {fileID: 2425052872784209920}
+            m_TargetAssemblyTypeName: Microsoft.MixedReality.Toolkit.UI.PressableButtonHoloLens2,
+              Microsoft.MixedReality.Toolkit.SDK
             m_MethodName: AnimateOutHighlightPlate
             m_Mode: 1
             m_Arguments:
@@ -2207,8 +2215,8 @@ MonoBehaviour:
   - Event:
       m_PersistentCalls:
         m_Calls:
-        - m_Target: {fileID: 2889564013791527765}
-          m_TargetAssemblyTypeName: 
+        - m_Target: {fileID: 5944617272362677420}
+          m_TargetAssemblyTypeName: UnityEngine.AudioSource, UnityEngine
           m_MethodName: PlayOneShot
           m_Mode: 2
           m_Arguments:
@@ -2251,8 +2259,8 @@ MonoBehaviour:
       EventValue:
         m_PersistentCalls:
           m_Calls:
-          - m_Target: {fileID: 2889564013791527765}
-            m_TargetAssemblyTypeName: 
+          - m_Target: {fileID: 5944617272362677420}
+            m_TargetAssemblyTypeName: UnityEngine.AudioSource, UnityEngine
             m_MethodName: PlayOneShot
             m_Mode: 2
             m_Arguments:
@@ -2410,8 +2418,8 @@ MonoBehaviour:
   debounceThreshold: 0.01
   localForward: {x: -0, y: -0, z: -1}
   localUp: {x: 0, y: 1, z: 0}
-  localCenter: {x: 0, y: 0, z: 0}
-  bounds: {x: 0, y: 0}
+  localCenter: {x: 0, y: 0, z: -0.008}
+  bounds: {x: 0.09607224, y: 0.032}
   touchableCollider: {fileID: 2443788071151722404}
 --- !u!114 &8641830457313108083
 MonoBehaviour:
@@ -2727,7 +2735,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f98e7663599230e419addf153615c144, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  movingButtonVisuals: {fileID: 2889564013356869673}
+  movingButtonVisuals: {fileID: 3780678626174587450}
   distanceSpaceMode: 1
   startPushDistance: -0.008
   maxPushDistance: 0.006
@@ -2824,10 +2832,10 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
-  movingButtonIconText: {fileID: 6625719727719857492}
-  compressableButtonVisuals: {fileID: 149962826177548964}
+  movingButtonIconText: {fileID: 1993749627567320721}
+  compressableButtonVisuals: {fileID: 8183477569821449463}
   minCompressPercentage: 0.25
-  highlightPlate: {fileID: 3180523052234174174}
+  highlightPlate: {fileID: 3784659625052552549}
   highlightPlateAnimationTime: 0.25
 --- !u!114 &6458949828103958244
 MonoBehaviour:
@@ -2866,10 +2874,10 @@ MonoBehaviour:
   VoiceCommand: 
   voiceRequiresFocus: 1
   profiles:
-  - Target: {fileID: 2889564014428589268}
+  - Target: {fileID: 8631935350790194013}
     Themes:
     - {fileID: 11400000, guid: 8f8cfb3041153fa45bccb6d664a563ec, type: 2}
-  - Target: {fileID: 2889564014346465272}
+  - Target: {fileID: 3874666863801355772}
     Themes:
     - {fileID: 11400000, guid: 087b16002c2b0b445baa3ed3beae44a9, type: 2}
   OnClick:
@@ -2891,8 +2899,9 @@ MonoBehaviour:
   - Event:
       m_PersistentCalls:
         m_Calls:
-        - m_Target: {fileID: 3041198136122407622}
-          m_TargetAssemblyTypeName: 
+        - m_Target: {fileID: 6421900770780138532}
+          m_TargetAssemblyTypeName: Microsoft.MixedReality.Toolkit.UI.PressableButtonHoloLens2,
+            Microsoft.MixedReality.Toolkit.SDK
           m_MethodName: AnimateInHighlightPlate
           m_Mode: 1
           m_Arguments:
@@ -2935,8 +2944,9 @@ MonoBehaviour:
       EventValue:
         m_PersistentCalls:
           m_Calls:
-          - m_Target: {fileID: 3041198136122407622}
-            m_TargetAssemblyTypeName: 
+          - m_Target: {fileID: 6421900770780138532}
+            m_TargetAssemblyTypeName: Microsoft.MixedReality.Toolkit.UI.PressableButtonHoloLens2,
+              Microsoft.MixedReality.Toolkit.SDK
             m_MethodName: AnimateOutHighlightPlate
             m_Mode: 1
             m_Arguments:
@@ -2951,8 +2961,8 @@ MonoBehaviour:
   - Event:
       m_PersistentCalls:
         m_Calls:
-        - m_Target: {fileID: 2889564013791527765}
-          m_TargetAssemblyTypeName: 
+        - m_Target: {fileID: 1341079872834299504}
+          m_TargetAssemblyTypeName: UnityEngine.AudioSource, UnityEngine
           m_MethodName: PlayOneShot
           m_Mode: 2
           m_Arguments:
@@ -2995,8 +3005,8 @@ MonoBehaviour:
       EventValue:
         m_PersistentCalls:
           m_Calls:
-          - m_Target: {fileID: 2889564013791527765}
-            m_TargetAssemblyTypeName: 
+          - m_Target: {fileID: 1341079872834299504}
+            m_TargetAssemblyTypeName: UnityEngine.AudioSource, UnityEngine
             m_MethodName: PlayOneShot
             m_Mode: 2
             m_Arguments:
@@ -3154,8 +3164,8 @@ MonoBehaviour:
   debounceThreshold: 0.01
   localForward: {x: -0, y: -0, z: -1}
   localUp: {x: 0, y: 1, z: 0}
-  localCenter: {x: 0, y: 0, z: 0}
-  bounds: {x: 0, y: 0}
+  localCenter: {x: 0, y: 0, z: -0.008}
+  bounds: {x: 0.09607224, y: 0.032}
   touchableCollider: {fileID: 4306140638539399261}
 --- !u!114 &7516417376075011032
 MonoBehaviour:
@@ -4128,7 +4138,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f98e7663599230e419addf153615c144, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  movingButtonVisuals: {fileID: 2889564013356869673}
+  movingButtonVisuals: {fileID: 5663287684207440584}
   distanceSpaceMode: 1
   startPushDistance: -0.008
   maxPushDistance: 0.006
@@ -4225,10 +4235,10 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
-  movingButtonIconText: {fileID: 6625719727719857492}
-  compressableButtonVisuals: {fileID: 149962826177548964}
+  movingButtonIconText: {fileID: 805653101514818449}
+  compressableButtonVisuals: {fileID: 4886485397511402260}
   minCompressPercentage: 0.25
-  highlightPlate: {fileID: 3180523052234174174}
+  highlightPlate: {fileID: 8693054268942507072}
   highlightPlateAnimationTime: 0.25
 --- !u!114 &8727770468251870026
 MonoBehaviour:
@@ -4267,10 +4277,10 @@ MonoBehaviour:
   VoiceCommand: 
   voiceRequiresFocus: 1
   profiles:
-  - Target: {fileID: 2889564014428589268}
+  - Target: {fileID: 7520907709028416506}
     Themes:
     - {fileID: 11400000, guid: 8f8cfb3041153fa45bccb6d664a563ec, type: 2}
-  - Target: {fileID: 2889564014346465272}
+  - Target: {fileID: 185575251416175397}
     Themes:
     - {fileID: 11400000, guid: 087b16002c2b0b445baa3ed3beae44a9, type: 2}
   OnClick:
@@ -4292,8 +4302,9 @@ MonoBehaviour:
   - Event:
       m_PersistentCalls:
         m_Calls:
-        - m_Target: {fileID: 3041198136122407622}
-          m_TargetAssemblyTypeName: 
+        - m_Target: {fileID: 5728129411559509483}
+          m_TargetAssemblyTypeName: Microsoft.MixedReality.Toolkit.UI.PressableButtonHoloLens2,
+            Microsoft.MixedReality.Toolkit.SDK
           m_MethodName: AnimateInHighlightPlate
           m_Mode: 1
           m_Arguments:
@@ -4336,8 +4347,9 @@ MonoBehaviour:
       EventValue:
         m_PersistentCalls:
           m_Calls:
-          - m_Target: {fileID: 3041198136122407622}
-            m_TargetAssemblyTypeName: 
+          - m_Target: {fileID: 5728129411559509483}
+            m_TargetAssemblyTypeName: Microsoft.MixedReality.Toolkit.UI.PressableButtonHoloLens2,
+              Microsoft.MixedReality.Toolkit.SDK
             m_MethodName: AnimateOutHighlightPlate
             m_Mode: 1
             m_Arguments:
@@ -4352,8 +4364,8 @@ MonoBehaviour:
   - Event:
       m_PersistentCalls:
         m_Calls:
-        - m_Target: {fileID: 2889564013791527765}
-          m_TargetAssemblyTypeName: 
+        - m_Target: {fileID: 7137595216062835792}
+          m_TargetAssemblyTypeName: UnityEngine.AudioSource, UnityEngine
           m_MethodName: PlayOneShot
           m_Mode: 2
           m_Arguments:
@@ -4396,8 +4408,8 @@ MonoBehaviour:
       EventValue:
         m_PersistentCalls:
           m_Calls:
-          - m_Target: {fileID: 2889564013791527765}
-            m_TargetAssemblyTypeName: 
+          - m_Target: {fileID: 7137595216062835792}
+            m_TargetAssemblyTypeName: UnityEngine.AudioSource, UnityEngine
             m_MethodName: PlayOneShot
             m_Mode: 2
             m_Arguments:
@@ -4555,8 +4567,8 @@ MonoBehaviour:
   debounceThreshold: 0.01
   localForward: {x: -0, y: -0, z: -1}
   localUp: {x: 0, y: 1, z: 0}
-  localCenter: {x: 0, y: 0, z: 0}
-  bounds: {x: 0, y: 0}
+  localCenter: {x: 0, y: 0, z: -0.008}
+  bounds: {x: 0.09607224, y: 0.032}
   touchableCollider: {fileID: 5295237164978365213}
 --- !u!114 &5169683660143297069
 MonoBehaviour:
@@ -4946,7 +4958,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Hold 1
+  m_text: Hold 5
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 6a84f857bec7e7345843ae29404c57ce, type: 2}
   m_sharedMaterial: {fileID: 21202819797275496, guid: 6a84f857bec7e7345843ae29404c57ce, type: 2}
@@ -6081,7 +6093,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Hold 1
+  m_text: Hold 4
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 6a84f857bec7e7345843ae29404c57ce, type: 2}
   m_sharedMaterial: {fileID: 21202819797275496, guid: 6a84f857bec7e7345843ae29404c57ce, type: 2}
@@ -29938,7 +29950,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Hold 1
+  m_text: Volume 1
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 6a84f857bec7e7345843ae29404c57ce, type: 2}
   m_sharedMaterial: {fileID: 21202819797275496, guid: 6a84f857bec7e7345843ae29404c57ce, type: 2}
@@ -30174,7 +30186,7 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
-      - m_Target: {fileID: 4486834672301206576}
+      - m_Target: {fileID: 3399781311290640653}
         m_TargetAssemblyTypeName: UnityEngine.Behaviour, UnityEngine
         m_MethodName: set_enabled
         m_Mode: 6
@@ -30186,7 +30198,7 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
-      - m_Target: {fileID: 4486834671972714369}
+      - m_Target: {fileID: 3639212696043121793}
         m_TargetAssemblyTypeName: Microsoft.MixedReality.Toolkit.UI.Interactable,
           Microsoft.MixedReality.Toolkit.SDK
         m_MethodName: set_IsToggled
@@ -30199,7 +30211,7 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 1
         m_CallState: 2
-      - m_Target: {fileID: 4486834672301206572}
+      - m_Target: {fileID: 7458454430794810112}
         m_TargetAssemblyTypeName: UnityEngine.AudioSource, UnityEngine
         m_MethodName: PlayOneShot
         m_Mode: 2
@@ -30226,7 +30238,7 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
-      - m_Target: {fileID: 4486834672301206572}
+      - m_Target: {fileID: 7458454430794810112}
         m_TargetAssemblyTypeName: UnityEngine.AudioSource, UnityEngine
         m_MethodName: PlayOneShot
         m_Mode: 2
@@ -31020,7 +31032,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Hold 1
+  m_text: Hold 2
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 6a84f857bec7e7345843ae29404c57ce, type: 2}
   m_sharedMaterial: {fileID: 21202819797275496, guid: 6a84f857bec7e7345843ae29404c57ce, type: 2}
@@ -31546,7 +31558,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Hold 1
+  m_text: Hold 6
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 6a84f857bec7e7345843ae29404c57ce, type: 2}
   m_sharedMaterial: {fileID: 21202819797275496, guid: 6a84f857bec7e7345843ae29404c57ce, type: 2}
@@ -31953,7 +31965,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f98e7663599230e419addf153615c144, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  movingButtonVisuals: {fileID: 2889564013356869673}
+  movingButtonVisuals: {fileID: 2313729356163975946}
   distanceSpaceMode: 1
   startPushDistance: -0.008
   maxPushDistance: 0.006
@@ -32050,10 +32062,10 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
-  movingButtonIconText: {fileID: 6625719727719857492}
-  compressableButtonVisuals: {fileID: 149962826177548964}
+  movingButtonIconText: {fileID: 5403741196177660541}
+  compressableButtonVisuals: {fileID: 5949558251079702198}
   minCompressPercentage: 0.25
-  highlightPlate: {fileID: 3180523052234174174}
+  highlightPlate: {fileID: 2505494852440062920}
   highlightPlateAnimationTime: 0.25
 --- !u!114 &4244900505676762309
 MonoBehaviour:
@@ -32092,10 +32104,10 @@ MonoBehaviour:
   VoiceCommand: 
   voiceRequiresFocus: 1
   profiles:
-  - Target: {fileID: 2889564014428589268}
+  - Target: {fileID: 2882427570030046986}
     Themes:
     - {fileID: 11400000, guid: 8f8cfb3041153fa45bccb6d664a563ec, type: 2}
-  - Target: {fileID: 2889564014346465272}
+  - Target: {fileID: 2382194373523315790}
     Themes:
     - {fileID: 11400000, guid: 087b16002c2b0b445baa3ed3beae44a9, type: 2}
   OnClick:
@@ -32117,8 +32129,9 @@ MonoBehaviour:
   - Event:
       m_PersistentCalls:
         m_Calls:
-        - m_Target: {fileID: 3041198136122407622}
-          m_TargetAssemblyTypeName: 
+        - m_Target: {fileID: 4500393066272769832}
+          m_TargetAssemblyTypeName: Microsoft.MixedReality.Toolkit.UI.PressableButtonHoloLens2,
+            Microsoft.MixedReality.Toolkit.SDK
           m_MethodName: AnimateInHighlightPlate
           m_Mode: 1
           m_Arguments:
@@ -32161,8 +32174,9 @@ MonoBehaviour:
       EventValue:
         m_PersistentCalls:
           m_Calls:
-          - m_Target: {fileID: 3041198136122407622}
-            m_TargetAssemblyTypeName: 
+          - m_Target: {fileID: 4500393066272769832}
+            m_TargetAssemblyTypeName: Microsoft.MixedReality.Toolkit.UI.PressableButtonHoloLens2,
+              Microsoft.MixedReality.Toolkit.SDK
             m_MethodName: AnimateOutHighlightPlate
             m_Mode: 1
             m_Arguments:
@@ -32177,8 +32191,8 @@ MonoBehaviour:
   - Event:
       m_PersistentCalls:
         m_Calls:
-        - m_Target: {fileID: 2889564013791527765}
-          m_TargetAssemblyTypeName: 
+        - m_Target: {fileID: 4789951594537153654}
+          m_TargetAssemblyTypeName: UnityEngine.AudioSource, UnityEngine
           m_MethodName: PlayOneShot
           m_Mode: 2
           m_Arguments:
@@ -32221,8 +32235,8 @@ MonoBehaviour:
       EventValue:
         m_PersistentCalls:
           m_Calls:
-          - m_Target: {fileID: 2889564013791527765}
-            m_TargetAssemblyTypeName: 
+          - m_Target: {fileID: 4789951594537153654}
+            m_TargetAssemblyTypeName: UnityEngine.AudioSource, UnityEngine
             m_MethodName: PlayOneShot
             m_Mode: 2
             m_Arguments:
@@ -32380,8 +32394,8 @@ MonoBehaviour:
   debounceThreshold: 0.01
   localForward: {x: -0, y: -0, z: -1}
   localUp: {x: 0, y: 1, z: 0}
-  localCenter: {x: 0, y: 0, z: 0}
-  bounds: {x: 0, y: 0}
+  localCenter: {x: 0, y: 0, z: -0.008}
+  bounds: {x: 0.09607224, y: 0.032}
   touchableCollider: {fileID: 4716786969839762729}
 --- !u!114 &3898198410372934717
 MonoBehaviour:
@@ -33071,7 +33085,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Hold 1
+  m_text: Hold 3
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 6a84f857bec7e7345843ae29404c57ce, type: 2}
   m_sharedMaterial: {fileID: 21202819797275496, guid: 6a84f857bec7e7345843ae29404c57ce, type: 2}
@@ -34757,44 +34771,20 @@ PrefabInstance:
     - {fileID: 4411601543488781707, guid: f8e43a3ccc58ff943b0bed33339f073b, type: 3}
     - {fileID: 4411601543488781706, guid: f8e43a3ccc58ff943b0bed33339f073b, type: 3}
   m_SourcePrefab: {fileID: 100100000, guid: f8e43a3ccc58ff943b0bed33339f073b, type: 3}
---- !u!1 &149962826177548964 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 4346174000363798167, guid: f8e43a3ccc58ff943b0bed33339f073b, type: 3}
+--- !u!114 &5718097787968253431 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 8151150256719921604, guid: f8e43a3ccc58ff943b0bed33339f073b, type: 3}
   m_PrefabInstance: {fileID: 4486834672301206579}
   m_PrefabAsset: {fileID: 0}
---- !u!1 &2889564014428589268 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 1611650356674027751, guid: f8e43a3ccc58ff943b0bed33339f073b, type: 3}
-  m_PrefabInstance: {fileID: 4486834672301206579}
-  m_PrefabAsset: {fileID: 0}
---- !u!1 &2889564014346465272 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 1611650356858848203, guid: f8e43a3ccc58ff943b0bed33339f073b, type: 3}
-  m_PrefabInstance: {fileID: 4486834672301206579}
-  m_PrefabAsset: {fileID: 0}
---- !u!4 &2560584902445603589 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 2147502590132549430, guid: f8e43a3ccc58ff943b0bed33339f073b, type: 3}
-  m_PrefabInstance: {fileID: 4486834672301206579}
-  m_PrefabAsset: {fileID: 0}
---- !u!1 &4464550443459063393 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 266051739895710290, guid: f8e43a3ccc58ff943b0bed33339f073b, type: 3}
-  m_PrefabInstance: {fileID: 4486834672301206579}
-  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1410eac1ae94b4d4492a09cc368e152c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!23 &2889564014346465278 stripped
 MeshRenderer:
   m_CorrespondingSourceObject: {fileID: 1611650356858848205, guid: f8e43a3ccc58ff943b0bed33339f073b, type: 3}
-  m_PrefabInstance: {fileID: 4486834672301206579}
-  m_PrefabAsset: {fileID: 0}
---- !u!23 &3180523052234174174 stripped
-MeshRenderer:
-  m_CorrespondingSourceObject: {fileID: 1326042366967055085, guid: f8e43a3ccc58ff943b0bed33339f073b, type: 3}
-  m_PrefabInstance: {fileID: 4486834672301206579}
-  m_PrefabAsset: {fileID: 0}
---- !u!1 &6625719727719857492 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 7329389179897467239, guid: f8e43a3ccc58ff943b0bed33339f073b, type: 3}
   m_PrefabInstance: {fileID: 4486834672301206579}
   m_PrefabAsset: {fileID: 0}
 --- !u!114 &2889564013171004068 stripped
@@ -34808,36 +34798,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9541d86e2fd84c1d9990edf0852d74ab, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
---- !u!114 &3041198136122407622 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 1472942933325682421, guid: f8e43a3ccc58ff943b0bed33339f073b, type: 3}
+--- !u!4 &2560584902445603589 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 2147502590132549430, guid: f8e43a3ccc58ff943b0bed33339f073b, type: 3}
   m_PrefabInstance: {fileID: 4486834672301206579}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f98e7663599230e419addf153615c144, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
---- !u!114 &5718097787968253431 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 8151150256719921604, guid: f8e43a3ccc58ff943b0bed33339f073b, type: 3}
-  m_PrefabInstance: {fileID: 4486834672301206579}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 1410eac1ae94b4d4492a09cc368e152c, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
---- !u!82 &2889564013791527765 stripped
-AudioSource:
-  m_CorrespondingSourceObject: {fileID: 1611650355230191462, guid: f8e43a3ccc58ff943b0bed33339f073b, type: 3}
-  m_PrefabInstance: {fileID: 4486834672301206579}
-  m_PrefabAsset: {fileID: 0}
---- !u!1 &2889564013356869673 stripped
+--- !u!1 &4464550443459063393 stripped
 GameObject:
-  m_CorrespondingSourceObject: {fileID: 1611650355597673498, guid: f8e43a3ccc58ff943b0bed33339f073b, type: 3}
+  m_CorrespondingSourceObject: {fileID: 266051739895710290, guid: f8e43a3ccc58ff943b0bed33339f073b, type: 3}
   m_PrefabInstance: {fileID: 4486834672301206579}
   m_PrefabAsset: {fileID: 0}
 --- !u!82 &4486834672301206572
@@ -35157,14 +35125,14 @@ PrefabInstance:
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 4b8cf9b017b6e044589323100e7bb98c, type: 3}
---- !u!1 &8196779083317386872 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 5729915152355676086, guid: 4b8cf9b017b6e044589323100e7bb98c, type: 3}
-  m_PrefabInstance: {fileID: 4486834672868118990}
-  m_PrefabAsset: {fileID: 0}
 --- !u!4 &8202957417875918900 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 5733841072989372922, guid: 4b8cf9b017b6e044589323100e7bb98c, type: 3}
+  m_PrefabInstance: {fileID: 4486834672868118990}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1 &8196779083317386872 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 5729915152355676086, guid: 4b8cf9b017b6e044589323100e7bb98c, type: 3}
   m_PrefabInstance: {fileID: 4486834672868118990}
   m_PrefabAsset: {fileID: 0}
 --- !u!114 &4486834672904644494
