@@ -14967,6 +14967,7 @@ GameObject:
   - component: {fileID: 4486834672100395773}
   - component: {fileID: 4486834672100395774}
   - component: {fileID: 4486834672100395775}
+  - component: {fileID: 4088469999786108720}
   m_Layer: 0
   m_Name: MainMenu
   m_TagString: Untagged
@@ -15176,6 +15177,20 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   pivotAxis: 0
   targetTransform: {fileID: 0}
+--- !u!114 &4088469999786108720
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4486834672100395712}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 746c87d982f993e46ae7de8969028216, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  toggleDebugWindowButton: {fileID: 4486834672722955011}
+  debugWindow: {fileID: 0}
 --- !u!1 &4486834672100483027
 GameObject:
   m_ObjectHideFlags: 0
@@ -17078,7 +17093,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Menu Eight
+  m_text: Show Debug
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 6a84f857bec7e7345843ae29404c57ce, type: 2}
   m_sharedMaterial: {fileID: 21202819797275496, guid: 6a84f857bec7e7345843ae29404c57ce, type: 2}
@@ -19497,12 +19512,12 @@ GameObject:
   - component: {fileID: 4486834672722955008}
   - component: {fileID: 4486834672722955009}
   m_Layer: 0
-  m_Name: ButtonEight
+  m_Name: ToggleDebugWindow
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &4486834672722955010
 Transform:
   m_ObjectHideFlags: 0
@@ -19694,9 +19709,9 @@ MonoBehaviour:
   OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 0}
-        m_TargetAssemblyTypeName: 
-        m_MethodName: OnToggleHandMesh
+      - m_Target: {fileID: 4088469999786108720}
+        m_TargetAssemblyTypeName: MainMenu, Assembly-CSharp
+        m_MethodName: ToggleDebugWindow
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -20000,7 +20015,7 @@ MonoBehaviour:
   iconSprite: {fileID: 21300000, guid: 20f25674b9512834f88938d45ed495d7, type: 3}
   iconQuadRenderer: {fileID: 4486834672758579406}
   iconQuadTextureNameID: _MainTex
-  iconQuadTexture: {fileID: 2800000, guid: ed2f699f32ec17f4cad3423d2c449119, type: 3}
+  iconQuadTexture: {fileID: 2800000, guid: bd30f98596e69f7469fda20a47760dd1, type: 3}
   defaultButtonQuadMaterial: {fileID: 2100000, guid: fa419ab56051229449e3b813df8f295f, type: 2}
   iconSet: {fileID: 11400000, guid: 8b386ef895f7c924f8c4b03d1d3ed683, type: 2}
   defaultIconSet: {fileID: 11400000, guid: 8b386ef895f7c924f8c4b03d1d3ed683, type: 2}
