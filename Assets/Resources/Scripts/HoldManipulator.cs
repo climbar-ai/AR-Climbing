@@ -113,7 +113,7 @@ namespace Scripts
             editingMode = EditingMode.Place;
             toggleEditorMode.GetComponentInChildren<TextMeshPro>().text = "Mode: Place";
             indicatorObject.SetActive(false);
-            menuHold = "Hold_1_Simple";
+            menuHold = "Jug_1_Medium"; // default hold
         }
         // </Start>
 

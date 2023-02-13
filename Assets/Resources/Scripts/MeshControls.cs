@@ -8,28 +8,31 @@ using System;
 public class MeshControls : MonoBehaviour
 {
     private bool showMesh;
+    private IMixedRealitySpatialAwarenessMeshObserver meshObserver;
 
     // <Start>
     // Start is called before the first frame update
     void Start()
     {
-        showMesh = true;
+        // Get the first Mesh Observer available, generally we have only one registered
+        meshObserver = CoreServices.GetSpatialAwarenessSystemDataProvider<IMixedRealitySpatialAwarenessMeshObserver>();
+
+        // disable mesh on start
+        showMesh = false;
+        meshObserver.DisplayOption = SpatialAwarenessMeshDisplayOptions.None;
     }
     // </Start>
 
     public void ToggleMesh()
     {
-        // Get the first Mesh Observer available, generally we have only one registered
-        var observer = CoreServices.GetSpatialAwarenessSystemDataProvider<IMixedRealitySpatialAwarenessMeshObserver>();
-
         if (showMesh)
         {
             // Set to not visible
-            observer.DisplayOption = SpatialAwarenessMeshDisplayOptions.None;
+            meshObserver.DisplayOption = SpatialAwarenessMeshDisplayOptions.None;
         } else
         {
             // Set to not visible
-            observer.DisplayOption = SpatialAwarenessMeshDisplayOptions.Visible;
+            meshObserver.DisplayOption = SpatialAwarenessMeshDisplayOptions.Visible;
         }
 
         showMesh = !showMesh;

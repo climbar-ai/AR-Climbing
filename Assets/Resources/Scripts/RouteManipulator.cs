@@ -18,6 +18,9 @@ namespace Scripts
 {
     public class RouteManipulator : MonoBehaviour//MonoBehaviourPunCallbacks, IInRoomCallbacks
     {
+        // instructions to show user when they want to load a route
+        [SerializeField] private GameObject loadRouteInstructionsObj = default;
+
         // parent to all specific routes (i.e. not merged with scene)
         [SerializeField] private GameObject globalRouteParent = default;
 
@@ -207,6 +210,8 @@ namespace Scripts
                 await GetRoutesForInstantiation();
                 editingMode = EditingMode.Place;
                 holdManipulator.editingMode = HoldManipulator.EditingMode.Place;
+
+                loadRouteInstructionsObj.SetActive(false); // hide instructions for loading route
             }
             else if (routeParentNearby && editingMode == EditingMode.Place)
             {
@@ -441,6 +446,8 @@ namespace Scripts
         {
             yield return new WaitForSeconds(time);
 
+            //Debug.Log($"Hold type: {go.name}");
+
             float distanceForward = float.PositiveInfinity;
             float distanceBackward = float.PositiveInfinity;
             RaycastHit hitForward = new RaycastHit();
@@ -448,19 +455,28 @@ namespace Scripts
             Vector3 forward = go.transform.forward; // project inward, toward assumed wall position (spatial mesh)
             Vector3 backward = -1 * forward;
 
+            //Debug.Log($"forward direction: {forward}");
+            //Debug.Log($"backward direction: {backward}");
+
             // RayCast forward and backward to determine which direction is closest to spatial mesh (assumed to be wall)
             // NOTE: we turn on Physics.queriesHitBackfaces since RayCast hits aren't registered if "behind" a mesh collider (e.g. hold has clipped into a
             // wall either due to the frequent spatial mesh updates or by moving the hold via it's parent)
-            if (Physics.Raycast(go.transform.position, forward, out hitForward))
+            
+            // Only raycast against the spatial mesh because sometimes, the raycast will hit object's own mesh depending on the mesh model used (unknown why)
+            LayerMask mask = LayerMask.GetMask("Spatial Awareness");
+            if (Physics.Raycast(go.transform.position, forward, out hitForward, Mathf.Infinity, mask))
             {
                 distanceForward = hitForward.distance;
                 //Debug.Log($"Forward distance to mesh: {distanceForward}");
             }
-            if (Physics.Raycast(go.transform.position, backward, out hitBackward))
+            if (Physics.Raycast(go.transform.position, backward, out hitBackward, Mathf.Infinity, mask))
             {
                 distanceBackward = hitBackward.distance;
                 //Debug.Log($"Backward distance to mesh: {distanceBackward}");
             }
+
+            //Debug.Log($"forward hit object: {hitForward.transform.gameObject.name}");
+            //Debug.Log($"backward hit object: {hitBackward.transform.gameObject.name}");
 
             //Debug.Log($"hitForward normal: {hitForward.normal}");
             //Debug.Log($"hitBackward normal: {hitBackward.normal}");
@@ -768,6 +784,8 @@ namespace Scripts
         {
             editingMode = EditingMode.Create;
             holdManipulator.editingMode = HoldManipulator.EditingMode.Off;
+
+            loadRouteInstructionsObj.SetActive(true); // show instructions for loading route
         }
 
         [PunRPC]
