@@ -4,6 +4,6 @@ authors:
   - family-names: Cast
     given-names: John
     orcid: https://orcid.org/0009-0001-5029-7151
-title: "ClimbAR"
+title: "ClimbAR Frontend"
 version: 1.0.0
 date-released: 2023-07-31
