@@ -1,4 +1,4 @@
-# Climbing in AR
+# ClimbAR: Climbing in AR
 ## MSE Thesis work
 
 Click below to watch a demo:
