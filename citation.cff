@@ -5,6 +5,6 @@ authors:
     given-names: John
     orcid: https://orcid.org/0009-0001-5029-7151
 title: "ClimbAR Frontend"
-version: 1.0.0
+version: 5.0.0
 date-released: 2023-07-31
 url: https://github.com/climbar-ai/AR-Climbing
