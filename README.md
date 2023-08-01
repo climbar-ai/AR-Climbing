@@ -8,4 +8,4 @@
 - [Relies on the corresponding back-end](https://github.com/climbar-ai/back-end)
 
 Click below to watch a demo:
-[![Watch the video](https://github.com/climbar-ai/AR-Climbing/assets/2231240/be67d7f7-f3ce-4296-91b6-63cf29173042)](https://www.youtube.com/watch?v=ejbVCAualg8&ab_channel=JohnCast)
+[![Watch the video](https://github.com/climbar-ai/AR-Climbing/assets/2231240/b931587a-83eb-4174-a89e-d111947fcbb0)](https://www.youtube.com/watch?v=ejbVCAualg8&ab_channel=JohnCast)
