@@ -1,7 +1,7 @@
 # ClimbAR: Climbing in AR
 ## MSE Thesis work
 
-- [Built using SynchronizAR](https://github.com/jdcast/SynchronizAR)
+- [Basis for SynchronizAR](https://github.com/jdcast/SynchronizAR)
 
 - [Unity Setup Instructions](https://github.com/climbar-ai/AR-Climbing/files/12232301/Unity.Setup.Instructions.docx.pdf)
 
