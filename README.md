@@ -4,6 +4,8 @@
 - [Basis for SynchronizAR](https://github.com/jdcast/SynchronizAR)
 
 - [Unity Setup Instructions](https://github.com/climbar-ai/AR-Climbing/files/12232301/Unity.Setup.Instructions.docx.pdf)
+  
+- [Unity Package to Use in Above Instructions](https://drive.google.com/file/d/1YKLGIma1W4NILa693F-UBAgHOieJ1w5l/view?usp=drive_link)
 
 - [Relies on the corresponding back-end](https://github.com/climbar-ai/back-end)
 
